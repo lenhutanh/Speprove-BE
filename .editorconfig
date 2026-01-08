@@ -1,0 +1,29 @@
+# Đánh dấu đây là file cấu hình gốc, không tìm kiếm ở các thư mục cha nữa
+root = true
+
+[*]
+# Định dạng mã hóa chuẩn quốc tế
+charset = utf-8
+
+# Kiểu thụt đầu dòng: dùng Space (khoảng trắng) thay vì Tab
+indent_style = space
+
+# Độ rộng thụt đầu dòng: 2 spaces (khớp với Prettier tabWidth: 2)
+indent_size = 2
+
+# Kiểu xuống dòng chuẩn Linux/macOS (khuyên dùng cho Server Node.js)
+end_of_line = lf
+
+# Tự động thêm một dòng trống ở cuối file (chuẩn POSIX, tránh lỗi khi nối file)
+insert_final_newline = true
+
+# Tự động xóa các khoảng trắng thừa ở cuối dòng code
+trim_trailing_whitespace = true
+
+[*.md]
+# Với file Markdown, đôi khi khoảng trắng ở cuối dòng dùng để xuống dòng nên ta tắt trim
+trim_trailing_whitespace = false
+
+[Makefile]
+# Riêng file Makefile bắt buộc phải dùng Tab thực sự
+indent_style = tab

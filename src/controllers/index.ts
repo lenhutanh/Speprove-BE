@@ -1,0 +1,5 @@
+export { accountController } from './account.controller'
+export { authController } from './auth.controller'
+export { groupController } from './group.controller'
+export { permissionGroupController } from './permission-group.controller'
+export { permissionController } from './permission.controller'
