@@ -1,7 +1,7 @@
 import { StatusCodes } from 'http-status-codes'
 import bcrypt from 'bcrypt'
 import { ApiError } from '~/utils/api-error'
-import { generateToken, verifyToken } from '~/utils/jwt.util'
+import { generateToken, verifyToken } from '~/utils'
 import { env } from '~/config/env.config'
 import { accountService } from './account.service'
 import { PermissionType } from '~/models'
@@ -129,6 +129,7 @@ const refreshToken = async (token: string) => {
     accessToken: generateToken(payload, env.ACCESS_TOKEN_SECRET_SIGNATURE, env.ACCESS_TOKEN_LIFE)
   }
 }
+
 export const authService = {
   login,
   register,

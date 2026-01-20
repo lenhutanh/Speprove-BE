@@ -6,7 +6,7 @@ import path from 'path'
 import { ApiError } from '~/utils/api-error'
 import { Request } from 'express'
 
-const customFileFilter = (req: Request, file: Express.Multer.File, callback: any) => {
+const customFileFilter = (_req: Request, file: Express.Multer.File, callback: any) => {
   if (!ALLOW_COMMON_FILE_TYPES.includes(file.mimetype)) {
     return callback(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'File type is invalid!'), false)
   }

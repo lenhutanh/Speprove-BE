@@ -1,3 +1,5 @@
+import { env } from '~/config/env.config'
+
 export const ACCOUNT_KIND = {
   ADMIN: 1,
   USER: 2
@@ -51,4 +53,26 @@ export const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.mp3', '.webm', '.w
 export const GENDER_KIND = {
   MALE: 0,
   FEMALE: 1
+} as const
+
+export const ALLOWED_ACCENTS = {
+  US: 'us',
+  UK: 'uk',
+  AU: 'au'
+} as const
+
+export const SUPPORTED_VOICE_IDS = [
+  'en-US-AndrewMultilingualNeural',
+  'en-US-AvaMultilingualNeural',
+  'en-GB-SoniaNeural',
+  'en-GB-RyanNeural',
+  'en-AU-WilliamNeural',
+  'en-AU-NatashaNeural'
+] as const
+
+export const CLOUD_FOLDERS = {
+  FORECASTS: `${env.APP_NAME}/forecasts`,
+  VOICE_SAMPLES: `${env.APP_NAME}/voices/samples`,
+  QUESTION_AUDIOS: `${env.APP_NAME}/questions/audios`,
+  AVATARS: `${env.APP_NAME}/users/avatars`
 } as const

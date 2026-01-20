@@ -1,5 +1,5 @@
 import z from 'zod'
-import { createPermissionSchema, updatePermissionSchema } from '~/validations/permission.validation'
+import { createPermissionSchema, updatePermissionSchema } from '~/validations'
 
 export type CreatePermissionBodyType = z.infer<typeof createPermissionSchema>['body']
 export type UpdatePermissionBodyType = z.infer<typeof updatePermissionSchema>['body']

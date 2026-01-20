@@ -2,3 +2,4 @@ ignoredBuiltDependencies:
   - '@scarf/scarf'
   - bcrypt
   - esbuild
+  - msedge-tts

@@ -5,7 +5,7 @@ import { groupService } from '~/services/group.service'
 
 const createNew = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const group = await groupService.createNew(req.body)
+    const group = await groupService.createNew(req.validated.body)
     res.status(StatusCodes.CREATED).json(new ApiResponse('Created group successfully', group))
   } catch (error) {
     next(error)
@@ -23,7 +23,7 @@ const getAll = async (_req: Request, res: Response, next: NextFunction) => {
 
 const getDetails = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const group = await groupService.getDetails(req.params.id)
+    const group = await groupService.getDetails(req.validated.params.id)
     res.status(StatusCodes.OK).json(new ApiResponse('Get group details successfully', group))
   } catch (error) {
     next(error)
@@ -32,7 +32,7 @@ const getDetails = async (req: Request, res: Response, next: NextFunction) => {
 
 const update = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const group = await groupService.update(req.params.id, req.body)
+    const group = await groupService.update(req.validated.params.id, req.validated.body)
     res.status(StatusCodes.OK).json(new ApiResponse('Updated group successfully', group))
   } catch (error) {
     next(error)
@@ -41,7 +41,7 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
 const remove = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await groupService.remove(req.params.id)
+    await groupService.remove(req.validated.params.id)
     res.status(StatusCodes.OK).json(new ApiResponse('Deleted group successfully'))
   } catch (error) {
     next(error)

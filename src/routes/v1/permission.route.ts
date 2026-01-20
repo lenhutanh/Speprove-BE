@@ -3,7 +3,7 @@ import { permissionController } from '~/controllers'
 import { authMiddleware } from '~/middlewares/'
 import { validateMiddleware } from '~/middlewares/validate.middleware'
 import { idParamSchema } from '~/validations/base.schema'
-import { createPermissionSchema, updatePermissionSchema } from '~/validations/permission.validation'
+import { createPermissionSchema, updatePermissionSchema } from '~/validations'
 
 const Router = express.Router()
 

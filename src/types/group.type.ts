@@ -1,6 +1,6 @@
 import z from 'zod'
-import { createGroupSchema, updateGroupSchema } from '~/validations/group.validation'
-import { permissionResSchema } from './'
+import { createGroupSchema, updateGroupSchema } from '~/validations'
+import { permissionResSchema } from './permission.type'
 
 export type CreateGroupBodyType = z.infer<typeof createGroupSchema>['body']
 export type UpdateGroupBodyType = z.infer<typeof updateGroupSchema>['body']

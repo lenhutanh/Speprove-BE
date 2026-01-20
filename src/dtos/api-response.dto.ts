@@ -7,8 +7,6 @@ export class ApiResponse<T> {
     public meta?: {
       totalElements: number
       totalPages: number
-      page: number
-      pageSize: number
     }
   ) {}
 }

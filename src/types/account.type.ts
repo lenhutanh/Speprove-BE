@@ -1,6 +1,6 @@
 import z from 'zod'
-import { updateProfileSchema } from '~/validations/account.validation'
-import { groupResSchema } from './'
+import { updateProfileSchema } from '~/validations'
+import { groupResSchema } from './group.type'
 
 export type UpdateProfileBodyType = z.infer<typeof updateProfileSchema>['body']
 

@@ -3,7 +3,7 @@ import { permissionGroupController } from '~/controllers'
 import { authMiddleware } from '~/middlewares'
 import { validateMiddleware } from '~/middlewares/validate.middleware'
 import { idParamSchema } from '~/validations/base.schema'
-import { createPermissionGroupSchema, updatePermissionGroupSchema } from '~/validations/permission-group.validation'
+import { createPermissionGroupSchema, updatePermissionGroupSchema } from '~/validations'
 
 const Router = express.Router()
 

@@ -10,16 +10,7 @@ const validate = (schema: ZodSchema<any>) => {
         query: req.query
       })
 
-      req.body = parsed.body ?? {}
-
-      if (parsed.params) {
-        Object.assign(req.params, parsed.params)
-      }
-
-      if (parsed.query) {
-        Object.keys(req.query).forEach((key) => delete req.query[key])
-        Object.assign(req.query, parsed.query)
-      }
+      req.validated = parsed
 
       next()
     } catch (err) {
