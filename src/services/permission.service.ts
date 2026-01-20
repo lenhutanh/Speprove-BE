@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import { Permission } from '~/models/permission.model'
-import { CreatePermissionBodyType, UpdatePermissionBodyType } from '~/types/permission.type'
+import { CreatePermissionBodyType, UpdatePermissionBodyType } from '~/types'
 import { ApiError } from '~/utils/api-error'
 
 const createNew = async (data: CreatePermissionBodyType) => {

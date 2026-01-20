@@ -1,5 +1,5 @@
 import { RedisProvider } from '~/providers/redis.provider'
-import { generateOtp } from '~/utils/index'
+import { generateOtp } from '~/utils'
 import { CACHE_CONFIG } from '~/config/cache.config'
 import { StatusCodes } from 'http-status-codes'
 import { ApiError } from '~/utils/api-error'

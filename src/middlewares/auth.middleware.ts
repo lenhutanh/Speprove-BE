@@ -2,18 +2,19 @@ import { NextFunction, Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { env } from '~/config/env.config'
 import { ApiError } from '~/utils/api-error'
-import { verifyToken } from '~/utils/jwt.util'
+import { verifyToken } from '~/utils'
 
 const isAuthorized = async (req: Request, _res: Response, next: NextFunction) => {
-  const clientAccessToken = req?.cookies?.accessToken || req.headers.authorization?.split(' ')[1]
+  const authHeader = req.headers.authorization
+  const clientAccessToken =
+    req?.cookies?.accessToken || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null)
 
   if (!clientAccessToken) {
     return next(new ApiError(StatusCodes.UNAUTHORIZED, 'Unauthorized! (token not found)'))
   }
 
   try {
-    const accessTokenDecoded = verifyToken(clientAccessToken, env.ACCESS_TOKEN_SECRET_SIGNATURE)
-    req.jwtDecoded = accessTokenDecoded
+    req.jwtDecoded = verifyToken(clientAccessToken, env.ACCESS_TOKEN_SECRET_SIGNATURE)
     next()
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -22,6 +23,21 @@ const isAuthorized = async (req: Request, _res: Response, next: NextFunction) =>
     }
     next(new ApiError(StatusCodes.UNAUTHORIZED, 'Unauthorized!'))
   }
+}
+
+const isAuthorizedOptional = async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization
+  const clientAccessToken =
+    req?.cookies?.accessToken || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null)
+
+  if (clientAccessToken) {
+    try {
+      req.jwtDecoded = verifyToken(clientAccessToken, env.ACCESS_TOKEN_SECRET_SIGNATURE)
+    } catch (error) {
+      console.log('Optional Auth: Invalid token, proceeding as guest')
+    }
+  }
+  next()
 }
 
 const hasPermission = (requiredPermissions: string | string[]) => {
@@ -43,4 +59,4 @@ const hasPermission = (requiredPermissions: string | string[]) => {
   }
 }
 
-export const authMiddleware = { isAuthorized, hasPermission }
+export const authMiddleware = { isAuthorized, hasPermission, isAuthorizedOptional }

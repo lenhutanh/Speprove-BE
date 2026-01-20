@@ -3,7 +3,7 @@ import { groupController } from '~/controllers'
 import { authMiddleware } from '~/middlewares'
 import { validateMiddleware } from '~/middlewares/validate.middleware'
 import { idParamSchema } from '~/validations/base.schema'
-import { createGroupSchema, updateGroupSchema } from '~/validations/group.validation'
+import { createGroupSchema, updateGroupSchema } from '~/validations'
 
 const Router = express.Router()
 

@@ -1,6 +1,7 @@
 import 'dotenv/config'
 
 export const env = {
+  APP_NAME: process.env.APP_NAME as string,
   MONGODB_URI: process.env.MONGODB_URI as string,
   DATABASE_NAME: process.env.DATABASE_NAME as string,
   APP_HOST: process.env.APP_HOST as string,
@@ -24,5 +25,9 @@ export const env = {
     BREVO_API_KEY: process.env.BREVO_API_KEY as string,
     SENDER_EMAIL: process.env.SENDER_EMAIL as string,
     SENDER_NAME: process.env.SENDER_NAME as string
-  }
+  },
+
+  CLOUDINARY_NAME: process.env.CLOUDINARY_NAME as string,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY as string,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET as string
 }
