@@ -11,6 +11,8 @@ const topicSchema = new Schema(
   BaseSchemaOptions
 )
 
+topicSchema.index({ name: 1, createdAt: -1 })
+
 export type TopicType = InferSchemaType<typeof topicSchema> & {
   _id: Types.ObjectId
 }

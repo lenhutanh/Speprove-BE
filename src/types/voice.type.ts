@@ -1,4 +1,4 @@
-import z from 'zod'
+import { z } from 'zod'
 import { createVoiceSchema, updateVoiceSchema } from '~/validations'
 
 export type CreateVoiceBodyType = z.infer<typeof createVoiceSchema>['body']
