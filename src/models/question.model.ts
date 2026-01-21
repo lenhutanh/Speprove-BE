@@ -13,6 +13,8 @@ const questionSchema = new Schema(
   BaseSchemaOptions
 )
 
+questionSchema.index({ topicId: 1, part: 1 })
+
 export type QuestionType = InferSchemaType<typeof questionSchema>
 
 export const Question = models.Question || model<QuestionType>('Question', questionSchema)

@@ -1,4 +1,4 @@
-import z from 'zod'
+import { z } from 'zod'
 import { createSchema, updateSchema } from './'
 
 export const createQuestionSchema = createSchema({

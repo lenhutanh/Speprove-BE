@@ -26,3 +26,4 @@ export const querySchema = <T extends ZodRawShape>(fields: T) =>
   })
 
 export const idParamSchema = z.object({ params: z.object({ id: objectIdSchema }) })
+

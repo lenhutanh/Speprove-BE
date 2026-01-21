@@ -1,4 +1,4 @@
-import z from 'zod'
+import { z } from 'zod'
 import { updateProfileSchema } from '~/validations'
 import { groupResSchema } from './group.type'
 

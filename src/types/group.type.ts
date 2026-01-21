@@ -1,4 +1,4 @@
-import z from 'zod'
+import { z } from 'zod'
 import { createGroupSchema, updateGroupSchema } from '~/validations'
 import { permissionResSchema } from './permission.type'
 

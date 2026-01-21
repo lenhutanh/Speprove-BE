@@ -25,9 +25,8 @@ const update = async (req: Request, res: Response, next: NextFunction) => {
 
 const getList = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req?.jwtDecoded?._id
     const queryData = parseQueryParams<ForecastQueryType>(req.validated.query)
-    const result = await forecastService.getList(userId, queryData)
+    const result = await forecastService.getList(queryData)
 
     res.status(StatusCodes.OK).json(new ApiResponse('Get forecast list successfully!', result.items, result.meta))
   } catch (error) {

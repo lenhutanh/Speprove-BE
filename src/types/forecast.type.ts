@@ -1,4 +1,4 @@
-import z from 'zod'
+import { z } from 'zod'
 import { createForecastSchema, getForecastsSchema } from '~/validations'
 
 export type CreateForecastBodyType = z.infer<typeof createForecastSchema>['body']

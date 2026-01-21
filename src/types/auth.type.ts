@@ -1,4 +1,4 @@
-import z from 'zod'
+import { z } from 'zod'
 import { createSchema } from '../validations/base.schema'
 import { emailSchema, otpSchema, passwordSchema } from '~/utils/validators.util'
 

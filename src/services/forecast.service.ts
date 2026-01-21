@@ -30,7 +30,7 @@ const update = async (id: string, data: UpdateForecastBodyType) => {
   return await forecast.save()
 }
 
-const getList = async (userId: string, queryData: any) => {
+const getList = async (queryData: any) => {
   const { page, limit, skip, sort, search, filters } = queryData
   const mongoFilter: any = {
     ...filters,
