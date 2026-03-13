@@ -1,0 +1,50 @@
+import { Request, Response } from 'express'
+import { StatusCodes } from 'http-status-codes'
+import { ForecastService } from '~/modules/forecast/forecast.service'
+import { ResponseTransformer } from '~/common/utils'
+import { injectable } from 'tsyringe'
+import { ForecastTopicService } from '../forecast-topic/forecast-topic.service'
+import { ForecastQuestionService } from '../forecast-question/forecast-question.service'
+
+@injectable()
+export class ForecastController {
+  constructor(
+    private readonly forecastService: ForecastService,
+    private readonly forecastTopicService: ForecastTopicService,
+    private readonly forecastQuestionService: ForecastQuestionService
+  ) {}
+
+  public async createNew(req: Request, res: Response) {
+    const forecast = await this.forecastService.createNew(req.validated.body)
+    return ResponseTransformer.success(res, forecast, 'Create forecast successfully', StatusCodes.CREATED)
+  }
+
+  public async getDetails(req: Request, res: Response) {
+    const forecast = await this.forecastService.getDetails(req.params.id)
+    return ResponseTransformer.success(res, forecast, 'Get forecast details successfully')
+  }
+
+  // public async update(req: Request, res: Response) {
+  //   const forecast = await this.forecastService.update(req.validated.params.id, req.validated.body)
+  //   return ResponseTransformer.success(res, forecast, 'Update forecast successfully')
+  // }
+
+  public async getList(req: Request, res: Response) {
+    const result = await this.forecastService.getList(req.validated.query)
+    return ResponseTransformer.paginate(res, result.data, result.pagination, 'Get forecast list successfully')
+  }
+
+  public async importTopics(req: Request, res: Response) {
+    await this.forecastTopicService.importTopics(req.params.id, req.validated.body.topics)
+    return ResponseTransformer.successNoData(res, 'Topics imported successfully')
+  }
+
+  public async importQuestions(req: Request, res: Response) {
+    await this.forecastQuestionService.importQuestions(
+      req.params.id,
+      req.validated.body.topicId,
+      req.validated.body.questions
+    )
+    return ResponseTransformer.successNoData(res, 'Questions imported successfully')
+  }
+}
