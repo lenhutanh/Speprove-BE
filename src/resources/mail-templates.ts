@@ -1,7 +1,7 @@
 export const registerOtpTemplate = (otp: string) => {
   return {
     subject: 'StepUp Speak: Verify your email address',
-    content: `
+    htmlContent: `
       <div style="font-family: Arial, sans-serif;">
         <h1>Email Verification</h1>
         <p>Your One-Time Password (OTP) is:</p>

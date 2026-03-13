@@ -3,3 +3,4 @@ ignoredBuiltDependencies:
   - bcrypt
   - esbuild
   - msedge-tts
+  - msgpackr-extract

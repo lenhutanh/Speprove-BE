@@ -1,4 +1,4 @@
-import { JwtPayload } from 'jsonwebtoken'
+import { TokenPayload } from './common/interfaces/token.interface'
 
 declare global {
   namespace Express {
@@ -8,7 +8,14 @@ declare global {
         params?: any
         query?: any
       }
-      jwtDecoded?: any | JwtPayload
+      user?: TokenPayload
     }
   }
 }
+
+// {
+//   "watch": ["src", ".env"],
+//   "ext": ".ts,.js,.json",
+//   "ignore": [],
+//   "exec": "tsx ./src/index.ts"
+// }

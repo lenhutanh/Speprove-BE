@@ -1,0 +1,71 @@
+import { Request, Response } from 'express'
+import ms from 'ms'
+import { env } from '~/common/config/env.config'
+import { ResponseTransformer } from '~/common/utils'
+import { injectable } from 'tsyringe'
+import { AuthenticatedRequest } from '~/common/interfaces/request.interface'
+import { AuthService } from './services'
+
+@injectable()
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  public async login(req: Request, res: Response) {
+    const metadata = {
+      ipAddress: req.ip,
+      deviceInfo: req.headers['user-agent']
+    }
+    const result = await this.authService.login(req.validated.body, metadata)
+    this.setAuthCookies(res, result)
+    return ResponseTransformer.success(res, result, 'Login successfully.')
+  }
+
+  public async register(req: Request, res: Response) {
+    await this.authService.register(req.validated.body)
+    return ResponseTransformer.successNoData(res, 'OTP sent successfully to your email.')
+  }
+
+  public async verify(req: Request, res: Response) {
+    await this.authService.verify(req.validated.body)
+    return ResponseTransformer.successNoData(res, 'Account verified successfully.')
+  }
+
+  public async logout(req: AuthenticatedRequest, res: Response) {
+    await this.authService.logout(req.user._id)
+    this.clearAuthCookies(res)
+    return ResponseTransformer.successNoData(res, 'Logout successfully.')
+  }
+
+  public async refreshToken(req: Request, res: Response) {
+    const metadata = {
+      ipAddress: req.ip,
+      deviceInfo: req.headers['user-agent']
+    }
+    const result = await this.authService.refreshToken(req.cookies?.refreshToken, metadata)
+    this.setAuthCookies(res, result)
+    return ResponseTransformer.success(res, result, 'Refresh token successfully')
+  }
+
+  private setAuthCookies(res: Response, tokens: { accessToken: string; refreshToken: string }): void {
+    const isProduction = env.NODE_ENV === 'production'
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: ms('1h')
+    })
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: ms('14 days'),
+      path: '/api/v1/auth'
+    })
+  }
+
+  private clearAuthCookies(res: Response): void {
+    res.clearCookie('accessToken')
+    res.clearCookie('refreshToken', { path: '/api/v1/auth' })
+  }
+}

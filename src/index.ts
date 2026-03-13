@@ -1,58 +1,80 @@
+import 'reflect-metadata'
 import express from 'express'
-import swaggerUi from 'swagger-ui-express'
-import { swaggerSpec } from './config/swagger.config'
-import { closeDB, connectDB } from './config/mongodb.config'
-import { env } from './config/env.config'
-import { errorMiddleware } from './middlewares/error.middleware'
 import helmet from 'helmet'
 import cors from 'cors'
-import { corsOptions } from './config/cors.config'
-import { APIs_V1 } from './routes/v1'
 import cookieParser from 'cookie-parser'
+import swaggerUi from 'swagger-ui-express'
+import { setupContainer } from './common/config/container.config'
+;import { initSpelling } from './common/utils'
+(async () => {
+  try {
+    await initSpelling()
+    setupContainer()
 
-const startServer = () => {
-  const app = express()
+    const { connectDB, closeDB } = await import('./common/config')
+    const { env, swaggerSpec, corsOptions } = await import('./common/config')
+    const { APIs_V1 } = await import('./routes')
+    const { errorMiddleware } = await import('./common/middlewares')
+    const { setupBullBoard } = await import('./infrastructure/bull-board.config')
+    const { startWorkers, shutdownWorkers } = await import('./infrastructure/workers/worker.setup')
+    const { EventBus } = await import('./infrastructure/event-bus/event-bus')
+    const { QueueFactory } = await import('./infrastructure/queues/queue.factory')
+    const { container } = await import('tsyringe')
 
-  app.use(cookieParser())
+    // 3. Kết nối DB
+    console.log('1. Connecting to MongoDB...')
+    await connectDB()
+    console.log('2. MongoDB connected\n')
 
-  app.use(helmet())
+    // 4. Init queues trước — đảm bảo BullBoard và Worker thấy đủ queues
+    const queueFactory = container.resolve(QueueFactory)
+    queueFactory.initQueues()
 
-  app.use(cors(corsOptions))
+    // 5. Kích hoạt EventBus
+    console.log('3. Registering event handlers...')
+    const eventBus = container.resolve(EventBus)
+    eventBus.registerHandlers()
 
-  app.use(express.json())
+    // 6. Start workers
+    startWorkers()
 
-  app.use('/api/v1', APIs_V1)
+    // 7. Khởi động Express
+    console.log('5. Starting server...')
+    const app = express()
 
-  app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+    app.use(cookieParser())
+    app.use(helmet())
+    app.use(cors(corsOptions))
+    app.use(express.json())
 
-  app.use(errorMiddleware)
+    if (env.NODE_ENV !== 'production') {
+      app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+      setupBullBoard(app) // ← queue đã init, luôn thấy đủ
+    }
 
-  const server = app.listen(env.APP_PORT, env.APP_HOST, () => {
-    console.log(`4. Backend Server is running at http://${env.APP_HOST}:${env.APP_PORT}/`)
-  })
+    app.use('/api/v1', APIs_V1)
+    app.use(errorMiddleware)
 
-  const exitHandler = async () => {
-    if (server) {
+    const server = app.listen(env.APP_PORT, env.APP_HOST, () => {
+      console.log(`6. Server running at http://${env.APP_HOST}:${env.APP_PORT}/\n`)
+    })
+
+    // 8. Graceful shutdown
+    const shutdown = async () => {
+      console.log('\n🛑 Shutting down gracefully...')
       server.close(async () => {
-        console.log('5. Server closing...')
+        await shutdownWorkers() // worker trước
+        await queueFactory.shutdown() // queue sau
         await closeDB()
+        console.log('✅ Shutdown complete')
         process.exit(0)
       })
     }
-  }
 
-  process.on('SIGINT', exitHandler)
-  process.on('SIGTERM', exitHandler)
-}
-
-;(async () => {
-  try {
-    console.log('1. Connecting to MongoDB...')
-    await connectDB()
-    console.log('3. Starting Server...')
-    startServer()
+    process.on('SIGINT', shutdown)
+    process.on('SIGTERM', shutdown)
   } catch (error) {
-    console.error('Failed to start server: ', error)
+    console.error('❌ Failed to start server:', error)
     process.exit(1)
   }
 })()
