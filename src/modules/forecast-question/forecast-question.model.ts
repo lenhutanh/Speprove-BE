@@ -4,7 +4,6 @@ import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base'
 const forecastQuestionSchema = new Schema(
   {
     ...BaseSchemaContent,
-    forecastId: { type: Schema.Types.ObjectId, ref: 'Forecast', required: true },
     forecastTopicId: { type: Schema.Types.ObjectId, ref: 'ForecastTopic', required: true },
     questionId: { type: Schema.Types.ObjectId, ref: 'Question', required: true },
     order: { type: Number, default: 0 }
@@ -12,7 +11,7 @@ const forecastQuestionSchema = new Schema(
   BaseSchemaOptions
 )
 
-forecastQuestionSchema.index({ forecastId: 1, questionId: 1 }, { unique: true })
+forecastQuestionSchema.index({ forecastTopicId: 1, questionId: 1 }, { unique: true })
 
 export type ForecastQuestionType = InferSchemaType<typeof forecastQuestionSchema> & {
   _id: Types.ObjectId

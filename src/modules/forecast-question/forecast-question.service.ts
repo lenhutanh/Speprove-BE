@@ -2,25 +2,26 @@ import { inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { IForecastQuestionRepository } from './forecast-question.repository.interface'
 import { toObjectId } from '~/common/utils'
+import { GetForecastQuestionType } from './forecast-question.validation'
+import { ForecastQuestionMapper } from './forecast-question.mapper'
+import { AppError } from '~/common/errors'
+import { StatusCodes } from 'http-status-codes'
 
 @singleton()
 export class ForecastQuestionService {
   constructor(
     @inject(TOKENS.IForecastQuestionRepository)
-    private readonly forecastQuestionRepository: IForecastQuestionRepository
+    private readonly forecastQuestionRepository: IForecastQuestionRepository,
+    private readonly forecastQuestionMapper: ForecastQuestionMapper
   ) {}
 
-  public async importQuestions(
-    forecastId: string,
-    topicId: string,
-    questions: { questionId: string; order: number }[]
-  ) {
+  public async importQuestions(forecastTopicId: string, questions: { questionId: string; order: number }[]) {
     const questionIds = questions.map((q) => toObjectId(q.questionId))
 
     await this.forecastQuestionRepository.withTransaction(async (session) => {
       await this.forecastQuestionRepository.hardDeleteMany(
         {
-          forecastId: toObjectId(forecastId),
+          forecastTopicId: toObjectId(forecastTopicId),
           questionId: { $nin: questionIds }
         },
         { session }
@@ -29,7 +30,7 @@ export class ForecastQuestionService {
       const ops = questions.map((item) => ({
         updateOne: {
           filter: {
-            forecastId: toObjectId(forecastId),
+            forecastTopicId: toObjectId(forecastTopicId),
             questionId: toObjectId(item.questionId)
           },
           update: {
@@ -43,5 +44,21 @@ export class ForecastQuestionService {
         await this.forecastQuestionRepository.bulkWrite(ops, { session })
       }
     })
+  }
+
+  public async getList(query: GetForecastQuestionType) {
+    const { data, pagination } = await this.forecastQuestionRepository.getList(query)
+    return {
+      data: this.forecastQuestionMapper.toResponseList(data),
+      pagination
+    }
+  }
+
+  public async getDetails(id: string) {
+    const forecastQuestion = await this.forecastQuestionRepository.findById(id, {
+      populate: 'questionId'
+    })
+    if (!forecastQuestion) throw new AppError('Forecast question not found', StatusCodes.NOT_FOUND)
+    return this.forecastQuestionMapper.toResponse(forecastQuestion)
   }
 }

@@ -5,6 +5,7 @@ import { ResponseTransformer } from '~/common/utils'
 import { injectable } from 'tsyringe'
 import { ForecastTopicService } from '../forecast-topic/forecast-topic.service'
 import { ForecastQuestionService } from '../forecast-question/forecast-question.service'
+import { ForecastMapper } from './forecast.mapper'
 
 @injectable()
 export class ForecastController {
@@ -37,14 +38,5 @@ export class ForecastController {
   public async importTopics(req: Request, res: Response) {
     await this.forecastTopicService.importTopics(req.params.id, req.validated.body.topics)
     return ResponseTransformer.successNoData(res, 'Topics imported successfully')
-  }
-
-  public async importQuestions(req: Request, res: Response) {
-    await this.forecastQuestionService.importQuestions(
-      req.params.id,
-      req.validated.body.topicId,
-      req.validated.body.questions
-    )
-    return ResponseTransformer.successNoData(res, 'Questions imported successfully')
   }
 }

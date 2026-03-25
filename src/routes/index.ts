@@ -9,6 +9,8 @@ import { questionRoutes } from '../modules/question/question.route'
 import { topicRoutes } from '../modules/topic/topic.route'
 import { voiceRoutes } from '../modules/voice/voice.route'
 import { fileRoutes } from '~/modules/file/file.route'
+import { forecastTopicRoutes } from '~/modules/forecast-topic/forecast-topic.route'
+import { forecastQuestionRoutes } from '~/modules/forecast-question/forecast-question.route'
 
 const router = express.Router()
 
@@ -22,5 +24,7 @@ router.use('/question', questionRoutes)
 router.use('/topic', topicRoutes)
 router.use('/voice', voiceRoutes)
 router.use('/file', fileRoutes)
+router.use('/forecast-topic', forecastTopicRoutes)
+router.use('/forecast-question', forecastQuestionRoutes)
 
 export const APIs_V1 = router

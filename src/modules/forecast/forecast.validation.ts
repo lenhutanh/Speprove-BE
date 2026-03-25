@@ -37,15 +37,3 @@ export const importTopicsSchema = updateSchema({
     )
     .default([])
 })
-
-export const importQuestionsSchema = updateSchema({
-  topicId: objectIdSchema,
-  questions: z
-    .array(
-      z.object({
-        questionId: objectIdSchema,
-        order: z.number().int().min(0).default(0)
-      })
-    )
-    .default([])
-})

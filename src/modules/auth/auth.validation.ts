@@ -24,3 +24,7 @@ export const verifySchema = createSchema({
   email: emailSchema,
   otp: otpSchema
 })
+
+export const forgotPasswordSchema = createSchema({
+  email: emailSchema
+})
