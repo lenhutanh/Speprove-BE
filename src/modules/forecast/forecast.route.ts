@@ -1,11 +1,6 @@
 import express from 'express'
 import { validateMiddleware } from '~/common/middlewares'
-import {
-  createForecastSchema,
-  getForecastsSchema,
-  importQuestionsSchema,
-  importTopicsSchema
-} from './forecast.validation'
+import { createForecastSchema, getForecastsSchema, importTopicsSchema } from './forecast.validation'
 import { bindHandler } from '~/common/utils'
 import { ForecastController } from './forecast.controller'
 import { container } from 'tsyringe'
@@ -51,13 +46,5 @@ router.route('/:id/import-topics').post(
   validateMiddleware(importTopicsSchema),
   bindHandler(ForecastController, 'importTopics')
 )
-
-router
-  .route('/:id/import-questions')
-  .post(
-    authMiddleware.isAuthorized,
-    validateMiddleware(importQuestionsSchema),
-    bindHandler(ForecastController, 'importQuestions')
-  )
 
 export const forecastRoutes = router

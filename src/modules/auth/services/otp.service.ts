@@ -8,12 +8,12 @@ import { CACHE_CONFIG } from '../auth.constants'
 export class OtpService {
   constructor(@inject(TOKENS.ICacheService) private readonly cacheService: ICacheService) {}
   public async storeOtp(email: string, otp: string): Promise<void> {
-    const key = buildRedisKey(CACHE_CONFIG.OTP, email)
-    return await this.cacheService.set(key, otp, CACHE_CONFIG.OTP.TTL)
+    const key = buildRedisKey(CACHE_CONFIG.VERIFY, email)
+    return await this.cacheService.set(key, otp, CACHE_CONFIG.VERIFY.TTL)
   }
 
   public async verifyOtp(email: string, otp: string): Promise<boolean> {
-    const key = buildRedisKey(CACHE_CONFIG.OTP, email)
+    const key = buildRedisKey(CACHE_CONFIG.VERIFY, email)
     const cachedOtp = await this.cacheService.get<string>(key)
 
     if (!cachedOtp || cachedOtp !== otp) return false
@@ -23,7 +23,7 @@ export class OtpService {
   }
 
   public async deleteOtp(email: string): Promise<void> {
-    const key = buildRedisKey(CACHE_CONFIG.OTP, email)
+    const key = buildRedisKey(CACHE_CONFIG.VERIFY, email)
     await this.cacheService.delete(key)
   }
 }

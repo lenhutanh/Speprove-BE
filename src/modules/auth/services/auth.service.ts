@@ -165,4 +165,16 @@ export class AuthService {
     if (!userId) return
     await this.sessionService.deleteByUserId(userId)
   }
+
+  public async forgotPassword(data: { email: string }): Promise<void> {
+    const account = await this.accountService.findByEmail(data.email)
+    if (!account) throw new AppError('Account not found', StatusCodes.NOT_FOUND)
+
+    const otp = generateOtp()
+    await this.otpService.storeOtp(data.email, otp)
+    await this.cacheService.set(buildRedisKey(CACHE_CONFIG.VERIFY, data.email), otp, CACHE_CONFIG.VERIFY.TTL)
+
+    const { subject, htmlContent } = registerOtpTemplate(otp)
+    this.mailPublisher.publishSendOtp({ to: data.email, subject, htmlContent })
+  }
 }

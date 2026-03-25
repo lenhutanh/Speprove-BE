@@ -5,7 +5,7 @@ import { singleton } from 'tsyringe'
 import { GroupMapper } from '../group/group.mapper'
 
 @singleton()
-export class AccountMapper extends BaseMapper<AccountType, AccountResponseDto> {
+export class  AccountMapper extends BaseMapper<AccountType, AccountResponseDto> {
   constructor(private readonly groupMapper: GroupMapper) {
     super()
   }

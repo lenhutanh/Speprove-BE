@@ -1,7 +1,7 @@
 import express from 'express'
 import { AuthController } from '~/modules/auth/auth.controller'
 import { validateMiddleware } from '~/common/middlewares/validate.middleware'
-import { loginSchema, registerSchema, verifySchema } from './auth.validation'
+import { forgotPasswordSchema, loginSchema, registerSchema, verifySchema } from './auth.validation'
 import { bindHandler } from '~/common/utils'
 import { container } from 'tsyringe'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
@@ -18,8 +18,9 @@ router.post(
   bindHandler(AuthController, 'login')
 )
 router.post('/register', validateMiddleware(registerSchema), bindHandler(AuthController, 'register'))
-router.post('/verify', validateMiddleware(verifySchema), bindHandler(AuthController, 'verify'))
+router.post('/verify-otp', validateMiddleware(verifySchema), bindHandler(AuthController, 'verify'))
 router.post('/refresh', bindHandler(AuthController, 'refreshToken'))
 router.post('/logout', authMiddleware.isAuthorized, bindHandler(AuthController, 'logout'))
+router.post('/forgot-password', validateMiddleware(forgotPasswordSchema), bindHandler(AuthController, 'forgotPassword'))
 
 export const authRoutes = router

@@ -1,4 +1,4 @@
-import { Model, ClientSession, Types, UpdateQuery, QueryFilter } from 'mongoose'
+import { Model, ClientSession, Types, UpdateQuery, QueryFilter, PipelineStage } from 'mongoose'
 import { IBaseRepository, PaginatedResult, QueryOptions } from './base.repository.interface'
 
 export abstract class BaseRepository<T> implements IBaseRepository<T> {
@@ -226,5 +226,74 @@ export abstract class BaseRepository<T> implements IBaseRepository<T> {
 
   async bulkWrite(operations: any[], options?: QueryOptions): Promise<any> {
     return this.model.bulkWrite(operations, { session: options?.session })
+  }
+
+  // ==================== AGGREGATE ====================
+
+  protected async aggregate<R = any>(
+    pipeline: PipelineStage[],
+    options?: { session?: ClientSession; includeSoftDeleted?: boolean }
+  ): Promise<R[]> {
+    let finalPipeline = [...pipeline]
+
+    // Apply soft delete filter automatically
+    if (this.HAS_SOFT_DELETE && !options?.includeSoftDeleted) {
+      finalPipeline = [{ $match: { deletedAt: null } }, ...finalPipeline]
+    }
+
+    const agg = this.model.aggregate<R>(finalPipeline).allowDiskUse(true)
+
+    if (options?.session) {
+      agg.session(options.session)
+    }
+
+    return agg.exec()
+  }
+
+  protected async aggregatePaginate<R = any>(
+    pipeline: PipelineStage[],
+    page: number = 1,
+    limit: number = 10,
+    options?: { session?: ClientSession; includeSoftDeleted?: boolean }
+  ): Promise<PaginatedResult<R>> {
+    const safeLimit = Math.min(limit, this.MAX_PAGE_LIMIT)
+    const safePage = Math.max(page, 1)
+    const skip = (safePage - 1) * safeLimit
+
+    let finalPipeline = [...pipeline]
+
+    // Apply soft delete filter automatically
+    if (this.HAS_SOFT_DELETE && !options?.includeSoftDeleted) {
+      finalPipeline = [{ $match: { deletedAt: null } }, ...finalPipeline]
+    }
+
+    const result = await this.aggregate<any>(
+      [
+        ...finalPipeline,
+        {
+          $facet: {
+            data: [{ $skip: skip }, { $limit: safeLimit }],
+            metadata: [{ $count: 'total' }]
+          }
+        }
+      ],
+      options
+    )
+
+    const total = result?.[0]?.metadata?.[0]?.total ?? 0
+    const data = result?.[0]?.data ?? []
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit))
+
+    return {
+      data,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        totalPages,
+        hasNext: safePage < totalPages,
+        hasPrev: safePage > 1
+      }
+    }
   }
 }

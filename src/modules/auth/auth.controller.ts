@@ -46,6 +46,11 @@ export class AuthController {
     return ResponseTransformer.success(res, result, 'Refresh token successfully')
   }
 
+  public async forgotPassword(req: Request, res: Response) {
+    await this.authService.forgotPassword(req.validated.body)
+    return ResponseTransformer.successNoData(res, 'OTP sent to your email')
+  }
+
   private setAuthCookies(res: Response, tokens: { accessToken: string; refreshToken: string }): void {
     const isProduction = env.NODE_ENV === 'production'
     res.cookie('accessToken', tokens.accessToken, {

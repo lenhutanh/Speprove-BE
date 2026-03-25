@@ -1,6 +1,6 @@
 import { GroupResponseDto } from '../group/group.dto'
 
-export interface AccountResponseDto {
+export type AccountResponseDto = {
   id: string
   username: string
   email: string

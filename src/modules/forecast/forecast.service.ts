@@ -6,10 +6,14 @@ import { TOKENS } from '~/common/constants/tokens'
 import { IForecastRepository } from './repositories/forecast.repository.interface'
 import { ForecastType } from './forecast.model'
 import { AppError } from '~/common/errors'
+import { ForecastMapper } from './forecast.mapper'
 
 @singleton()
 export class ForecastService {
-  constructor(@inject(TOKENS.IForecastRepository) private readonly forecastRepository: IForecastRepository) {}
+  constructor(
+    @inject(TOKENS.IForecastRepository) private readonly forecastRepository: IForecastRepository,
+    private readonly forecastMapper: ForecastMapper
+  ) {}
   public async createNew(data: CreateForecastBodyType) {
     const existed = await this.forecastRepository.findOne({ quarter: data.quarter, year: data.year })
     if (existed) throw new AppError(`Forecast for Q${data.quarter} ${data.year} already exists`, StatusCodes.CONFLICT)
@@ -48,12 +52,18 @@ export class ForecastService {
       .sort(sortBy, sortOrder)
       .build()
 
-    return await this.forecastRepository.paginate(filter, page, limit, options)
+    const { data, pagination } = await this.forecastRepository.paginate(filter, page, limit, options)
+    return {
+      data: this.forecastMapper.toResponseList(data),
+      pagination
+    }
   }
 
   public async getDetails(id: string) {
-    const forecast = await this.forecastRepository.findById(id)
+    const forecast = await this.forecastRepository.findById(id, {
+      populate: 'thumbnailId'
+    })
     if (!forecast) throw new AppError('Forecast not found', StatusCodes.NOT_FOUND)
-    return forecast
+    return this.forecastMapper.toResponse(forecast)
   }
 }

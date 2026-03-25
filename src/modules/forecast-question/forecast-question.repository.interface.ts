@@ -1,5 +1,7 @@
 import { IBaseRepository } from '~/common/base'
 import { ForecastQuestionType } from './forecast-question.model'
+import { GetForecastQuestionType } from './forecast-question.validation'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface IForecastQuestionRepository extends IBaseRepository<ForecastQuestionType> {}
+export interface IForecastQuestionRepository extends IBaseRepository<ForecastQuestionType> {
+  getList(query: GetForecastQuestionType): Promise<any>
+}

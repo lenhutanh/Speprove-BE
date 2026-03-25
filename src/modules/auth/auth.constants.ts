@@ -3,8 +3,8 @@ export const CACHE_CONFIG = {
     PREFIX: 'auth:register',
     TTL: 300
   },
-  OTP: {
-    PREFIX: 'auth:otp',
+  VERIFY: {
+    PREFIX: 'auth:verify',
     TTL: 180
   }
 }
