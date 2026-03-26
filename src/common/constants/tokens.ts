@@ -48,5 +48,11 @@ export const TOKENS = {
   IForecastTopicRepository: Symbol('IForecastTopicRepository'),
 
   // Forecast question
-  IForecastQuestionRepository: Symbol('IForecastQuestionRepository')
+  IForecastQuestionRepository: Symbol('IForecastQuestionRepository'),
+
+  // Speaking session
+  ISpeakingSessionRepository: Symbol('ISpeakingSessionRepository'),
+
+  // Attempt
+  IAttemptRepository: Symbol('IAttemptRepository')
 }

@@ -20,6 +20,8 @@ import { registerMailModule } from '~/modules/mail/mail.di'
 import { registerQuestionAudioModule } from '~/modules/question-audio/question-audio.di'
 import { registerForecastTopicModule } from '~/modules/forecast-topic/forecast-topic.di'
 import { registerForecastQuestionModule } from '~/modules/forecast-question/forecast-question.di'
+import { registerSpeakingSessionModule } from '~/modules/speaking-session/speaking-session.di'
+import { registerAttemptModule } from '~/modules/attempt/attempt.di'
 
 export function setupContainer(): void {
   console.log('🔧 Setting up DI container...')
@@ -46,6 +48,8 @@ export function setupContainer(): void {
   registerQuestionAudioModule()
   registerForecastTopicModule()
   registerForecastQuestionModule()
+  registerSpeakingSessionModule()
+  registerAttemptModule()
 
   console.log('✅ DI container ready\n')
 }
