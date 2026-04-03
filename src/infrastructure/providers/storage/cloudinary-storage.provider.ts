@@ -2,8 +2,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import streamifier from 'streamifier'
 import { singleton } from 'tsyringe'
 import { env } from '~/common/config'
-
-type ResourceType = 'image' | 'video' | 'raw'
+import { UPLOAD_PRESET_MAP, UploadConfig, UploadPreset } from '~/common/constants/constants'
 
 @singleton()
 export class CloudinaryStorageProvider {
@@ -15,51 +14,51 @@ export class CloudinaryStorageProvider {
     })
   }
 
-  async uploadImage(fileBuffer: Buffer, folder: string): Promise<{ url: string; publicId: string; bytes: number }> {
-    const result = await this.uploadFile(fileBuffer, folder, 'image')
-    return {
-      url: result.secure_url,
-      publicId: result.public_id,
-      bytes: result.bytes
-    }
-  }
-
-  async uploadAudio(fileBuffer: Buffer, folder: string): Promise<{ url: string; publicId: string; bytes: number }> {
-    const result = await this.uploadFile(fileBuffer, folder, 'video', 'mp3')
-    return {
-      url: result.secure_url,
-      publicId: result.public_id,
-      bytes: result.bytes
-    }
-  }
-
-  async uploadFile(
+  async upload(
     fileBuffer: Buffer,
     folder: string,
-    resourceType: ResourceType = 'raw',
-    format?: string
-  ): Promise<any> {
+    preset: UploadPreset,
+    override?: Partial<UploadConfig>
+  ): Promise<{ url: string; publicId: string; bytes: number }> {
+    const baseConfig = UPLOAD_PRESET_MAP[preset]
+
+    const finalConfig: UploadConfig = {
+      ...baseConfig,
+      ...override
+    }
+
+    const result = await this._uploadStream(fileBuffer, folder, finalConfig)
+
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+      bytes: result.bytes
+    }
+  }
+
+  private async _uploadStream(fileBuffer: Buffer, folder: string, config: UploadConfig): Promise<any> {
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder,
-          resource_type: resourceType,
-          format,
-          transformation: [{ quality: 'auto' }, { fetch_format: 'auto' }]
+          resource_type: config.resource_type,
+          ...(config.format ? { format: config.format } : {}),
+          ...(config.transformation ? { transformation: config.transformation } : {})
         },
         (error, result) => {
           if (error) return reject(error)
           resolve(result)
         }
       )
+
       streamifier.createReadStream(fileBuffer).pipe(stream)
     })
   }
 
-  async deleteFile(publicId: string, resourceType: ResourceType = 'image'): Promise<void> {
-    return new Promise((resolve, reject) => {
-      cloudinary.uploader.destroy(publicId, { resource_type: resourceType }, (error, result) => {
-        if (error) return reject(error)
+  async deleteFile(publicId: string, resourceType: 'image' | 'video' | 'raw' = 'image') {
+    return new Promise<void>((resolve, reject) => {
+      cloudinary.uploader.destroy(publicId, { resource_type: resourceType }, (err) => {
+        if (err) return reject(err)
         resolve()
       })
     })

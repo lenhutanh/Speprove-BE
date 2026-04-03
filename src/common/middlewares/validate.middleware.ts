@@ -9,7 +9,6 @@ export const validateMiddleware = (schema: ZodSchema<any>) => {
         params: req.params,
         query: req.query
       })
-      console.log('🚀 ~ validateMiddleware ~ parsed:', parsed)
 
       req.validated = parsed
 

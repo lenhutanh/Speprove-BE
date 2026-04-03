@@ -5,7 +5,6 @@ import { ResponseTransformer } from '~/common/utils'
 import { injectable } from 'tsyringe'
 import { ForecastTopicService } from '../forecast-topic/forecast-topic.service'
 import { ForecastQuestionService } from '../forecast-question/forecast-question.service'
-import { ForecastMapper } from './forecast.mapper'
 
 @injectable()
 export class ForecastController {

@@ -10,14 +10,14 @@ export const PASSWORD_RULE_MESSAGE = 'Password must include at least 1 letter, 1
 export const OTP_RULE = /^[0-9]{6}$/
 export const OTP_RULE_MESSAGE = 'OTP is invalid'
 
-export const objectIdSchema = z
-  .string()
-  .refine((val) => Types.ObjectId.isValid(val), {
-    message: 'Invalid ObjectId format'
-  })
-  .transform((val) => new Types.ObjectId(val))
+export const OBJECT_ID_RULE = /^[0-9a-fA-F]{24}$/
+export const OBJECT_ID_RULE_MESSAGE = 'Invalid ObjectId format'
+
+export const objectIdSchema = z.string().regex(OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE)
+
 export const emailSchema = z.string().regex(EMAIL_RULE, EMAIL_RULE_MESSAGE)
 export const passwordSchema = z.string().regex(PASSWORD_RULE, PASSWORD_RULE_MESSAGE)
+
 export const requiredString = (min = 1, max = 255, trim = true) =>
   z
     .string()

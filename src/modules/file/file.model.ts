@@ -40,7 +40,9 @@ export const File = models.File || model<FileType>('File', fileSchema)
 
 const audioSchema = new Schema({
   duration: { type: Number },
-  transcript: { type: String }
+  transcript: { type: String },
+  aiAudioUrl: { type: String },
+  aiStorageKey: { type: String }
 })
 
 export type AudioFileType = FileType & InferSchemaType<typeof audioSchema> & { kind: typeof FILE_KIND.AUDIO }

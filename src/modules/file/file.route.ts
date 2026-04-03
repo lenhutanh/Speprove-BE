@@ -12,7 +12,7 @@ const router = express.Router()
 const authMiddleware = container.resolve(AuthMiddleware)
 
 router
-  .route('/upload/image')
+  .route('/upload-image')
   .post(
     authMiddleware.isAuthorized,
     multerMiddleware.uploadImage,
@@ -22,7 +22,7 @@ router
   )
 
 router
-  .route('/upload/audio')
+  .route('/upload-audio')
   .post(
     authMiddleware.isAuthorized,
     multerMiddleware.uploadAudio,

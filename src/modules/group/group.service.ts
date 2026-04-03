@@ -4,6 +4,7 @@ import { TOKENS } from '~/common/constants/tokens'
 import { IGroupRepository } from './repositories/group.repository.interface'
 import { CreateGroupBodyType, UpdateGroupBodyType } from './types/group.type'
 import { AppError } from '~/common/errors'
+import { toObjectIds } from '~/common/utils'
 
 @singleton()
 export class GroupService {
@@ -14,7 +15,11 @@ export class GroupService {
       throw new AppError('Group name already exists', StatusCodes.CONFLICT)
     }
 
-    const group = await this.groupRepository.create(data, {
+    const createData = {
+      ...data,
+      permissionIds: toObjectIds(data.permissionIds)
+    }
+    const group = await this.groupRepository.create(createData, {
       populate: 'permissionIds'
     })
 

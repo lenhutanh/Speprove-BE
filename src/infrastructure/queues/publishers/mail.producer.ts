@@ -1,9 +1,9 @@
 import { singleton } from 'tsyringe'
-import { BasePublisher } from '~/infrastructure/queues/publishers/base.publisher'
+import { BaseProducer } from '~/infrastructure/queues/publishers/base.producer'
 import { JOB_NAME, QUEUE_NAME, QueueFactory } from '~/infrastructure/queues'
 
 @singleton()
-export class MailPublisher extends BasePublisher {
+export class MailProducer extends BaseProducer {
   constructor(queueFactory: QueueFactory) {
     super(queueFactory, QUEUE_NAME.MAIL)
   }

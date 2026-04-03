@@ -5,4 +5,6 @@ export type ForecastQuestionResponseDto = {
   order: number
   content: string
   part: 1 | 2 | 3
+  bulletPoints?: string[]
+  part2Content?: string
 }

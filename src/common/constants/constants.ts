@@ -42,7 +42,15 @@ export const ACCOUNT_PLANS = {
 export const WHITELIST_DOMAINS = ['http://localhost:3000']
 
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-export const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/ogg', 'audio/webm']
+export const ALLOWED_AUDIO_TYPES = [
+  'audio/mpeg',
+  'audio/wav',
+  'audio/mp4',
+  'audio/ogg',
+  'audio/webm',
+  'video/webm',
+  'video/mp4'
+]
 export const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime']
 
 export const LIMIT_IMAGE_SIZE = 5 * 1024 * 1024
@@ -125,7 +133,8 @@ export const IMAGE_PURPOSE = {
 export type ImagePurpose = (typeof IMAGE_PURPOSE)[keyof typeof IMAGE_PURPOSE]
 
 export const AUDIO_PURPOSE = {
-  QUESTION_AUDIO: 'question/audio'
+  QUESTION_AUDIO: 'question/audio',
+  USER_RECORDINGS: 'practice/recordings'
 } as const
 
 export type AudioPurpose = (typeof AUDIO_PURPOSE)[keyof typeof AUDIO_PURPOSE]
@@ -136,5 +145,69 @@ export const PURPOSE_TO_FOLDER: Record<ImagePurpose | AudioPurpose, string> = {
   [IMAGE_PURPOSE.FORECAST_THUMBNAIL]: CLOUD_FOLDERS.FORECAST_THUMBNAIL,
 
   // Audio
-  [AUDIO_PURPOSE.QUESTION_AUDIO]: CLOUD_FOLDERS.QUESTION_AUDIOS
+  [AUDIO_PURPOSE.QUESTION_AUDIO]: CLOUD_FOLDERS.QUESTION_AUDIOS,
+  [AUDIO_PURPOSE.USER_RECORDINGS]: CLOUD_FOLDERS.USER_RECORDINGS
 }
+
+export const SPEAKING_SESSION_MODE = {
+  PRACTICE: 'practice',
+  MOCK: 'mock'
+} as const
+
+export const SPEAKING_PART = [1, 2, 3] as const
+
+export const SESSION_STATUS = {
+  IN_PROGRESS: 0,
+  COMPLETED: 1,
+  FAILED: 2
+} as const
+
+export const ATTEMPT_STATUS = {
+  PENDING: 0,
+  PROCESSING: 1,
+  DONE: 2,
+  FAILED: 3
+} as const
+
+export type AttemptStatus = (typeof ATTEMPT_STATUS)[keyof typeof ATTEMPT_STATUS]
+
+export const AZURE_TICKS_PER_MS = 10_000
+export const AZURE_TICKS_PER_SECOND = 10_000_000
+export const MS_PER_SECOND = 1_000
+export const SECONDS_PER_MINUTE = 60
+
+export enum UploadPreset {
+  IMAGE_DEFAULT = 'IMAGE_DEFAULT',
+  AUDIO_AI = 'AUDIO_AI',
+  AUDIO_PLAYBACK = 'AUDIO_PLAYBACK'
+}
+
+export type UploadConfig = {
+  resource_type: 'image' | 'video' | 'raw'
+  format?: string
+  transformation?: any[]
+}
+
+export const UPLOAD_PRESET_MAP: Record<UploadPreset, UploadConfig> = {
+  [UploadPreset.IMAGE_DEFAULT]: {
+    resource_type: 'image',
+    transformation: [{ quality: 'auto' }, { fetch_format: 'auto' }]
+  },
+
+  [UploadPreset.AUDIO_AI]: {
+    resource_type: 'raw',
+    format: 'wav'
+  },
+
+  [UploadPreset.AUDIO_PLAYBACK]: {
+    resource_type: 'video',
+    format: 'mp3'
+  }
+}
+
+export const SPEAKING_SESSION_TYPE = {
+  MOCK_PART_1: 'mock_p1',
+  MOCK_PART_2: 'mock_p2',
+  MOCK_PART_3: 'mock_p3',
+  FULL_TEST: 'full_test'
+} as const

@@ -1,7 +1,7 @@
 import { JobsOptions } from 'bullmq'
 import { QueueFactory, QueueName } from '~/infrastructure/queues'
 
-export abstract class BasePublisher {
+export abstract class BaseProducer {
   constructor(
     protected readonly queueFactory: QueueFactory,
     private readonly queueName: QueueName

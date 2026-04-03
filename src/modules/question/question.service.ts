@@ -9,14 +9,14 @@ import { QuestionType } from './question.model'
 import { CreateQuestionBodyType, UpdateQuestionBodyType } from './types/question.type'
 import { AppError } from '~/common/errors'
 import { JOB_NAME } from '~/infrastructure/queues'
-import { FilePublisher } from '../../infrastructure/queues/publishers/file.publisher'
-import { checkSpelling, getSuggestions } from '~/common/utils'
+import { FileProducer } from '../../infrastructure/queues/publishers/file.producer'
+import { checkSpelling, getSuggestions, toObjectId } from '~/common/utils'
 
 @singleton()
 export class QuestionService {
   constructor(
     private readonly voiceService: VoiceService,
-    private readonly filePublisher: FilePublisher,
+    private readonly fileProducer: FileProducer,
     @inject(TOKENS.IQuestionRepository) private readonly questionRepository: IQuestionRepository
   ) {}
 
@@ -29,17 +29,23 @@ export class QuestionService {
       }))
       throw new AppError(`Spelling errors: ${JSON.stringify(suggestions)}`)
     }
-
+    const createData = {
+      ...data,
+      topicId: toObjectId(data.topicId)
+    }
     let question: QuestionType | null = null
     switch (data.part) {
       case PartKind.ONE:
-        question = await this.questionRepository.createPart1Question(data)
+        question = await this.questionRepository.createPart1Question(createData)
         break
       case PartKind.TWO:
-        question = await this.questionRepository.createPart2Question(data)
+        question = await this.questionRepository.createPart2Question(createData)
         break
       case PartKind.THREE:
-        question = await this.questionRepository.createPart3Question(data)
+        question = await this.questionRepository.createPart3Question({
+          ...createData,
+          parentId: toObjectId(data.parentId)
+        })
         break
     }
 
@@ -58,7 +64,7 @@ export class QuestionService {
           folder: CLOUD_FOLDERS.QUESTION_AUDIOS
         }
       }))
-      await this.filePublisher.addBulk(jobs)
+      await this.fileProducer.addBulk(jobs)
     }
     return question
   }

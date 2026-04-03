@@ -14,7 +14,7 @@ import { LoginBodyType, RegisterBodyType, VerifyBodyType } from '../types/auth.t
 import { AppError } from '~/common/errors'
 import { ICacheService } from '~/infrastructure/cache'
 import { CACHE_CONFIG } from '../auth.constants'
-import { MailPublisher } from '~/infrastructure/queues/publishers/mail.publisher'
+import { MailProducer } from '~/infrastructure/queues/publishers/mail.producer'
 
 @singleton()
 export class AuthService {
@@ -22,7 +22,7 @@ export class AuthService {
     private readonly accountService: AccountService,
     private readonly otpService: OtpService,
     private readonly sessionService: SessionService,
-    private readonly mailPublisher: MailPublisher,
+    private readonly mailProducer: MailProducer,
     @inject(TOKENS.ITokenService) private readonly tokenService: ITokenService,
     @inject(TOKENS.ICacheService) private readonly cacheService: ICacheService
   ) {}
@@ -76,7 +76,7 @@ export class AuthService {
     await this.cacheService.set(buildRedisKey(CACHE_CONFIG.REGISTER, data.email), tempData, CACHE_CONFIG.REGISTER.TTL)
 
     const { subject, htmlContent } = registerOtpTemplate(otp)
-    this.mailPublisher.publishSendOtp({ to: data.email, subject, htmlContent })
+    this.mailProducer.publishSendOtp({ to: data.email, subject, htmlContent })
   }
 
   public async verify(data: VerifyBodyType) {
@@ -175,6 +175,6 @@ export class AuthService {
     await this.cacheService.set(buildRedisKey(CACHE_CONFIG.VERIFY, data.email), otp, CACHE_CONFIG.VERIFY.TTL)
 
     const { subject, htmlContent } = registerOtpTemplate(otp)
-    this.mailPublisher.publishSendOtp({ to: data.email, subject, htmlContent })
+    this.mailProducer.publishSendOtp({ to: data.email, subject, htmlContent })
   }
 }

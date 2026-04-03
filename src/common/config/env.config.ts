@@ -38,7 +38,10 @@ const envSchema = z.object({
   AZURE_SPEECH_REGION: z.string(),
 
   // LOG_LEVEL
-  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('info')
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('info'),
+
+  // Groq
+  GROQ_API_KEY: z.string()
 })
 
 const parsed = envSchema.safeParse(process.env)

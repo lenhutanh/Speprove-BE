@@ -2,7 +2,7 @@ import { singleton } from 'tsyringe'
 import { QUEUE_NAME, QueueFactory } from '~/infrastructure/queues'
 
 @singleton()
-export class FilePublisher {
+export class FileProducer {
   constructor(private readonly queueFactory: QueueFactory) {}
 
   private get queue() {

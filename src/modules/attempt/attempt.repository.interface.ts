@@ -1,5 +1,6 @@
 import { IBaseRepository } from '~/common/base'
 import { AttemptType } from './attempt.model'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface IAttemptRepository extends IBaseRepository<AttemptType> {}
+export interface IAttemptRepository extends IBaseRepository<AttemptType> {
+  createOrUpdateAttempt(data: Partial<AttemptType>): Promise<AttemptType>
+}

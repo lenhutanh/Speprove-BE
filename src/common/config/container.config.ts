@@ -22,6 +22,8 @@ import { registerForecastTopicModule } from '~/modules/forecast-topic/forecast-t
 import { registerForecastQuestionModule } from '~/modules/forecast-question/forecast-question.di'
 import { registerSpeakingSessionModule } from '~/modules/speaking-session/speaking-session.di'
 import { registerAttemptModule } from '~/modules/attempt/attempt.di'
+import { GroqSTTProvider } from '~/infrastructure/providers/stt'
+import { GroqLLMProvider } from '~/infrastructure/providers/llm/groq.llm'
 
 export function setupContainer(): void {
   console.log('🔧 Setting up DI container...')
@@ -32,6 +34,8 @@ export function setupContainer(): void {
   container.registerSingleton(AppEventEmitter, AppEventEmitter)
   container.registerSingleton(QueueFactory, QueueFactory)
   container.registerSingleton(WorkerFactory, WorkerFactory)
+  container.registerSingleton(TOKENS.ISTTProvider, GroqSTTProvider)
+  container.registerSingleton(TOKENS.ILLMProvider, GroqLLMProvider)
 
   // Module
   registerAccountModule()

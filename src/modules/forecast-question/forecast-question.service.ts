@@ -56,7 +56,7 @@ export class ForecastQuestionService {
 
   public async getDetails(id: string) {
     const forecastQuestion = await this.forecastQuestionRepository.findById(id, {
-      populate: 'questionId'
+      populate: { path: 'questionId', populate: { path: 'parentId' } }
     })
     if (!forecastQuestion) throw new AppError('Forecast question not found', StatusCodes.NOT_FOUND)
     return this.forecastQuestionMapper.toResponse(forecastQuestion)

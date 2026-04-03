@@ -23,7 +23,6 @@ export const questionBodySchema = z.discriminatedUnion('part', [
   z.object({
     ...commonFields,
     part: z.literal(PartKind.THREE),
-    category: z.nativeEnum(PART23_CATEGORY),
     parentId: objectIdSchema
   })
 ])

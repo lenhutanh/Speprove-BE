@@ -1,6 +1,7 @@
 export const QUEUE_NAME = {
-  FILE: 'file_queue',
-  MAIL: 'mail_queue'
+  FILE: 'file-queue',
+  MAIL: 'mail-queue',
+  SPEAKING: 'speaking-queue'
 } as const
 
 export type QueueName = (typeof QUEUE_NAME)[keyof typeof QUEUE_NAME]
@@ -14,5 +15,11 @@ export const JOB_NAME = {
   },
   QUESTION_AUDIO: {
     GENERATE: 'question-audio:generate'
+  },
+  SPEAKING: {
+    TRANSCRIBE: 'speaking:transcribe',
+    ASSESS: 'speaking:assess',
+    EVALUATE: 'speaking:evaluate',
+    SCORE_SESSION: 'speaking:score-session'
   }
 } as const
