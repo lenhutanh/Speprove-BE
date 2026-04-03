@@ -1,5 +1,5 @@
 export * from './mail.di'
-export * from '../../infrastructure/queues/publishers/mail.publisher'
+export * from '../../infrastructure/queues/publishers/mail.producer'
 export * from './mail.service'
 export * from './mail.service.interface'
 export * from './mail.consumer'

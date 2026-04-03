@@ -1,4 +1,4 @@
-import { z, ZodRawShape } from 'zod'
+import { z, ZodRawShape, ZodTypeAny } from 'zod'
 import { objectIdSchema } from '~/common/utils/validators.util'
 
 export const baseQueryFields = {
@@ -14,14 +14,16 @@ export const createSchema = <T extends ZodRawShape>(fields: T) =>
     body: z.object(fields).strip()
   })
 
-export const createUnionSchema = <T extends z.ZodDiscriminatedUnion<any, any>>(union: T) =>
+export const createUnionSchema = <T extends ZodTypeAny>(schema: T) =>
   z.object({
-    body: union
+    body: schema
   })
 
 export const updateSchema = <T extends ZodRawShape>(fields: T) =>
   z.object({
-    params: z.object({ id: objectIdSchema }),
+    params: z.object({
+      id: objectIdSchema
+    }),
     body: z.object(fields).strip()
   })
 
@@ -35,4 +37,8 @@ export const querySchema = <T extends ZodRawShape>(filterFields: T) =>
       .strip()
   })
 
-export const idParamSchema = z.object({ params: z.object({ id: objectIdSchema }) })
+export const idParamSchema = z.object({
+  params: z.object({
+    id: objectIdSchema
+  })
+})

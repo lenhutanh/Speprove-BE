@@ -54,5 +54,11 @@ export const TOKENS = {
   ISpeakingSessionRepository: Symbol('ISpeakingSessionRepository'),
 
   // Attempt
-  IAttemptRepository: Symbol('IAttemptRepository')
+  IAttemptRepository: Symbol('IAttemptRepository'),
+
+  // STT
+  ISTTProvider: Symbol('ISTTProvider'),
+
+  // LLM
+  ILLMProvider: Symbol('ILLMProvider')
 }

@@ -1,17 +1,9 @@
 import { Types } from 'mongoose'
-import { AppError } from '../errors/app.error'
-import { StatusCodes } from 'http-status-codes'
 
-export const toObjectId = (id: string) => {
-  if (!Types.ObjectId.isValid(id)) {
-    throw new AppError(`Invalid ObjectId: ${id}`, StatusCodes.BAD_REQUEST)
-  }
+export const toObjectId = (id: string) => new Types.ObjectId(id)
 
-  return new Types.ObjectId(id)
-}
-
-export const toObjectIds = (ids?: string[]) => {
+export const toObjectIds = (ids?: string[]): Types.ObjectId[] => {
   if (!ids) return []
 
-  return ids.map(toObjectId)
+  return ids.map(toObjectId).filter((id): id is Types.ObjectId => id !== undefined)
 }

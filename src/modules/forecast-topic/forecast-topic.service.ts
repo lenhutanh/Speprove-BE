@@ -16,12 +16,12 @@ export class ForecastTopicService {
   ) {}
 
   public async importTopics(forecastId: string, selectedTopics: { topicId: string; order: number }[]) {
-    const topicIds = selectedTopics.map((t) => t.topicId)
+    const topicIds = selectedTopics.map((t) => toObjectId(t.topicId))
     await this.forecastTopicRepository.withTransaction(async (session) => {
       await this.forecastTopicRepository.hardDeleteMany(
         {
           forecastId: toObjectId(forecastId),
-          topicId: { $nin: topicIds.map((id) => toObjectId(id)) }
+          topicId: { $nin: topicIds }
         },
         { session }
       )
@@ -47,7 +47,6 @@ export class ForecastTopicService {
 
   public async getList(query: GetForecastTopicType) {
     const { data, pagination } = await this.forecastTopicRepository.getList(query)
-    console.log('🚀 ~ ForecastTopicService ~ getList ~ data:', data)
     return {
       data: this.forecastTopicMapper.toResponseList(data),
       pagination

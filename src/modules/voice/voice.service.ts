@@ -8,7 +8,7 @@ import { QueryBuilder } from '~/common/base/query-builder'
 import { CreateVoiceBodyType, UpdateVoiceBodyType } from './types/voice.type'
 import { AppError } from '~/common/errors'
 import { getVoiceSampleText } from '~/common/utils'
-import { AzureSpeechProvider } from '~/infrastructure/providers/ai/azure/azure-speech.provider'
+import { AzureSpeechProvider } from '~/infrastructure/providers/tts/azure-speech.provider'
 import { CloudinaryStorageProvider } from '~/infrastructure/providers/storage/cloudinary-storage.provider'
 import { FileService } from '../file/file.service'
 
