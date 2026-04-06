@@ -12,4 +12,9 @@ export class AttemptController {
     const attempt = await this.attemptService.createNew(req.user._id, req.validated.body)
     return ResponseTransformer.success(res, attempt, 'Create attempt successfully')
   }
+
+  public async getDetails(req: AuthenticatedRequest, res: Response) {
+    const attempt = await this.attemptService.getDetails(req.user._id, req.validated.params.id)
+    return ResponseTransformer.success(res, attempt, 'Get attempt details successfully')
+  }
 }

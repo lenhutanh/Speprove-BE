@@ -8,16 +8,15 @@ import { TopicType } from '../topic/topic.model'
 export class ForecastTopicMapper extends BaseMapper<ForecastTopicType, ForecastTopicResponseDto> {
   toResponse(entity: ForecastTopicType): ForecastTopicResponseDto {
     const topic = entity.topicId as unknown as TopicType
-    console.log('🚀 ~ ForecastTopicMapper ~ toResponse ~ topic:', topic)
+    const isPopulated = topic && typeof topic === 'object' && '_id' in topic
 
     return {
       id: entity._id.toString(),
       forecastId: entity.forecastId.toString(),
       order: entity.order,
-      topicId: topic._id.toString(),
-      name: topic.name,
-      slug: topic.slug,
-      part: topic.part as 1 | 2 | 3
+      topicId: isPopulated ? topic._id.toString() : entity.topicId.toString(),
+      name: isPopulated ? topic.name : '',
+      slug: isPopulated ? topic.slug : ''
     }
   }
 }

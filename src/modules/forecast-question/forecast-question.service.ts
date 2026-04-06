@@ -2,10 +2,10 @@ import { inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { IForecastQuestionRepository } from './forecast-question.repository.interface'
 import { toObjectId } from '~/common/utils'
-import { GetForecastQuestionType } from './forecast-question.validation'
 import { ForecastQuestionMapper } from './forecast-question.mapper'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
+import { ForecastQuestionQueryType } from './forecast-question.type'
 
 @singleton()
 export class ForecastQuestionService {
@@ -46,10 +46,10 @@ export class ForecastQuestionService {
     })
   }
 
-  public async getList(query: GetForecastQuestionType) {
+  public async getList(query: ForecastQuestionQueryType) {
     const { data, pagination } = await this.forecastQuestionRepository.getList(query)
     return {
-      data: this.forecastQuestionMapper.toResponseList(data),
+      data: this.forecastQuestionMapper.toResponseList(data, query.part),
       pagination
     }
   }

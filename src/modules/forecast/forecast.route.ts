@@ -1,6 +1,6 @@
 import express from 'express'
 import { validateMiddleware } from '~/common/middlewares'
-import { createForecastSchema, getForecastsSchema, importTopicsSchema } from './forecast.validation'
+import { createForecastSchema, forecastQuerySchema, importTopicsSchema } from './forecast.validation'
 import { bindHandler } from '~/common/utils'
 import { ForecastController } from './forecast.controller'
 import { container } from 'tsyringe'
@@ -22,7 +22,7 @@ router
   .get(
     authMiddleware.isAuthorizedOptional,
     // authMiddleware.hasPermission('FORECAST:VIEW:ALL'),
-    validateMiddleware(getForecastsSchema),
+    validateMiddleware(forecastQuerySchema),
     bindHandler(ForecastController, 'getList')
   )
 

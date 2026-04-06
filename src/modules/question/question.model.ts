@@ -32,12 +32,6 @@ const part2Schema = new Schema({
 export const Part2Question = Question.discriminators?.[PartKind.TWO] || Question.discriminator(2, part2Schema)
 
 const part3Schema = new Schema({
-  category: {
-    type: String,
-    enum: Object.values(PART23_CATEGORY),
-    required: true,
-    index: true
-  },
   parentId: {
     type: Schema.Types.ObjectId,
     ref: 'Question',

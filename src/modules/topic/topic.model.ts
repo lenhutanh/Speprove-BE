@@ -6,7 +6,6 @@ const topicSchema = new Schema(
     ...BaseSchemaContent,
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, trim: true },
-    part: { type: Number, required: true },
     status: { type: Number, required: true, default: 1 }
   },
   BaseSchemaOptions

@@ -6,26 +6,24 @@ export const createForecastSchema = createSchema({
   name: z.string().optional(),
   description: z.string().optional(),
   thumbnailId: objectIdSchema.optional(),
-  quarter: z.number().min(1).max(3),
-  year: z.number(),
+  quarter: z.number().int().min(1).max(3),
+  year: z.number().int().min(2020),
   status: z.number().optional()
 })
 
 export const updateForecastSchema = updateSchema({
   name: z.string().optional(),
   description: z.string().optional(),
-  thumbnail: z.string().optional(),
-  quarter: z.number().optional(),
-  year: z.number().optional(),
+  thumbnailId: objectIdSchema.optional(),
+  quarter: z.number().int().min(1).max(3).optional(),
+  year: z.number().int().optional(),
   publishedAt: z.coerce.date().optional(),
   status: z.number().optional()
 })
 
-export const forecastFilterSchema = z.object({
+export const forecastQuerySchema = querySchema({
   quarter: z.coerce.number().min(1).max(3).optional()
 })
-
-export const getForecastsSchema = querySchema(forecastFilterSchema.shape)
 
 export const importTopicsSchema = updateSchema({
   topics: z

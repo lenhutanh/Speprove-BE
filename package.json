@@ -60,6 +60,8 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dictionary-en": "^3.2.0",
+    "dictionary-en-gb": "^2.4.0",
+    "dictionary-en-us": "^2.2.1",
     "edge-tts-node": "^1.5.7",
     "eventemitter2": "^6.4.9",
     "express": "^5.2.1",
