@@ -7,7 +7,7 @@ import { IForecastRepository } from './repositories/forecast.repository.interfac
 import { ForecastType } from './forecast.model'
 import { AppError } from '~/common/errors'
 import { ForecastMapper } from './forecast.mapper'
-import { toObjectId } from '~/common/utils'
+import { generateSlug, toObjectId } from '~/common/utils'
 
 @singleton()
 export class ForecastService {
@@ -16,19 +16,27 @@ export class ForecastService {
     private readonly forecastMapper: ForecastMapper
   ) {}
   public async createNew(data: CreateForecastBodyType) {
-    const existed = await this.forecastRepository.findOne({ quarter: data.quarter, year: data.year })
-    if (existed) throw new AppError(`Forecast for Q${data.quarter} ${data.year} already exists`, StatusCodes.CONFLICT)
-    const slug = `ielts-speaking-forecast-q${data.quarter}-${data.year}`
+    const existed = await this.forecastRepository.findOne({
+      quarter: data.quarter,
+      year: data.year
+    })
+    if (existed) {
+      throw new AppError(`Forecast for Q${data.quarter} ${data.year} already exists`, StatusCodes.CONFLICT)
+    }
+
     const name = data.name || `IELTS Speaking Forecast Q${data.quarter} ${data.year}`
+    const slug = generateSlug(name)
+
     const createData = {
       ...data,
       name,
       slug,
       thumbnailId: data.thumbnailId ? toObjectId(data.thumbnailId) : undefined
     }
-    return await this.forecastRepository.create(createData)
-  }
 
+    const forecast = await this.forecastRepository.create(createData)
+    return this.forecastMapper.toResponse(forecast)
+  }
   // async update(id: string, data: UpdateForecastBodyType) {
   //   const forecast = await this.forecastRepository.findById(id)
   //   if (!forecast) {

@@ -38,6 +38,12 @@ importers:
       dictionary-en:
         specifier: ^3.2.0
         version: 3.2.0
+      dictionary-en-gb:
+        specifier: ^2.4.0
+        version: 2.4.0
+      dictionary-en-us:
+        specifier: ^2.2.1
+        version: 2.2.1
       edge-tts-node:
         specifier: ^1.5.7
         version: 1.5.7
@@ -1115,6 +1121,12 @@ packages:
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
+
+  dictionary-en-gb@2.4.0:
+    resolution: {integrity: sha512-zwc7e6CM/+Em+v74a5/ia6663nwR9vvtEayaX5WkgvHD99al1qm/RbcdLludqX3mggYxXXFN1zN5hzyREW/DXg==}
+
+  dictionary-en-us@2.2.1:
+    resolution: {integrity: sha512-Z8mycV0ywTfjbUTi0JZfQHqBZhu4CYFtpf7KluSGpt3xHpFlal2S/hiK50tlPynOtR5K3pG5wCradnz1yxwOHA==}
 
   dictionary-en@3.2.0:
     resolution: {integrity: sha512-oujbJhuplUTlDntmOoultEcNyk8ge7cFI6yXNn7eJvpbBJOhGNhWtK0XjOJsiwl4EfIeyvDKwGB95vJXv1d+lQ==}
@@ -3524,6 +3536,10 @@ snapshots:
 
   detect-libc@2.1.2:
     optional: true
+
+  dictionary-en-gb@2.4.0: {}
+
+  dictionary-en-us@2.2.1: {}
 
   dictionary-en@3.2.0: {}
 

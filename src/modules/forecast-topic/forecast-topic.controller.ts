@@ -3,7 +3,6 @@ import { ForecastTopicService } from './forecast-topic.service'
 import { Request, Response } from 'express'
 import { ResponseTransformer } from '~/common/utils'
 import { ForecastQuestionService } from '../forecast-question/forecast-question.service'
-import { ForecastTopicMapper } from './forecast-topic.mapper'
 
 @singleton()
 export class ForecastTopicController {

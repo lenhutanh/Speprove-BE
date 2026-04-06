@@ -115,4 +115,11 @@ export class AttemptService {
 
     return forecastQuestion.content
   }
+
+  public async getDetails(userId: string, attemptId: string) {
+    const attempt = await this.attemptRepository.findById(attemptId)
+    if (!attempt) throw new AppError('Attempt not found', StatusCodes.NOT_FOUND)
+    if (attempt.userId.toString() !== userId) throw new AppError('Forbidden', StatusCodes.FORBIDDEN)
+    return this.attemptMapper.toResponse(attempt)
+  }
 }

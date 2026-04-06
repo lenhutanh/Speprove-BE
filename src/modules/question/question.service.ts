@@ -11,13 +11,15 @@ import { AppError } from '~/common/errors'
 import { JOB_NAME } from '~/infrastructure/queues'
 import { FileProducer } from '../../infrastructure/queues/publishers/file.producer'
 import { checkSpelling, getSuggestions, toObjectId } from '~/common/utils'
+import { QuestionMapper } from './question.mapper'
 
 @singleton()
 export class QuestionService {
   constructor(
     private readonly voiceService: VoiceService,
     private readonly fileProducer: FileProducer,
-    @inject(TOKENS.IQuestionRepository) private readonly questionRepository: IQuestionRepository
+    @inject(TOKENS.IQuestionRepository) private readonly questionRepository: IQuestionRepository,
+    private readonly questionMapper: QuestionMapper
   ) {}
 
   public async createNew(data: CreateQuestionBodyType) {
@@ -66,7 +68,7 @@ export class QuestionService {
       }))
       await this.fileProducer.addBulk(jobs)
     }
-    return question
+    return this.questionMapper.toResponse(question)
   }
 
   public async update(id: string, data: UpdateQuestionBodyType) {
@@ -85,9 +87,13 @@ export class QuestionService {
       .applyFilters(filters, ['topicId', 'part', 'status', 'createdAt'])
       .search(['content'], search)
       .sort(sortBy, sortOrder)
-      .populate('topicId')
+      // .populate('topicId')
       .build()
 
-    return await this.questionRepository.paginate(filter, page, limit, options)
+    const { data, pagination } = await this.questionRepository.paginate(filter, page, limit, options)
+    return {
+      data: this.questionMapper.toResponseList(data),
+      pagination
+    }
   }
 }

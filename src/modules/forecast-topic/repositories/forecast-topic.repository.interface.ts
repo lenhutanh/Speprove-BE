@@ -1,7 +1,7 @@
 import { IBaseRepository } from '~/common/base'
 import { ForecastTopicType } from '../forecast-topic.model'
-import { GetForecastTopicType } from '../forecast-topic.validation'
+import { ForecastTopicQueryType } from '../forecast-topic.type'
 
 export interface IForecastTopicRepository extends IBaseRepository<ForecastTopicType> {
-  getList(query: GetForecastTopicType): Promise<any>
+  getList(query: ForecastTopicQueryType): Promise<any>
 }

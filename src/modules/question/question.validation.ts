@@ -18,7 +18,7 @@ export const questionBodySchema = z.discriminatedUnion('part', [
     ...commonFields,
     part: z.literal(PartKind.TWO),
     category: z.nativeEnum(PART23_CATEGORY),
-    bulletPoints: z.array(z.string().trim()).optional()
+    bulletPoints: z.array(z.string().trim())
   }),
   z.object({
     ...commonFields,

@@ -3,7 +3,7 @@ import { ForecastTopic, ForecastTopicType } from '../forecast-topic.model'
 import { IForecastTopicRepository } from './forecast-topic.repository.interface'
 import { singleton } from 'tsyringe'
 import { PipelineStage, Types } from 'mongoose'
-import { GetForecastTopicType } from '../forecast-topic.validation'
+import { ForecastTopicQueryType } from '../forecast-topic.type'
 
 @singleton()
 export class ForecastTopicRepository extends BaseRepository<ForecastTopicType> implements IForecastTopicRepository {
@@ -11,9 +11,8 @@ export class ForecastTopicRepository extends BaseRepository<ForecastTopicType> i
     super(ForecastTopic)
   }
 
-  public async getList(query: GetForecastTopicType): Promise<any> {
-    const { page, limit, search, forecastId, topicId, part } = query ?? {}
-
+  public async getList(query: ForecastTopicQueryType): Promise<any> {
+    const { page, limit, search, forecastId, topicId, sortBy, sortOrder } = query ?? {}
     const pipeline: PipelineStage[] = [
       {
         $match: {
@@ -38,12 +37,6 @@ export class ForecastTopicRepository extends BaseRepository<ForecastTopicType> i
       { $unwind: '$topicId' }
     )
 
-    if (part) {
-      pipeline.push({
-        $match: { 'topicId.part': Number(part) }
-      })
-    }
-
     if (search) {
       pipeline.push({
         $match: {
@@ -52,7 +45,9 @@ export class ForecastTopicRepository extends BaseRepository<ForecastTopicType> i
       })
     }
 
-    pipeline.push({ $sort: { order: 1 } })
+    const sortDirection = sortOrder === 'desc' ? -1 : 1
+    const sortField = sortBy || 'order'
+    pipeline.push({ $sort: { [sortField]: sortDirection } })
 
     return this.aggregatePaginate(pipeline, page, limit)
   }

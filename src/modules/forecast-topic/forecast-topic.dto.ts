@@ -5,5 +5,4 @@ export type ForecastTopicResponseDto = {
   topicId: string
   name: string
   slug: string
-  part: 1 | 2 | 3
 }
