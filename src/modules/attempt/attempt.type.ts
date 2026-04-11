@@ -1,4 +1,6 @@
 import z from 'zod'
-import { createAttemptSchema } from './attempt.validation'
+import { attemptQuerySchema, createAttemptSchema } from './attempt.validation'
 
 export type CreateAttemptBodyType = z.infer<typeof createAttemptSchema>['body']
+
+export type AttemptQueryType = z.infer<typeof attemptQuerySchema>['query']

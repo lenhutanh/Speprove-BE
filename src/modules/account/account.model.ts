@@ -13,7 +13,8 @@ const accountSchema = new Schema(
     avatarId: { type: Schema.Types.ObjectId, ref: 'File' },
     isSuperAdmin: { type: Boolean, default: false },
     kind: { type: Number, default: ACCOUNT_KIND.USER },
-    status: { type: Number, default: STATUS.PENDING }
+    status: { type: Number, default: STATUS.PENDING },
+    selectedVoiceId: { type: Schema.Types.ObjectId, ref: 'Voice', required: true }
   },
   BaseSchemaOptions
 )

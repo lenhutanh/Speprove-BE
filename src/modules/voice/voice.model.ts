@@ -12,12 +12,15 @@ const voiceSchema = new Schema(
     speed: { type: Number, required: true, min: 0.5, max: 2, default: 1 },
     pitch: { type: Number, min: -20, max: 20, default: 0 },
     sampleAudioFileId: { type: Schema.Types.ObjectId, ref: 'File', index: true },
-    status: { type: Number, default: STATUS.PENDING, required: true }
+    status: { type: Number, default: STATUS.PENDING, required: true },
+    isDefault: { type: Boolean, default: false }
   },
   BaseSchemaOptions
 )
 
 voiceSchema.index({ locale: 1, gender: 1 })
+
+voiceSchema.index({ isDefault: 1 }, { unique: true, partialFilterExpression: { isDefault: true } })
 
 export type VoiceType = InferSchemaType<typeof voiceSchema> & {
   _id: Types.ObjectId

@@ -10,9 +10,10 @@ export type Syllable = {
 export type WordAssessment = {
   word: string
   accuracyScore: number
+  errorType: 'None' | 'Omission' | 'Insertion' | 'Mispronunciation'
   offset: number
   duration: number
-  syllables: Syllable[]
+  // syllables: Syllable[]
   phonemes: {
     phoneme: string
     accuracyScore: number

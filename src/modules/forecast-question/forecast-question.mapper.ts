@@ -5,7 +5,7 @@ import { ForecastQuestionResponseDto } from './forecast-question.dto'
 
 @singleton()
 export class ForecastQuestionMapper extends BaseMapper<ForecastQuestionType, ForecastQuestionResponseDto> {
-  toResponse(entity: any): any {
+  toResponse(entity: any): ForecastQuestionResponseDto {
     const q = entity.q || entity.questionId
     const res: any = {
       id: entity._id.toString(),
@@ -36,7 +36,22 @@ export class ForecastQuestionMapper extends BaseMapper<ForecastQuestionType, For
     return res
   }
 
-  toResponseList(entities: any[], currentPart?: any): any[] {
+  toDetailResponse(
+    entity: any,
+    audioUrl: string,
+    neighbors?: {
+      prev: { id: string; content: string } | null
+      next: { id: string; content: string } | null
+    }
+  ): ForecastQuestionResponseDto {
+    const baseResponse = this.toResponse(entity)
+    baseResponse.audioUrl = audioUrl
+    baseResponse.prev = neighbors?.prev ?? null
+    baseResponse.next = neighbors?.next ?? null
+    return baseResponse
+  }
+
+  toResponseList(entities: any[], currentPart?: any): ForecastQuestionResponseDto[] {
     const mapped = entities.map((e) => this.toResponse(e))
 
     const part1s = mapped.filter((q) => q.part === 1)
@@ -46,7 +61,7 @@ export class ForecastQuestionMapper extends BaseMapper<ForecastQuestionType, For
     const nestedPart2s = part2s.map((p2) => ({
       ...p2,
       childPart3: part3s
-        .filter((p3) => p3.parentId === p2.questionId || p3.parent?.questionId === p2.questionId)
+        .filter((p3) => p3.parent?.questionId === p2.questionId || p3.parent?.questionId === p2.questionId)
         .map((p3) => {
           const { parent, ...rest } = p3
           return rest

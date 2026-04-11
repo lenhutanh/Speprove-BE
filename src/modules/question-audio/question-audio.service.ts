@@ -50,4 +50,17 @@ export class QuestionAudioService {
       contentHash
     })
   }
+
+  public async getAudioUrl(params: { questionId: string; voiceId: string }): Promise<string> {
+    const questionAudio = await this.questionAudioRepository.findOne(
+      {
+        questionId: params.questionId,
+        voiceId: params.voiceId
+      },
+      { populate: { path: 'fileId' } }
+    )
+
+    const fileNode = questionAudio?.fileId as any
+    return fileNode?.url || ''
+  }
 }

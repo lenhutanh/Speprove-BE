@@ -17,4 +17,9 @@ export class AttemptController {
     const attempt = await this.attemptService.getDetails(req.user._id, req.validated.params.id)
     return ResponseTransformer.success(res, attempt, 'Get attempt details successfully')
   }
+
+  public async getList(req: AuthenticatedRequest, res: Response) {
+    const result = await this.attemptService.getList(req.user._id, req.validated.query)
+    return ResponseTransformer.paginate(res, result.data, result.pagination, 'Get attempt list successfully')
+  }
 }

@@ -6,6 +6,7 @@ const forecastQuestionSchema = new Schema(
     ...BaseSchemaContent,
     forecastTopicId: { type: Schema.Types.ObjectId, ref: 'ForecastTopic', required: true },
     questionId: { type: Schema.Types.ObjectId, ref: 'Question', required: true },
+    part: { type: Number, required: true },
     order: { type: Number, default: 0 }
   },
   BaseSchemaOptions

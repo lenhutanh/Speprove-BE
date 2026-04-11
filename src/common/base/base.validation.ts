@@ -37,6 +37,11 @@ export const querySchema = <T extends ZodRawShape>(filterFields: T) =>
       .strip()
   })
 
+export const simpleQuerySchema = <T extends ZodRawShape>(fields: T) =>
+  z.object({
+    query: z.object(fields).strip()
+  })
+
 export const idParamSchema = z.object({
   params: z.object({
     id: objectIdSchema
