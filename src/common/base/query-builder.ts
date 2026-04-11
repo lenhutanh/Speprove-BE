@@ -98,7 +98,7 @@ export class QueryBuilder<T> {
   }
 
   where(field: string, value: any): this {
-    this.setFilterOperator(field, '$eq', value)
+    this.setFilterOperator(field, '$eq', this.castValue(field, value))
     return this
   }
 

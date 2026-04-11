@@ -22,4 +22,9 @@ export class VoiceController {
     await this.voiceService.activate(req.validated.params.id)
     return ResponseTransformer.successNoData(res, 'Activate voice successfully')
   }
+
+  public async getDefault(_req: Request, res: Response) {
+    const voice = await this.voiceService.getDefault()
+    return ResponseTransformer.success(res, voice, 'Get default voice successfully')
+  }
 }

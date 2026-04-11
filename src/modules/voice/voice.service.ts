@@ -11,12 +11,14 @@ import { getVoiceSampleText } from '~/common/utils'
 import { AzureSpeechProvider } from '~/infrastructure/providers/tts/azure-speech.provider'
 import { CloudinaryStorageProvider } from '~/infrastructure/providers/storage/cloudinary-storage.provider'
 import { FileService } from '../file/file.service'
+import { VoiceMapper } from './voice.mapper'
 
 @singleton()
 export class VoiceService {
   constructor(
     private readonly fileService: FileService,
-    @inject(TOKENS.IVoiceRepository) private readonly voiceRepository: IVoiceRepository
+    @inject(TOKENS.IVoiceRepository) private readonly voiceRepository: IVoiceRepository,
+    private readonly voiceMapper: VoiceMapper
   ) {}
   public async createNew(data: CreateVoiceBodyType) {
     const locale = data.voiceCode.split('-').slice(0, 2).join('-')
@@ -78,5 +80,16 @@ export class VoiceService {
       sampleAudioFileId: audioFile._id,
       status: STATUS.ACTIVE
     })
+  }
+
+  public async getDefault() {
+    const voice = await this.voiceRepository.findOne(
+      { isDefault: true },
+      {
+        populate: 'sampleAudioFileId'
+      }
+    )
+    if (!voice) throw new AppError('Default voice not found', StatusCodes.NOT_FOUND)
+    return this.voiceMapper.toResponse(voice)
   }
 }

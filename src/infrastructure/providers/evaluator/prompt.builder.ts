@@ -1,4 +1,4 @@
-import { Word } from '~/modules/attempt/attempt.model'
+import { LongPause, Word } from '~/modules/attempt/attempt.model'
 import { PART_CONTEXT, RUBRIC } from './rubric'
 import { singleton } from 'tsyringe'
 import { EvaluateInput } from './llm-evaluator'
@@ -8,7 +8,7 @@ export class EvaluatorPromptBuilder {
   public build(input: EvaluateInput): string {
     const { question, part, speechMetrics: m } = input
 
-    const annotatedTranscript = this._buildAnnotatedTranscript(m.transcriptTokens ?? [], m.words ?? [])
+    const annotatedTranscript = this._buildAnnotatedTranscript(m.words ?? [], m.longPauses ?? [])
 
     // ── Fluency signals ──
     const fluencySignals = {
@@ -41,7 +41,7 @@ export class EvaluatorPromptBuilder {
 
     const pronunciationSignals = {
       avgPhonemeScore_0to100: m.avgPronunciationScore, // 0–100 (fixed in mapper)
-      prosodyScore_0to100: m.prosody?.score ?? null, // single Azure value, no breakdown
+      prosodyScore_0to100: m.prosodyScore ?? null, // single Azure value, no breakdown
       mispronounced
     }
 
@@ -130,27 +130,27 @@ OUTPUT — valid JSON only, no markdown, no text outside JSON
 `
   }
 
-  private _buildAnnotatedTranscript(
-    tokens: string[],
-    highlights: (Word & { isMispronounced?: boolean })[],
-    pauseThreshold = 0.5
-  ): string {
-    if (!tokens?.length) return ''
-    if (!highlights?.length) return tokens.map((w, i) => `${i}:${w}`).join(' ')
+  private _buildAnnotatedTranscript(words: Word[], longPauses: LongPause[]): string {
+    if (!words || words.length === 0) return ''
 
-    const sorted = [...highlights].sort((a, b) => a.offset - b.offset)
+    // Convert array pauses sang Map để tra cứu O(1) theo afterWordIndex
+    const pauseMap = new Map<number, number>()
+    longPauses.forEach((p) => pauseMap.set(p.afterWordIndex, p.duration))
+
     const parts: string[] = []
 
-    for (let i = 0; i < sorted.length; i++) {
-      const curr = sorted[i]
-      parts.push(`${curr.wordIndex}:${tokens[curr.wordIndex] ?? curr.word}`)
+    // Xử lý khoảng lặng đầu file (nếu user im lặng trước khi nói chữ đầu tiên)
+    if (pauseMap.has(-1)) {
+      parts.push(`[PAUSE ${pauseMap.get(-1)!.toFixed(1)}s]`)
+    }
 
-      if (i < sorted.length - 1) {
-        const next = sorted[i + 1]
-        const gapSec = (next.offset - (curr.offset + curr.duration)) / 1000
-        if (gapSec >= pauseThreshold) {
-          parts.push(`[PAUSE ${gapSec.toFixed(1)}s]`)
-        }
+    for (const w of words) {
+      // Ép dấu câu trực tiếp vào từ để LLM thấy rõ ranh giới câu
+      parts.push(`${w.wordIndex}:${w.word}${w.punctuationAfter}`)
+
+      // Thêm [PAUSE Xs] nếu có khoảng lặng ngay sau từ này
+      if (pauseMap.has(w.wordIndex)) {
+        parts.push(`[PAUSE ${pauseMap.get(w.wordIndex)!.toFixed(1)}s]`)
       }
     }
 

@@ -5,7 +5,7 @@ import { singleton } from 'tsyringe'
 import { GroupMapper } from '../group/group.mapper'
 
 @singleton()
-export class  AccountMapper extends BaseMapper<AccountType, AccountResponseDto> {
+export class AccountMapper extends BaseMapper<AccountType, AccountResponseDto> {
   constructor(private readonly groupMapper: GroupMapper) {
     super()
   }
@@ -23,7 +23,8 @@ export class  AccountMapper extends BaseMapper<AccountType, AccountResponseDto> 
       status: entity.status,
       group: isPopulated ? this.groupMapper.toResponse(entity.groupId as any) : null,
       isSuperAdmin: !!entity.isSuperAdmin,
-      createdAt: entity.createdAt?.toISOString() || ''
+      createdAt: entity.createdAt?.toISOString() || '',
+      selectedVoiceId: entity.selectedVoiceId.toString()
     }
   }
 }

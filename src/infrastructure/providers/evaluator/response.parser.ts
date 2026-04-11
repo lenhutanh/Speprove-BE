@@ -6,7 +6,7 @@ import { EvaluateInput } from './llm-evaluator'
 export class EvaluatorResponseParser {
   public parse(raw: string, input: EvaluateInput): Evaluation {
     const { transcript, speechMetrics: m } = input
-    const maxIdx = Math.max(0, (m.transcriptTokens?.length ?? 1) - 1)
+    const maxIdx = Math.max(0, (m.words?.length ?? 1) - 1)
 
     let parsed: any
     try {

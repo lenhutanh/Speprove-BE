@@ -13,7 +13,7 @@ export class ForecastQuestionController {
   }
 
   public async getDetails(req: Request, res: Response) {
-    const forecastQuestion = await this.forecastQuestionService.getDetails(req.params.id)
+    const forecastQuestion = await this.forecastQuestionService.getDetails(req.params.id, req.validated.query.voiceId)
     return ResponseTransformer.success(res, forecastQuestion, 'Get forecast question details successfully')
   }
 }

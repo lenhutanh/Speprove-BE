@@ -4,7 +4,7 @@ import { validateMiddleware } from '~/common/middlewares'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
 import { bindHandler } from '~/common/utils'
 import { AttemptController } from './attempt.controller'
-import { createAttemptSchema } from './attempt.validation'
+import { attemptQuerySchema, createAttemptSchema } from './attempt.validation'
 import { idParamSchema } from '~/common/base'
 
 const router = express.Router()
@@ -18,8 +18,10 @@ router
     validateMiddleware(createAttemptSchema),
     bindHandler(AttemptController, 'createNew')
   )
+  .get(authMiddleware.isAuthorized, validateMiddleware(attemptQuerySchema), bindHandler(AttemptController, 'getList'))
 
 router
   .route('/:id')
   .get(authMiddleware.isAuthorized, validateMiddleware(idParamSchema), bindHandler(AttemptController, 'getDetails'))
+
 export const attemptRoutes = router

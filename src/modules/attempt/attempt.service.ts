@@ -1,7 +1,7 @@
 import { inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { IAttemptRepository } from './attempt.repository.interface'
-import { CreateAttemptBodyType } from './attempt.type'
+import { AttemptQueryType, CreateAttemptBodyType } from './attempt.type'
 import { SpeakingSessionService } from '../speaking-session/speaking-session.service'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
@@ -13,6 +13,8 @@ import { ATTEMPT_STATUS, SPEAKING_SESSION_MODE } from '~/common/constants/consta
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 import { AudioFileType } from '../file/file.model'
 import { ForecastQuestionResponseDto } from '../forecast-question/forecast-question.dto'
+import { QueryBuilder } from '~/common/base'
+import { AttemptType } from './attempt.model'
 
 @singleton()
 export class AttemptService {
@@ -108,8 +110,8 @@ export class AttemptService {
     }
 
     if (forecastQuestion.part === 3) {
-      return forecastQuestion.part2Content
-        ? `PART 2 TOPIC (context): ${forecastQuestion.part2Content}\n\nPART 3 QUESTION: ${forecastQuestion.content}`
+      return forecastQuestion.parent?.content
+        ? `PART 2 TOPIC (context): ${forecastQuestion.parent.content}\n\nPART 3 QUESTION: ${forecastQuestion.content}`
         : forecastQuestion.content
     }
 
@@ -121,5 +123,24 @@ export class AttemptService {
     if (!attempt) throw new AppError('Attempt not found', StatusCodes.NOT_FOUND)
     if (attempt.userId.toString() !== userId) throw new AppError('Forbidden', StatusCodes.FORBIDDEN)
     return this.attemptMapper.toResponse(attempt)
+  }
+
+  public async getList(userId: string, queryOptions: AttemptQueryType) {
+    const { limit, page, sortBy, sortOrder, forecastQuestionId } = queryOptions || {}
+
+    const qb = new QueryBuilder<AttemptType>()
+
+    const { filter, options } = qb
+      .applyFilters({ userId, forecastQuestionId })
+      .populate('audioFileId')
+      .sort(sortBy, sortOrder)
+      .build()
+
+    const { data, pagination } = await this.attemptRepository.paginate(filter, page, limit, options)
+
+    return {
+      data: this.attemptMapper.toResponseList(data),
+      pagination
+    }
   }
 }

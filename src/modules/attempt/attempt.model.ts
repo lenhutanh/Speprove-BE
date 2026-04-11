@@ -6,7 +6,8 @@ const pauseSchema = new mongoose.Schema(
   {
     start: Number,
     end: Number,
-    duration: Number
+    duration: Number,
+    afterWordIndex: Number
   },
   { _id: false }
 )
@@ -15,12 +16,17 @@ const wordSchema = new mongoose.Schema(
   {
     wordIndex: Number,
     word: String,
+    sentenceIndex: Number,
+    punctuationAfter: String,
+    isFiller: Boolean,
+    isRepetition: Boolean,
+    isScoreable: Boolean,
+    errorType: { type: String, default: 'None' },
     score: Number,
     offset: Number,
     duration: Number,
     phonemes: [{ sound: String, score: Number }],
-    spokenIpa: { type: String, default: '' },
-    expectedIpa: { type: String, default: '' }
+    spokenIpa: { type: String, default: '' }
   },
   { _id: false }
 )
@@ -37,10 +43,7 @@ const speechMetricsSchema = new mongoose.Schema(
     repetitionCount: { type: Number },
     repetitions: { type: [String], default: [] },
     avgPronunciationScore: { type: Number },
-    prosody: {
-      score: { type: Number }
-    },
-    transcriptTokens: { type: [String], default: [] },
+    prosodyScore: { type: Number },
     words: { type: [wordSchema], default: [] }
   },
   { _id: false }
@@ -163,12 +166,24 @@ export type PhonemeInfo = {
 export type Word = {
   wordIndex: number
   word: string
+  sentenceIndex: number
+  punctuationAfter: string
+  isFiller: boolean
+  isRepetition: boolean
+  isScoreable: boolean
+  errorType: 'None' | 'Omission' | 'Insertion' | 'Mispronunciation'
   score: number
   offset: number
   duration: number
   phonemes: PhonemeInfo[]
   spokenIpa: string
-  expectedIpa: string
+}
+
+export type LongPause = {
+  start: number
+  end: number
+  duration: number
+  afterWordIndex: number
 }
 
 export type SpeechMetrics = {
@@ -176,16 +191,13 @@ export type SpeechMetrics = {
   wordCount: number
   speechRate: number
   pauseCount: number
-  longPauses: { start: number; end: number; duration: number }[]
+  longPauses: LongPause[]
   fillerCount: number
   fillers: string[]
   repetitionCount: number
   repetitions: string[]
   avgPronunciationScore: number
-  prosody: {
-    score: number
-  }
-  transcriptTokens: string[]
+  prosodyScore: number
   words: Word[]
 }
 

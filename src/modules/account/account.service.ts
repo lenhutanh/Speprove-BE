@@ -6,12 +6,14 @@ import { GroupService } from '../group/group.service'
 import { TOKENS } from '~/common/constants/tokens'
 import { IAccountRepository } from './repositories/account.repository.interface'
 import { AppError } from '~/common/errors'
+import { VoiceService } from '../voice/voice.service'
 
 @singleton()
 export class AccountService {
   constructor(
     private readonly groupService: GroupService,
-    @inject(TOKENS.IAccountRepository) private readonly accountRepository: IAccountRepository
+    @inject(TOKENS.IAccountRepository) private readonly accountRepository: IAccountRepository,
+    private readonly voiceService: VoiceService
   ) {}
 
   public async getById(id: string): Promise<AccountType> {
@@ -25,7 +27,11 @@ export class AccountService {
   }
 
   public async createUser(data: any) {
-    const group = await this.groupService.findByName(GROUP_NAME.USER)
+    const [group, defaultVoice] = await Promise.all([
+      this.groupService.findByName(GROUP_NAME.USER),
+      this.voiceService.getDefault()
+    ])
+
     if (!group) {
       throw new AppError('Default user group not found', StatusCodes.INTERNAL_SERVER_ERROR)
     }
@@ -33,7 +39,8 @@ export class AccountService {
       ...data,
       username: data.email.split('@')[0],
       status: STATUS.ACTIVE,
-      groupId: group._id
+      groupId: group._id,
+      selectedVoiceId: defaultVoice.id
     }
     return await this.accountRepository.create(newData)
   }

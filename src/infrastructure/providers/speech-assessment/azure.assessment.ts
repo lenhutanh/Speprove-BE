@@ -170,26 +170,12 @@ export class AzurePronunciationAssessmentProvider implements IPronunciationAsses
     const words = (nBest?.Words ?? []).map((w: any) => {
       const assessment = w.PronunciationAssessment ?? {}
 
-      const mappedSyllables: Syllable[] = (w.Syllables ?? []).map((s: any) => ({
-        syllable: s.Syllable,
-        accuracyScore: s.PronunciationAssessment?.AccuracyScore ?? 0,
-        offset: (s.Offset ?? 0) / AZURE_TICKS_PER_SECOND,
-        duration: (s.Duration ?? 0) / AZURE_TICKS_PER_SECOND
-      }))
-
-      const maxDuration = Math.max(...mappedSyllables.map((s) => s.duration), 0)
-
-      const syllables = mappedSyllables.map((s) => ({
-        ...s,
-        isActualStress: mappedSyllables.length === 1 ? true : s.duration === maxDuration && maxDuration > 0
-      }))
-
       return {
         word: w.Word ?? '',
         accuracyScore: assessment.AccuracyScore ?? 0,
+        errorType: assessment.ErrorType ?? 'None',
         offset: (w.Offset ?? 0) / AZURE_TICKS_PER_SECOND,
         duration: (w.Duration ?? 0) / AZURE_TICKS_PER_SECOND,
-        syllables: syllables,
         phonemes: (w.Phonemes ?? []).map((p: any) => ({
           phoneme: p.Phoneme ?? '',
           accuracyScore: p.PronunciationAssessment?.AccuracyScore ?? 0,

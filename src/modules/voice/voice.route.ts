@@ -33,4 +33,6 @@ router
     bindHandler(VoiceController, 'activate')
   )
 
+router.route('/default').get(bindHandler(VoiceController, 'getDefault'))
+
 export const voiceRoutes = router
