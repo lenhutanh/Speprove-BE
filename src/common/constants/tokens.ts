@@ -60,5 +60,15 @@ export const TOKENS = {
   ISTTProvider: Symbol('ISTTProvider'),
 
   // LLM
-  ILLMProvider: Symbol('ILLMProvider')
+  ILLMProvider: Symbol('ILLMProvider'),
+
+  // Payment
+  IPaymentRepository: Symbol('IPaymentRepository'),
+  IPaymentProvider: Symbol('IPaymentProvider'),
+
+  // Credit package
+  ICreditPackageRepository: Symbol('ICreditPackageRepository'),
+
+  // Credit log
+  ICreditLogRepository: Symbol('ICreditLogRepository')
 }

@@ -53,6 +53,7 @@
     "@bull-board/api": "^6.16.2",
     "@bull-board/express": "^6.16.2",
     "@getbrevo/brevo": "^3.0.1",
+    "@payos/node": "^2.0.5",
     "axios": "^1.14.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.70.1",

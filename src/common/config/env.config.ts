@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 
 const envSchema = z.object({
   APP_NAME: z.string(),
+  APP_URL: z.string().url(),
   MONGODB_URI: z.string().url(),
   DATABASE_NAME: z.string(),
   APP_HOST: z.string().default('localhost'),
@@ -41,7 +42,12 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('info'),
 
   // Groq
-  GROQ_API_KEY: z.string()
+  GROQ_API_KEY: z.string(),
+
+  // PayOS
+  PAYOS_CLIENT_ID: z.string(),
+  PAYOS_API_KEY: z.string(),
+  PAYOS_CHECKSUM_KEY: z.string()
 })
 
 const parsed = envSchema.safeParse(process.env)

@@ -24,6 +24,9 @@ import { registerSpeakingSessionModule } from '~/modules/speaking-session/speaki
 import { registerAttemptModule } from '~/modules/attempt/attempt.di'
 import { GroqSTTProvider } from '~/infrastructure/providers/stt'
 import { GroqLLMProvider } from '~/infrastructure/providers/llm/groq.llm'
+import { registerPaymentModule } from '~/modules/payment/payment.di'
+import { registerCreditPackageModule } from '~/modules/credit-package/credit-package.di'
+import { registerCreditLogModule } from '~/modules/credit-log/credit-log.di'
 
 export function setupContainer(): void {
   console.log('🔧 Setting up DI container...')
@@ -54,6 +57,9 @@ export function setupContainer(): void {
   registerForecastQuestionModule()
   registerSpeakingSessionModule()
   registerAttemptModule()
+  registerPaymentModule()
+  registerCreditPackageModule()
+  registerCreditLogModule()
 
   console.log('✅ DI container ready\n')
 }

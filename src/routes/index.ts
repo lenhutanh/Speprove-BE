@@ -13,6 +13,8 @@ import { forecastTopicRoutes } from '~/modules/forecast-topic/forecast-topic.rou
 import { forecastQuestionRoutes } from '~/modules/forecast-question/forecast-question.route'
 import { speakingSessionRoutes } from '~/modules/speaking-session/speaking-session.route'
 import { attemptRoutes } from '~/modules/attempt/attempt.route'
+import { paymentRoutes } from '~/modules/payment/payment.route'
+import { creditPackageRoutes } from '~/modules/credit-package/credit-package.route'
 
 const router = express.Router()
 
@@ -30,5 +32,7 @@ router.use('/forecast-topic', forecastTopicRoutes)
 router.use('/forecast-question', forecastQuestionRoutes)
 router.use('/speaking-session', speakingSessionRoutes)
 router.use('/attempt', attemptRoutes)
+router.use('/payment', paymentRoutes)
+router.use('/credit-package', creditPackageRoutes)
 
 export const APIs_V1 = router
