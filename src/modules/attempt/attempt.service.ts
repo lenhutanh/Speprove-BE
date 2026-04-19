@@ -1,7 +1,7 @@
 import { inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { IAttemptRepository } from './attempt.repository.interface'
-import { AttemptQueryType, CreateAttemptBodyType } from './attempt.type'
+import { AttemptQueryType, CreateAttemptBodyType, GetTopAttemptQueryType } from './attempt.type'
 import { SpeakingSessionService } from '../speaking-session/speaking-session.service'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
@@ -142,5 +142,38 @@ export class AttemptService {
       data: this.attemptMapper.toResponseList(data),
       pagination
     }
+  }
+
+  public async getTopAttemptsByQuestion(data: GetTopAttemptQueryType) {
+    const qb = new QueryBuilder<AttemptType>()
+
+    const { filter, options } = qb
+      .where('forecastQuestionId', data.forecastQuestionId)
+      .where('status', ATTEMPT_STATUS.DONE)
+      .where('isPublic', true)
+      .whereGte('evaluation.overall', data.band)
+      .whereLt('evaluation.overall', data.band + 1)
+      .sort('evaluation.overall', 'desc')
+      .sort('createdAt', 'desc')
+      .limit(10)
+      .populate('audioFileId')
+      .populate({ path: 'userId', select: 'fullName avatar' })
+      .build()
+
+    const result = await this.attemptRepository.findMany(filter, options)
+    return this.attemptMapper.toLeaderboardResponseList(result)
+  }
+
+  public async toggleShareStatus(userId: string, attemptId: string, isPublic: boolean) {
+    const attempt = await this.attemptRepository.findById(attemptId)
+    if (!attempt) throw new AppError('Attempt not found', StatusCodes.NOT_FOUND)
+    if (attempt.userId.toString() !== userId) {
+      throw new AppError('You do not own this attempt', StatusCodes.FORBIDDEN)
+    }
+    if (attempt.status !== ATTEMPT_STATUS.DONE) {
+      throw new AppError('You can only share fully evaluated attempts', StatusCodes.BAD_REQUEST)
+    }
+    const updatedAttempt = await this.attemptRepository.updateById(attemptId, { isPublic })
+    return this.attemptMapper.toResponse(updatedAttempt!)
   }
 }

@@ -13,7 +13,10 @@ export const errorMiddleware = (err: any, _req: Request, res: Response, _next: N
 
   if (err instanceof ZodError) {
     const fieldErrors = err.issues.reduce((acc: any, cur: any) => {
-      acc[cur.path.join('.')] = cur.message
+      const isReqObject = ['body', 'query', 'params'].includes(String(cur.path[0]))
+      const cleanPath = isReqObject ? cur.path.slice(1).join('.') : cur.path.join('.')
+
+      acc[cleanPath] = cur.message
       return acc
     }, {})
 
