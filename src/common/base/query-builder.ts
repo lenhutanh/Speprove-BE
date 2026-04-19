@@ -1,5 +1,21 @@
 import { PopulateOptions as MongoosePopulateOptions, QueryFilter, Types } from 'mongoose'
 
+type DeepPath<T> = T extends object
+  ? {
+      [K in keyof T & string]: NonNullable<T[K]> extends Date | Types.ObjectId
+        ? K
+        : NonNullable<T[K]> extends Array<infer U>
+          ? U extends object
+            ? K | `${K}.${DeepPath<NonNullable<U>>}`
+            : K
+          : NonNullable<T[K]> extends object
+            ? `${K}` | `${K}.${DeepPath<NonNullable<T[K]>>}`
+            : K
+    }[keyof T & string]
+  : string
+
+export type FieldPath<T> = DeepPath<T> | (string & {})
+
 type OperatorHandler = (field: string, value: any) => void
 
 export class QueryBuilder<T> {
@@ -7,10 +23,16 @@ export class QueryBuilder<T> {
   private populateFields: (string | MongoosePopulateOptions)[] = []
   private selectFields: string = ''
   private sortFields: Record<string, 1 | -1> = {}
+  private limitValue?: number
 
   // ==================== BASIC FILTERS ====================
 
-  private setFilterOperator(field: string, operator: string, value: any) {
+  limit(value: number): this {
+    this.limitValue = value
+    return this
+  }
+
+  private setFilterOperator(field: FieldPath<T>, operator: string, value: any) {
     if (!this.filters[field] || typeof this.filters[field] !== 'object' || Array.isArray(this.filters[field])) {
       const existingValue = this.filters[field]
       this.filters[field] = {}
@@ -21,7 +43,7 @@ export class QueryBuilder<T> {
     this.filters[field][operator] = value
   }
 
-  private castValue(field: string, val: any) {
+  private castValue(field: FieldPath<T>, val: any) {
     if (val === null || val === undefined) return val
 
     // ObjectId
@@ -97,49 +119,49 @@ export class QueryBuilder<T> {
     return this
   }
 
-  where(field: string, value: any): this {
+  where(field: FieldPath<T>, value: any): this {
     this.setFilterOperator(field, '$eq', this.castValue(field, value))
     return this
   }
 
-  whereNot(field: string, value: any): this {
+  whereNot(field: FieldPath<T>, value: any): this {
     this.setFilterOperator(field, '$ne', value)
     return this
   }
 
-  whereIn(field: string, values: any[]): this {
+  whereIn(field: FieldPath<T>, values: any[]): this {
     this.setFilterOperator(field, '$in', values)
     return this
   }
 
-  whereNotIn(field: string, values: any[]): this {
+  whereNotIn(field: FieldPath<T>, values: any[]): this {
     this.setFilterOperator(field, '$nin', values)
     return this
   }
 
   // ==================== COMPARISON OPERATORS ====================
 
-  whereGt(field: string, value: any): this {
+  whereGt(field: FieldPath<T>, value: any): this {
     this.setFilterOperator(field, '$gt', value)
     return this
   }
 
-  whereGte(field: string, value: any): this {
+  whereGte(field: FieldPath<T>, value: any): this {
     this.setFilterOperator(field, '$gte', value)
     return this
   }
 
-  whereLt(field: string, value: any): this {
+  whereLt(field: FieldPath<T>, value: any): this {
     this.setFilterOperator(field, '$lt', value)
     return this
   }
 
-  whereLte(field: string, value: any): this {
+  whereLte(field: FieldPath<T>, value: any): this {
     this.setFilterOperator(field, '$lte', value)
     return this
   }
 
-  whereBetween(field: string, min: any, max: any): this {
+  whereBetween(field: FieldPath<T>, min: any, max: any): this {
     this.setFilterOperator(field, '$gte', min)
     this.setFilterOperator(field, '$lte', max)
     return this
@@ -147,17 +169,17 @@ export class QueryBuilder<T> {
 
   // ==================== EXISTENCE ====================
 
-  whereExists(field: string, exists: boolean = true): this {
+  whereExists(field: FieldPath<T>, exists: boolean = true): this {
     this.setFilterOperator(field, '$exists', exists)
     return this
   }
 
-  whereNull(field: string): this {
+  whereNull(field: FieldPath<T>): this {
     this.where(field, null) // $eq: null
     return this
   }
 
-  whereNotNull(field: string): this {
+  whereNotNull(field: FieldPath<T>): this {
     this.setFilterOperator(field, '$ne', null)
     return this
   }
@@ -168,7 +190,7 @@ export class QueryBuilder<T> {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   }
 
-  whereRegex(field: string, pattern: string, options?: string): this {
+  whereRegex(field: FieldPath<T>, pattern: string, options?: string): this {
     const safePattern = this.escapeRegex(pattern)
     this.setFilterOperator(field, '$regex', safePattern)
     if (options) {
@@ -177,7 +199,7 @@ export class QueryBuilder<T> {
     return this
   }
 
-  whereLike(field: string, pattern: string): this {
+  whereLike(field: FieldPath<T>, pattern: string): this {
     return this.whereRegex(field, pattern, 'i')
   }
 
@@ -215,7 +237,7 @@ export class QueryBuilder<T> {
 
   // ==================== QUERY OPTIONS ====================
 
-  populate(field: string | MongoosePopulateOptions): this {
+  populate(field: FieldPath<T> | MongoosePopulateOptions): this {
     this.populateFields.push(field)
     return this
   }
@@ -225,13 +247,13 @@ export class QueryBuilder<T> {
     return this
   }
 
-  sort(field: string, order: 'asc' | 'desc' = 'asc'): this {
+  sort(field: FieldPath<T>, order: 'asc' | 'desc' = 'asc'): this {
     if (!field?.trim()) return this
     this.sortFields[field] = order === 'asc' ? 1 : -1
     return this
   }
 
-  orderBy(field: string, order: 'asc' | 'desc' = 'asc'): this {
+  orderBy(field: FieldPath<T>, order: 'asc' | 'desc' = 'asc'): this {
     return this.sort(field, order)
   }
 
@@ -255,6 +277,8 @@ export class QueryBuilder<T> {
     if (Object.keys(this.sortFields).length > 0) {
       options.sort = this.sortFields
     }
+
+    if (this.limitValue !== undefined) options.limit = this.limitValue
 
     return options
   }

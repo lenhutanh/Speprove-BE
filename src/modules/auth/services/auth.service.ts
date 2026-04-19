@@ -30,7 +30,11 @@ export class AuthService {
   public async login(data: LoginBodyType, metadata: { ipAddress?: string; deviceInfo?: string }) {
     const account = await this.accountService.findByEmail(data.email)
 
-    const loginError = new AppError('Invalid email or password', StatusCodes.UNAUTHORIZED)
+    const loginError = new AppError(
+      'Invalid email or password',
+      StatusCodes.UNAUTHORIZED,
+      ErrorCodes.INVALID_CREDENTIALS
+    )
 
     if (!account) throw loginError
 

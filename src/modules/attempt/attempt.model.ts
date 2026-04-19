@@ -142,6 +142,11 @@ const attemptSchema = new mongoose.Schema(
       default: 0,
       index: true
     },
+    isPublic: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
     speechMetrics: { type: speechMetricsSchema, default: {} },
     evaluation: { type: evaluationSchema, default: {} }
   },
@@ -244,8 +249,8 @@ type RawAttemptType = mongoose.InferSchemaType<typeof attemptSchema>
 
 export type AttemptType = Omit<RawAttemptType, 'speechMetrics' | 'evaluation'> & {
   _id: mongoose.Types.ObjectId
-  speechMetrics: SpeechMetrics | any
-  evaluation: Evaluation | any
+  speechMetrics?: Partial<SpeechMetrics>
+  evaluation?: Partial<Evaluation>
 }
 
 export const Attempt = mongoose.models.Attempt || mongoose.model<AttemptType>('Attempt', attemptSchema)
