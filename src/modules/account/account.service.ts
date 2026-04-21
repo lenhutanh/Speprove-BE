@@ -7,6 +7,7 @@ import { TOKENS } from '~/common/constants/tokens'
 import { IAccountRepository } from './repositories/account.repository.interface'
 import { AppError } from '~/common/errors'
 import { VoiceService } from '../voice/voice.service'
+import { ErrorCodes } from '~/common/constants/error-codes'
 
 @singleton()
 export class AccountService {
@@ -61,5 +62,17 @@ export class AccountService {
 
   async findByEmail(email: string): Promise<AccountType | null> {
     return await this.accountRepository.findByEmailWithPassword(email)
+  }
+
+  public async addBalance(userId: string, amount: number, session: any) {
+    const updated = await this.accountRepository.addBalance(userId, amount, session)
+    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    return updated
+  }
+
+  public async deductBalance(userId: string, amount: number, session: any) {
+    const updated = await this.accountRepository.deductBalance(userId, amount, session)
+    if (!updated) throw new AppError('Insufficient balance', StatusCodes.BAD_REQUEST, ErrorCodes.INSUFFICIENT_BALANCE)
+    return updated
   }
 }

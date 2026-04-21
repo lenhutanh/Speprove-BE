@@ -13,12 +13,12 @@ import {
   PAYMENT_STATUS,
   PaymentProviderType
 } from '~/common/constants/constants'
-import { IAccountRepository } from '../account/repositories'
-import { ICreditLogRepository } from '../credit-log/credit-log.repository.interface'
 import { PaymentProviderFactory } from './providers/payment-provider.factory'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
 import { PaymentMapper } from './payment.mapper'
+import { AccountService } from '../account/account.service'
+import { CreditLogService } from '../credit-log/credit-log.service'
 
 @singleton()
 export class PaymentService {
@@ -27,11 +27,9 @@ export class PaymentService {
     private readonly paymentRepository: IPaymentRepository,
     private readonly paymentProviderFactory: PaymentProviderFactory,
     private readonly creditPackageService: CreditPackageService,
-    @inject(TOKENS.IAccountRepository)
-    private readonly accountRepository: IAccountRepository,
-    @inject(TOKENS.ICreditLogRepository)
-    private readonly creditLogRepository: ICreditLogRepository,
-    private readonly paymentMapper: PaymentMapper
+    private readonly creditLogService: CreditLogService,
+    private readonly paymentMapper: PaymentMapper,
+    private readonly accountService: AccountService
   ) {}
 
   public async create(userId: string, data: CreatePaymentBodyType) {
@@ -61,7 +59,6 @@ export class PaymentService {
       cancelUrl: `${env.APP_URL}/payment/cancel`,
       expiredAt: expiredAtTimestamp
     })
-    console.log('🚀 ~ PaymentService ~ create ~ result:', result)
 
     const payment = await this.paymentRepository.create({
       userId: toObjectId(userId),
@@ -79,19 +76,15 @@ export class PaymentService {
       bin: result.bin,
       description: result.description
     })
-    console.log('🚀 ~ PaymentService ~ create ~ payment:', payment)
 
     return this.paymentMapper.toResponse(payment)
   }
 
   public async handleWebhook(providerName: PaymentProviderType, payload: unknown) {
     const paymentProvider = this.paymentProviderFactory.getProvider(providerName)
-    console.log('🚀 ~ PaymentService ~ handleWebhook ~ paymentProvider:', paymentProvider)
     const data = await paymentProvider.handleWebhook(payload)
-    console.log('🚀 ~ PaymentService ~ handleWebhook ~ data:', data)
 
     const payment = await this.paymentRepository.findOne({ orderCode: data.orderCode })
-    console.log('🚀 ~ PaymentService ~ handleWebhook ~ payment:', payment)
     if (!payment || payment.status !== PAYMENT_STATUS.PENDING) return
 
     if (payment.amount !== data.amount) {
@@ -113,7 +106,6 @@ export class PaymentService {
         },
         { session }
       )
-      console.log('🚀 ~ PaymentService ~ handleWebhook ~ updateResult:', updateResult)
 
       if (!updateResult) {
         console.log(`[Webhook] Order ${data.orderCode} already processed by another request.`)
@@ -121,15 +113,9 @@ export class PaymentService {
       }
 
       if (data.status === PAYMENT_STATUS.SUCCESS) {
-        const account = await this.accountRepository.updateById(
-          payment.userId,
-          { $inc: { balance: payment.points } },
-          { session }
-        )
-        console.log('🚀 ~ PaymentService ~ handleWebhook ~ account:', account)
-
+        const account = await this.accountService.addBalance(payment.userId.toString(), payment.points, session)
         if (account) {
-          await this.creditLogRepository.create(
+          await this.creditLogService.create(
             {
               userId: payment.userId,
               amount: payment.points,
@@ -139,7 +125,7 @@ export class PaymentService {
               balanceBefore: account.balance - payment.points,
               balanceAfter: account.balance
             },
-            { session }
+            session
           )
         }
       }

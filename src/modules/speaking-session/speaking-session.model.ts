@@ -16,7 +16,7 @@ const sessionResultSchema = new mongoose.Schema(
 const sessionQuestionSchema = new mongoose.Schema(
   {
     part1: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' }],
-    part2: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' }], // Thường chỉ có 1 câu
+    part2: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' }],
     part3: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' }]
   },
   { _id: false }

@@ -4,7 +4,6 @@ import { IFileRepository } from './repositories/file.repository.interface'
 import {
   AUDIO_MIME_TYPES,
   AudioPurpose,
-  CLOUD_FOLDERS,
   FILE_KIND,
   FileKind,
   ImagePurpose,
@@ -14,7 +13,6 @@ import {
 } from '~/common/constants/constants'
 import { generateFileName, toObjectId } from '~/common/utils'
 import { FileType } from './file.model'
-import { AzureSpeechProvider } from '~/infrastructure/providers/tts/azure-speech.provider'
 import { CloudinaryStorageProvider } from '~/infrastructure/providers/storage/cloudinary-storage.provider'
 import { EdgeTTSProvider } from '~/infrastructure/providers/tts/edge-tts.provider'
 import { AppError } from '~/common/errors'
@@ -30,7 +28,6 @@ export class FileService {
   constructor(
     @inject(TOKENS.IFileRepository)
     private readonly fileRepository: IFileRepository,
-    private readonly azureSpeechProvider: AzureSpeechProvider,
     private readonly edgeTSSProvider: EdgeTTSProvider,
     private readonly cloudinaryStorage: CloudinaryStorageProvider,
     private readonly fileMapper: FileMapper,
