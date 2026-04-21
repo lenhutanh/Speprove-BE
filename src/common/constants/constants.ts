@@ -246,3 +246,17 @@ export type PaymentStatusType = (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STA
 
 export const BUFFER_TIME = 3 * 60 * 1000
 export const EXPIRED_DURATION = 15 * 60
+
+export const CREDIT_COST = {
+  PRACTICE: {
+    PART_1: 1,
+    PART_2: 2,
+    PART_3: 2
+  },
+  MOCK: {
+    PART_1: 3,
+    PART_2: 5,
+    PART_3: 5
+  },
+  FULL_TEST: 10
+} as const
