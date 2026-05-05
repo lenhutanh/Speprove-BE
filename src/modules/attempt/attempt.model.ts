@@ -161,6 +161,14 @@ attemptSchema.index(
   }
 )
 
+attemptSchema.index(
+  { speakingSessionId: 1, forecastQuestionId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { speakingSessionId: { $type: 'objectId' } }
+  }
+)
+
 attemptSchema.index({ userId: 1, forecastQuestionId: 1, createdAt: -1 })
 
 export type PhonemeInfo = {

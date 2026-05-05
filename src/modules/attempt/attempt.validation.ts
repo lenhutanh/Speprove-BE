@@ -8,10 +8,22 @@ export const createAttemptSchema = createSchema({
   forecastQuestionId: objectIdSchema,
   audioFileId: objectIdSchema,
   mode: z.nativeEnum(SPEAKING_SESSION_MODE)
-})
+}).refine(
+  (data) => {
+    if (data.body.mode === SPEAKING_SESSION_MODE.MOCK && !data.body.speakingSessionId) {
+      return false
+    }
+    return true
+  },
+  {
+    message: 'speakingSessionId is required when mode is MOCK',
+    path: ['speakingSessionId']
+  }
+)
 
 export const attemptQuerySchema = querySchema({
-  forecastQuestionId: objectIdSchema.optional()
+  forecastQuestionId: objectIdSchema.optional(),
+  speakingSessionId: objectIdSchema.optional()
 })
 
 export const getLeaderboardSchema = querySchema({
