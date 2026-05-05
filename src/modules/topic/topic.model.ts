@@ -1,12 +1,25 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
-import { BaseSchemaContent, BaseSchemaOptions } from '../../common/base/base.model'
+import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base'
 
 const topicSchema = new Schema(
   {
     ...BaseSchemaContent,
-    name: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, unique: true, trim: true },
-    status: { type: Number, required: true, default: 1 }
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    },
+    status: {
+      type: Number,
+      required: true,
+      default: 1
+    }
   },
   BaseSchemaOptions
 )

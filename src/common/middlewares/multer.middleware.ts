@@ -53,7 +53,6 @@ const createValidateFileContent = (allowedTypes: string[]) => {
     if (!req.file?.buffer) return next()
 
     const detected = await fileTypeFromBuffer(req.file.buffer as any)
-    console.log('🚀 ~ createValidateFileContent ~ detected:', detected)
 
     if (!detected || !allowedTypes.includes(detected.mime)) {
       return next(new AppError('File content is invalid!', StatusCodes.UNPROCESSABLE_ENTITY))

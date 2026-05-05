@@ -1,28 +1,28 @@
 import { z } from 'zod'
 import { createUnionSchema, querySchema, updateSchema } from '~/common/base/base.validation'
-import { PART23_CATEGORY, PartKind } from '~/common/constants/constants'
+import { PART2_CATEGORY, PART_KIND } from '~/common/constants/constants'
 import { objectIdSchema } from '~/common/utils'
 
 const commonFields = {
   content: z.string().trim().min(1),
-  topicId: objectIdSchema,
   status: z.number().optional().default(1)
 }
 
 export const questionBodySchema = z.discriminatedUnion('part', [
   z.object({
     ...commonFields,
-    part: z.literal(PartKind.ONE)
+    part: z.literal(PART_KIND.ONE),
+    topicId: objectIdSchema
   }),
   z.object({
     ...commonFields,
-    part: z.literal(PartKind.TWO),
-    category: z.nativeEnum(PART23_CATEGORY),
+    part: z.literal(PART_KIND.TWO),
+    category: z.nativeEnum(PART2_CATEGORY),
     bulletPoints: z.array(z.string().trim())
   }),
   z.object({
     ...commonFields,
-    part: z.literal(PartKind.THREE),
+    part: z.literal(PART_KIND.THREE),
     parentId: objectIdSchema
   })
 ])

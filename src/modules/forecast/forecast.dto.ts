@@ -8,6 +8,6 @@ export type ForecastResponseDto = {
   description: string | null
   validFrom: string
   validTo: string
-  isActive: boolean
+  // isActive: boolean
   createdAt: string
 }

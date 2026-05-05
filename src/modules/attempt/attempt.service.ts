@@ -1,4 +1,4 @@
-import { inject, singleton } from 'tsyringe'
+import { delay, inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { IAttemptRepository } from './attempt.repository.interface'
 import { AttemptQueryType, CreateAttemptBodyType, GetTopAttemptQueryType } from './attempt.type'
@@ -7,7 +7,7 @@ import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
 import { ForecastQuestionService } from '../forecast-question/forecast-question.service'
 import { FileService } from '../file/file.service'
-import { getCreditCost, toObjectId } from '~/common/utils'
+import { calculateCreditCost, toObjectId } from '~/common/utils'
 import { AttemptMapper } from './attempt.mapper'
 import { ATTEMPT_STATUS, CREDIT_LOG_REF_TYPE, SPEAKING_SESSION_MODE } from '~/common/constants/constants'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
@@ -21,7 +21,9 @@ import { CreditLogService } from '../credit-log/credit-log.service'
 @singleton()
 export class AttemptService {
   constructor(
-    @inject(TOKENS.IAttemptRepository) private readonly attemptRepository: IAttemptRepository,
+    @inject(TOKENS.IAttemptRepository)
+    private readonly attemptRepository: IAttemptRepository,
+    @inject(delay(() => SpeakingSessionService))
     private readonly speakingSessionService: SpeakingSessionService,
     private readonly forecastQuestionService: ForecastQuestionService,
     private readonly fileService: FileService,
@@ -42,7 +44,7 @@ export class AttemptService {
     }
 
     let speakingSession = null
-    let calculatedOrder = 1
+    let order = 1
 
     if (data.mode === SPEAKING_SESSION_MODE.MOCK) {
       if (!data.speakingSessionId) {
@@ -55,63 +57,67 @@ export class AttemptService {
         throw new AppError('You do not own this session', StatusCodes.FORBIDDEN)
       }
 
-      if (speakingSession.status !== 0) {
-        throw new AppError('Speaking session is not in progress', StatusCodes.BAD_REQUEST)
+      if (speakingSession.status === 2) {
+        throw new AppError('This speaking session is already finished', StatusCodes.BAD_REQUEST)
       }
 
-      const allQuestionIds = [
-        ...(speakingSession.questions.part1 || []),
-        ...(speakingSession.questions.part2 || []),
-        ...(speakingSession.questions.part3 || [])
-      ].map((id) => id.toString())
-
-      const questionIndex = allQuestionIds.indexOf(data.forecastQuestionId)
-
-      if (questionIndex === -1) {
-        throw new AppError('This question does not belong to the current mock session', StatusCodes.BAD_REQUEST)
-      }
-
-      calculatedOrder = questionIndex + 1
+      order = speakingSession.currentQuestionIndex
     }
 
-    const attempt = await this.attemptRepository.withTransaction(async (session) => {
-      if (data.mode === SPEAKING_SESSION_MODE.PRACTICE) {
-        const pointsToDeduct = getCreditCost(data.mode, forecastQuestion.part)
-        const account = await this.accountService.deductBalance(userId, pointsToDeduct, session)
-        await this.creditLogService.create(
-          {
-            userId: toObjectId(userId),
-            amount: -pointsToDeduct,
-            reason: `Luyện tập Part ${forecastQuestion.part}: ${forecastQuestion.content}`,
-            refType: CREDIT_LOG_REF_TYPE.USAGE,
-            refId: forecastQuestion.id,
-            balanceBefore: account.balance - pointsToDeduct,
-            balanceAfter: account.balance
-          },
-          session
-        )
-      }
-      const attemptPayload = {
-        userId: toObjectId(userId),
-        mode: data.mode,
-        speakingSessionId: speakingSession ? speakingSession._id : null,
-        audioFileId: toObjectId(data.audioFileId),
-        forecastQuestionId: toObjectId(data.forecastQuestionId),
-        part: forecastQuestion.part ?? null,
-        order: calculatedOrder,
-        status: ATTEMPT_STATUS.PENDING,
-        speechMetrics: {},
-        evaluation: {}
-      }
-      try {
-        return await this.attemptRepository.createOrUpdateAttempt(attemptPayload)
-      } catch (error: any) {
-        if (error.message === 'PROCESSING_CONFLICT') {
-          throw new AppError('This question is being processed, please wait', StatusCodes.CONFLICT)
+    let attempt = null
+    try {
+      attempt = await this.attemptRepository.withTransaction(async (session) => {
+        if (data.mode === SPEAKING_SESSION_MODE.PRACTICE) {
+          const pointsToDeduct = calculateCreditCost(data.mode, forecastQuestion.part)
+          const account = await this.accountService.deductBalance(userId, pointsToDeduct, session)
+          await this.creditLogService.create(
+            {
+              userId: toObjectId(userId),
+              amount: -pointsToDeduct,
+              reason: `Luyện tập Part ${forecastQuestion.part}: ${forecastQuestion.content}`,
+              refType: CREDIT_LOG_REF_TYPE.USAGE,
+              refId: forecastQuestion.id,
+              balanceBefore: account.balance - pointsToDeduct,
+              balanceAfter: account.balance
+            },
+            session
+          )
         }
-        throw error
+
+        const attemptPayload = {
+          userId: toObjectId(userId),
+          mode: data.mode,
+          speakingSessionId: speakingSession ? speakingSession._id : null,
+          audioFileId: toObjectId(data.audioFileId),
+          forecastQuestionId: toObjectId(data.forecastQuestionId),
+          part: forecastQuestion.part ?? null,
+          order,
+          status: ATTEMPT_STATUS.PENDING,
+          speechMetrics: {},
+          evaluation: {}
+        }
+
+        const newAttempt = await this.attemptRepository.create(attemptPayload, { session })
+
+        if (data.mode === SPEAKING_SESSION_MODE.MOCK && speakingSession) {
+          const updateQuery: any = {
+            $inc: { currentQuestionIndex: 1 }
+          }
+          if (speakingSession.status === 0) {
+            updateQuery.$set = { status: 1 }
+          }
+
+          await this.speakingSessionService.updateOne({ _id: speakingSession._id }, updateQuery, { session })
+        }
+
+        return newAttempt
+      })
+    } catch (error: any) {
+      if (error.code === 11000) {
+        throw new AppError('You have already submitted an answer for this question', StatusCodes.CONFLICT)
       }
-    })
+      throw error
+    }
 
     await this.speakingProducer.transcribe({
       attemptId: attempt!._id.toString(),
@@ -146,12 +152,12 @@ export class AttemptService {
   }
 
   public async getList(userId: string, queryOptions: AttemptQueryType) {
-    const { limit, page, sortBy, sortOrder, forecastQuestionId } = queryOptions || {}
+    const { limit, page, sortBy, sortOrder, forecastQuestionId, speakingSessionId } = queryOptions || {}
 
     const qb = new QueryBuilder<AttemptType>()
 
     const { filter, options } = qb
-      .applyFilters({ userId, forecastQuestionId })
+      .applyFilters({ userId, forecastQuestionId, speakingSessionId })
       .populate('audioFileId')
       .sort(sortBy, sortOrder)
       .build()
@@ -195,5 +201,13 @@ export class AttemptService {
     }
     const updatedAttempt = await this.attemptRepository.updateById(attemptId, { isPublic })
     return this.attemptMapper.toResponse(updatedAttempt!)
+  }
+
+  public async countCompletedAttempts(speakingSessionId: string) {
+    return await this.attemptRepository.count({ speakingSessionId })
+  }
+
+  public async findBySpeakingSessionId(speakingSessionId: string) {
+    return await this.attemptRepository.findMany({ speakingSessionId })
   }
 }

@@ -3,9 +3,9 @@ import { objectIdSchema } from '~/common/utils/validators.util'
 
 export const baseQueryFields = {
   page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(10),
+  limit: z.coerce.number().min(1).max(100).default(12),
   sortBy: z.string().default('createdAt'),
-  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  sortOrder: z.enum(['asc', 'desc']).default('asc'),
   search: z.string().optional()
 }
 

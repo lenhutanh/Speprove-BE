@@ -1,7 +1,7 @@
 import { BaseRepository } from '~/common/base/base.repository'
 import { Part2QuestionType, Part3QuestionType, Question, QuestionType } from '../question.model'
 import { IQuestionRepository } from './question.repository.interface'
-import { PartKind } from '~/common/constants/constants'
+import { PART_KIND } from '~/common/constants/constants'
 
 export class QuestionRepository extends BaseRepository<QuestionType> implements IQuestionRepository {
   constructor() {
@@ -11,7 +11,7 @@ export class QuestionRepository extends BaseRepository<QuestionType> implements 
   public async createPart1Question(data: Partial<QuestionType>): Promise<QuestionType> {
     const question = await this.create({
       ...data,
-      part: PartKind.ONE
+      part: PART_KIND.ONE
     })
     return question as QuestionType
   }
@@ -19,7 +19,7 @@ export class QuestionRepository extends BaseRepository<QuestionType> implements 
   public async createPart2Question(data: Partial<Part2QuestionType>): Promise<Part2QuestionType> {
     const question = await this.create({
       ...data,
-      part: PartKind.TWO
+      part: PART_KIND.TWO
     })
     return question as Part2QuestionType
   }
@@ -27,7 +27,7 @@ export class QuestionRepository extends BaseRepository<QuestionType> implements 
   public async createPart3Question(data: Partial<Part3QuestionType>): Promise<Part3QuestionType> {
     const question = await this.create({
       ...data,
-      part: PartKind.THREE
+      part: PART_KIND.THREE
     })
     return question as Part3QuestionType
   }

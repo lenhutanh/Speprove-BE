@@ -14,7 +14,7 @@ const accountSchema = new Schema(
     isSuperAdmin: { type: Boolean, default: false },
     kind: { type: Number, default: ACCOUNT_KIND.USER },
     status: { type: Number, default: STATUS.PENDING },
-    selectedVoiceId: { type: Schema.Types.ObjectId, ref: 'Voice', required: true },
+    selectedVoiceId: { type: Schema.Types.ObjectId, ref: 'Voice' },
     balance: { type: Schema.Types.Number, default: 0, required: true }
   },
   BaseSchemaOptions

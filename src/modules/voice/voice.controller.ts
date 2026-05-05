@@ -27,4 +27,9 @@ export class VoiceController {
     const voice = await this.voiceService.getDefault()
     return ResponseTransformer.success(res, voice, 'Get default voice successfully')
   }
+
+  public async getList(_req: Request, res: Response) {
+    const voices = await this.voiceService.getList()
+    return ResponseTransformer.success(res, voices, 'Get voice list successfully')
+  }
 }

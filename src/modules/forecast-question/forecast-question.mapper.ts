@@ -7,74 +7,37 @@ import { ForecastQuestionResponseDto } from './forecast-question.dto'
 export class ForecastQuestionMapper extends BaseMapper<ForecastQuestionType, ForecastQuestionResponseDto> {
   toResponse(entity: any): ForecastQuestionResponseDto {
     const q = entity.q || entity.questionId
-    const res: any = {
+    if (!q) return {} as any
+
+    const res: ForecastQuestionResponseDto = {
       id: entity._id.toString(),
-      questionId: q._id.toString(),
+      questionId: q._id?.toString() || q.id,
       content: q.content,
       part: q.part,
-      order: entity.order
+      order: entity.order,
+      audioUrl: entity.audioUrl,
+      prev: entity.prev,
+      next: entity.next
+    }
+
+    if (q.parentId) {
+      res.parent = {
+        id: q.parentId._id.toString(),
+        questionId: q.parentId._id.toString(),
+        content: q.parentId.content,
+        part: q.parentId.part
+      }
     }
 
     if (q.part === 2) {
       res.category = q.category
       res.bulletPoints = q.bulletPoints || []
-    }
 
-    if (q.part === 3) {
-      if (q.parentId) {
-        if (typeof q.parentId === 'object' && q.parentId._id) {
-          res.parent = this.toResponse({
-            q: q.parentId,
-            _id: q.parentId._id
-          })
-        } else {
-          res.parent = q.parentId.toString()
-        }
+      if (entity.followUpForecastQuestions && entity.followUpForecastQuestions.length > 0) {
+        res.childPart3 = entity.followUpForecastQuestions.map((p3Record: any) => this.toResponse(p3Record))
       }
     }
 
     return res
-  }
-
-  toDetailResponse(
-    entity: any,
-    audioUrl: string,
-    neighbors?: {
-      prev: { id: string; content: string } | null
-      next: { id: string; content: string } | null
-    }
-  ): ForecastQuestionResponseDto {
-    const baseResponse = this.toResponse(entity)
-    baseResponse.audioUrl = audioUrl
-    baseResponse.prev = neighbors?.prev ?? null
-    baseResponse.next = neighbors?.next ?? null
-    return baseResponse
-  }
-
-  toResponseList(entities: any[], currentPart?: any): ForecastQuestionResponseDto[] {
-    const mapped = entities.map((e) => this.toResponse(e))
-
-    const part1s = mapped.filter((q) => q.part === 1)
-    const part2s = mapped.filter((q) => q.part === 2)
-    const part3s = mapped.filter((q) => q.part === 3)
-
-    const nestedPart2s = part2s.map((p2) => ({
-      ...p2,
-      childPart3: part3s
-        .filter((p3) => p3.parent?.questionId === p2.questionId || p3.parent?.questionId === p2.questionId)
-        .map((p3) => {
-          const { parent, ...rest } = p3
-          return rest
-        })
-    }))
-
-    const partNum = currentPart ? Number(String(currentPart).split(',')[0]) : null
-
-    if (partNum === 1) return part1s
-    if (partNum === 3) return part3s
-
-    if (!partNum) return [...part1s, ...nestedPart2s]
-
-    return nestedPart2s
   }
 }

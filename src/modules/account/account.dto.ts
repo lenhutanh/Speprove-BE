@@ -11,5 +11,5 @@ export type AccountResponseDto = {
   group: GroupResponseDto | null
   isSuperAdmin: boolean
   createdAt: string
-  selectedVoiceId: string
+  selectedVoiceId?: string
 }

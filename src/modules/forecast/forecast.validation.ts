@@ -1,14 +1,18 @@
 import { z } from 'zod'
-import { createSchema, querySchema, updateSchema } from '~/common/base/base.validation'
+import { createSchema, idParamSchema, querySchema, updateSchema } from '~/common/base/base.validation'
+import { FORECAST_STATUS } from '~/common/constants/constants'
 import { objectIdSchema } from '~/common/utils'
 
 export const createForecastSchema = createSchema({
-  name: z.string().optional(),
   description: z.string().optional(),
   thumbnailId: objectIdSchema.optional(),
   quarter: z.number().int().min(1).max(3),
-  year: z.number().int().min(2020),
-  status: z.number().optional()
+  year: z
+    .number()
+    .int()
+    .min(2020)
+    .max(new Date().getFullYear() + 1),
+  status: z.nativeEnum(FORECAST_STATUS).optional()
 })
 
 export const updateForecastSchema = updateSchema({
@@ -25,13 +29,6 @@ export const forecastQuerySchema = querySchema({
   quarter: z.coerce.number().min(1).max(3).optional()
 })
 
-export const importTopicsSchema = updateSchema({
-  topics: z
-    .array(
-      z.object({
-        topicId: objectIdSchema,
-        order: z.number().int().min(0).default(0)
-      })
-    )
-    .default([])
-})
+export const importTopicsSchema = createSchema({
+  topics: z.array(objectIdSchema).default([])
+}).merge(idParamSchema)

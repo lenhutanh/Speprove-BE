@@ -39,4 +39,12 @@ export class CacheService implements ICacheService {
       await pipeline.exec()
     }
   }
+
+  public async incr(key: string): Promise<number> {
+    return this.redis.incr(key)
+  }
+
+  public async expire(key: string, seconds: number): Promise<void> {
+    await this.redis.expire(key, seconds)
+  }
 }

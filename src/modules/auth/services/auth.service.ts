@@ -176,7 +176,6 @@ export class AuthService {
 
     const otp = generateOtp()
     await this.otpService.storeOtp(data.email, otp)
-    await this.cacheService.set(buildRedisKey(CACHE_CONFIG.VERIFY, data.email), otp, CACHE_CONFIG.VERIFY.TTL)
 
     const { subject, htmlContent } = registerOtpTemplate(otp)
     this.mailProducer.publishSendOtp({ to: data.email, subject, htmlContent })

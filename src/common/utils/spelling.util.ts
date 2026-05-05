@@ -4,9 +4,19 @@ let spellUS: any
 let spellGB: any
 
 const ALLOWED_WORDS = new Set(
-  ['ielts', 'youtube', 'tiktok', 'whatsapp', 'wifi', 'covid', 'facebook', 'instagram', 'chatgpt', 'smartphone'].map(
-    (w) => w.toLowerCase()
-  )
+  [
+    'ielts',
+    'youtube',
+    'tiktok',
+    'whatsapp',
+    'wifi',
+    'covid',
+    'facebook',
+    'instagram',
+    'chatgpt',
+    'smartphone',
+    'tv'
+  ].map((w) => w.toLowerCase())
 )
 
 // Helper để load từ điển từ callback sang Promise
@@ -40,8 +50,9 @@ export async function initSpelling() {
 
 function normalizeText(text: string) {
   return text
+    .replace(/[‘’]/g, "'")
     .toLowerCase()
-    .replace(/[^a-z'\s]/g, ' ') // Giữ lại dấu nháy đơn cho các từ như don't
+    .replace(/[^a-z'\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -51,23 +62,38 @@ export function checkSpelling(text: string) {
 
   const normalized = normalizeText(text)
   const words = normalized.split(' ')
+
   const errors: string[] = []
+  const warnings: { word: string; suggestion: string[] }[] = []
 
   for (const word of words) {
     if (!word || ALLOWED_WORDS.has(word)) continue
 
     const cleanWord = word.replace(/'$/, '')
 
-    // LOGIC QUAN TRỌNG: Chỉ coi là lỗi nếu CẢ HAI từ điển đều báo sai
     const isCorrectUS = spellUS.correct(cleanWord)
     const isCorrectGB = spellGB.correct(cleanWord)
 
     if (!isCorrectUS && !isCorrectGB) {
-      errors.push(word)
+      const capitalized = cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1)
+
+      const isCapitalizedCorrect = spellUS.correct(capitalized) || spellGB.correct(capitalized)
+
+      if (isCapitalizedCorrect) {
+        warnings.push({
+          word,
+          suggestion: [capitalized]
+        })
+      } else {
+        errors.push(word)
+      }
     }
   }
 
-  return [...new Set(errors)]
+  return {
+    errors: [...new Set(errors)],
+    warnings
+  }
 }
 
 export function getSuggestions(word: string) {

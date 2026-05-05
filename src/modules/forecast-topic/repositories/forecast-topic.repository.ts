@@ -11,6 +11,35 @@ export class ForecastTopicRepository extends BaseRepository<ForecastTopicType> i
     super(ForecastTopic)
   }
 
+  public async getRandom(forecastId: string, excludeIds: string[], limit: number): Promise<any> {
+    const excludeObjectIds = excludeIds.map((id) => new Types.ObjectId(id))
+
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          forecastId: new Types.ObjectId(forecastId),
+          _id: { $nin: excludeObjectIds }
+        }
+      },
+      {
+        $sample: { size: limit }
+      },
+      {
+        $lookup: {
+          from: 'topics',
+          localField: 'topicId',
+          foreignField: '_id',
+          as: 'topicId'
+        }
+      },
+      {
+        $unwind: '$topicId'
+      }
+    ]
+
+    return this.aggregate(pipeline)
+  }
+
   public async getList(query: ForecastTopicQueryType): Promise<any> {
     const { page, limit, search, forecastId, topicId, sortBy, sortOrder } = query ?? {}
     const pipeline: PipelineStage[] = [
@@ -46,8 +75,7 @@ export class ForecastTopicRepository extends BaseRepository<ForecastTopicType> i
     }
 
     const sortDirection = sortOrder === 'desc' ? -1 : 1
-    const sortField = sortBy || 'order'
-    pipeline.push({ $sort: { [sortField]: sortDirection } })
+    pipeline.push({ $sort: { ['order']: sortDirection } })
 
     return this.aggregatePaginate(pipeline, page, limit)
   }
