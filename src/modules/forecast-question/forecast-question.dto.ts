@@ -19,4 +19,5 @@ export type ForecastQuestionResponseDto = {
   audioUrl?: string
   prev?: NeighborDto | null
   next?: NeighborDto | null
+  childPart3?: ForecastQuestionResponseDto[]
 }

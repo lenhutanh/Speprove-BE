@@ -8,6 +8,8 @@ import { ForecastType } from './forecast.model'
 import { AppError } from '~/common/errors'
 import { ForecastMapper } from './forecast.mapper'
 import { generateSlug, toObjectId } from '~/common/utils'
+import { FORECAST_STATUS } from '~/common/constants/constants'
+import { ErrorCodes } from '~/common/constants/error-codes'
 
 @singleton()
 export class ForecastService {
@@ -24,7 +26,7 @@ export class ForecastService {
       throw new AppError(`Forecast for Q${data.quarter} ${data.year} already exists`, StatusCodes.CONFLICT)
     }
 
-    const name = data.name || `IELTS Speaking Forecast Q${data.quarter} ${data.year}`
+    const name = `IELTS Speaking Forecast Q${data.quarter} ${data.year}`
     const slug = generateSlug(name)
 
     const createData = {
@@ -82,8 +84,16 @@ export class ForecastService {
     return this.forecastMapper.toResponse(forecast)
   }
 
-  public async existsById(id: string): Promise<boolean> {
+  public async findById(id: string) {
     const forecast = await this.forecastRepository.findById(id)
-    return !!forecast
+    if (!forecast) throw new AppError('Forecast not found', StatusCodes.NOT_FOUND)
+    return forecast
+  }
+
+  public async getCurrentActiveForecast() {
+    const forecast = await this.forecastRepository.findOne({ isDefault: true, status: FORECAST_STATUS.PUBLISHED })
+    if (!forecast)
+      throw new AppError('No active forecast is currently available', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    return forecast
   }
 }

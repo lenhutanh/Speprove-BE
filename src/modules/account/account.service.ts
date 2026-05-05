@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import { Account, AccountType } from '~/modules/account/account.model'
-import { GROUP_NAME, STATUS } from '~/common/constants/constants'
+import { FREE_SIGNUP_BALANCE, GROUP_NAME, STATUS } from '~/common/constants/constants'
 import { inject, singleton } from 'tsyringe'
 import { GroupService } from '../group/group.service'
 import { TOKENS } from '~/common/constants/tokens'
@@ -41,7 +41,8 @@ export class AccountService {
       username: data.email.split('@')[0],
       status: STATUS.ACTIVE,
       groupId: group._id,
-      selectedVoiceId: defaultVoice.id
+      selectedVoiceId: defaultVoice.id,
+      balance: FREE_SIGNUP_BALANCE
     }
     return await this.accountRepository.create(newData)
   }

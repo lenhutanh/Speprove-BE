@@ -21,5 +21,8 @@ export const JOB_NAME = {
     ASSESS: 'speaking:assess',
     EVALUATE: 'speaking:evaluate',
     SCORE_SESSION: 'speaking:score-session'
+  },
+  INSTRUCTION_AUDIO: {
+    GENERATE: 'instruction-audio:generate'
   }
 } as const

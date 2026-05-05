@@ -23,7 +23,7 @@ export class ForecastMapper extends BaseMapper<ForecastType, ForecastResponseDto
       description: entity.description || null,
       validFrom: validFrom.toISOString(),
       validTo: validTo.toISOString(),
-      isActive: entity.status === 1 && now >= validFrom && now <= validTo,
+      // isActive: entity.status === 1 && now >= validFrom && now <= validTo,
       createdAt: entity.createdAt?.toISOString() || ''
     }
   }

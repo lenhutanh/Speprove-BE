@@ -1,24 +1,23 @@
 import { StatusCodes } from 'http-status-codes'
-import { AUDIO_MIME_TYPES, CLOUD_FOLDERS, STATUS } from '~/common/constants/constants'
-import { VoiceType } from './voice.model'
+import { CLOUD_FOLDERS, INSTRUCTION_SCRIPTS, STATUS } from '~/common/constants/constants'
 import { inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { IVoiceRepository } from './repositories/voice.repository.interface'
-import { QueryBuilder } from '~/common/base/query-builder'
 import { CreateVoiceBodyType, UpdateVoiceBodyType } from './types/voice.type'
 import { AppError } from '~/common/errors'
 import { getVoiceSampleText } from '~/common/utils'
-import { AzureSpeechProvider } from '~/infrastructure/providers/tts/azure-speech.provider'
-import { CloudinaryStorageProvider } from '~/infrastructure/providers/storage/cloudinary-storage.provider'
 import { FileService } from '../file/file.service'
 import { VoiceMapper } from './voice.mapper'
+import { FileProducer } from '~/infrastructure/queues/publishers/file.producer'
+import { JOB_NAME } from '~/infrastructure/queues'
 
 @singleton()
 export class VoiceService {
   constructor(
     private readonly fileService: FileService,
     @inject(TOKENS.IVoiceRepository) private readonly voiceRepository: IVoiceRepository,
-    private readonly voiceMapper: VoiceMapper
+    private readonly voiceMapper: VoiceMapper,
+    private readonly fileProducer: FileProducer
   ) {}
   public async createNew(data: CreateVoiceBodyType) {
     const locale = data.voiceCode.split('-').slice(0, 2).join('-')
@@ -44,15 +43,13 @@ export class VoiceService {
     return await this.voiceRepository.updateById(id, updateData)
   }
 
-  public async getList(query?: any) {
-    const { page, limit, sortBy, sortOrder, search, ...filters } = query || {}
-    const qb = new QueryBuilder<VoiceType>()
-    const { filter, options } = qb
-      .applyFilters(filters, ['gender', 'locale', 'status', 'createdAt'])
-      .search(['name'], search)
-      .sort(sortBy, sortOrder)
-      .build()
-    return await this.voiceRepository.paginate(filter, page, limit, options)
+  public async getAll() {
+    return await this.voiceRepository.findMany({ status: STATUS.ACTIVE })
+  }
+
+  public async getList() {
+    const voices = await this.voiceRepository.findMany({ status: STATUS.ACTIVE }, { populate: 'sampleAudioFileId' })
+    return this.voiceMapper.toResponseList(voices)
   }
 
   public async activate(id: string) {
@@ -76,6 +73,22 @@ export class VoiceService {
       folder: CLOUD_FOLDERS.VOICE_SAMPLES
     })
 
+    const jobs = Object.entries(INSTRUCTION_SCRIPTS).map(([key, text]) => {
+      return {
+        name: JOB_NAME.INSTRUCTION_AUDIO.GENERATE,
+        data: {
+          voiceId: voice._id,
+          key,
+          text,
+          voiceCode: voice.voiceCode,
+          speed: voice.speed,
+          pitch: voice.pitch
+        }
+      }
+    })
+
+    await this.fileProducer.addBulk(jobs)
+
     return this.voiceRepository.updateById(id, {
       sampleAudioFileId: audioFile._id,
       status: STATUS.ACTIVE
@@ -91,5 +104,17 @@ export class VoiceService {
     )
     if (!voice) throw new AppError('Default voice not found', StatusCodes.NOT_FOUND)
     return this.voiceMapper.toResponse(voice)
+  }
+
+  public async getRandomVoice() {
+    const voice = await this.voiceRepository.getRandom()
+    if (!voice) throw new AppError('Not found any voice', StatusCodes.NOT_FOUND)
+    return voice
+  }
+
+  public async findById(id: string) {
+    const voice = await this.voiceRepository.findById(id)
+    if (!voice) throw new AppError('Voice not found', StatusCodes.NOT_FOUND)
+    return voice
   }
 }

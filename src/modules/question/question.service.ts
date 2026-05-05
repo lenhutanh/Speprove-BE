@@ -1,5 +1,5 @@
 import { StatusCodes } from 'http-status-codes'
-import { CLOUD_FOLDERS, PartKind } from '~/common/constants/constants'
+import { CLOUD_FOLDERS, PART_KIND } from '~/common/constants/constants'
 import { inject, singleton } from 'tsyringe'
 import { VoiceService } from '../voice/voice.service'
 import { TOKENS } from '~/common/constants/tokens'
@@ -23,35 +23,40 @@ export class QuestionService {
   ) {}
 
   public async createNew(data: CreateQuestionBodyType) {
-    const errors = checkSpelling(data.content)
+    const { errors, warnings } = checkSpelling(data.content)
+
     if (errors.length) {
       const suggestions = errors.map((w) => ({
         word: w,
         suggestion: getSuggestions(w)
       }))
+
       throw new AppError(`Spelling errors: ${JSON.stringify(suggestions)}`)
     }
-    const createData = {
-      ...data,
-      topicId: toObjectId(data.topicId)
-    }
+
     let question: QuestionType | null = null
+
     switch (data.part) {
-      case PartKind.ONE:
-        question = await this.questionRepository.createPart1Question(createData)
+      case PART_KIND.ONE:
+        question = await this.questionRepository.createPart1Question({
+          ...data,
+          topicId: toObjectId(data.topicId)
+        })
         break
-      case PartKind.TWO:
-        question = await this.questionRepository.createPart2Question(createData)
+
+      case PART_KIND.TWO:
+        question = await this.questionRepository.createPart2Question(data)
         break
-      case PartKind.THREE:
+
+      case PART_KIND.THREE:
         question = await this.questionRepository.createPart3Question({
-          ...createData,
+          ...data,
           parentId: toObjectId(data.parentId)
         })
         break
     }
 
-    const voices = (await this.voiceService.getList()).data
+    const voices = await this.voiceService.getAll()
 
     if (voices.length > 0) {
       const jobs = voices.map((voice) => ({

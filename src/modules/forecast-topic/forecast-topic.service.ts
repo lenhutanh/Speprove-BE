@@ -15,25 +15,27 @@ export class ForecastTopicService {
     private readonly forecastTopicMapper: ForecastTopicMapper
   ) {}
 
-  public async importTopics(forecastId: string, selectedTopics: { topicId: string; order: number }[]) {
-    const topicIds = selectedTopics.map((t) => toObjectId(t.topicId))
+  public async importTopics(forecastId: string, topicIds: string[]) {
+    const forecastIdObj = toObjectId(forecastId)
+    const targetTopicIds = topicIds.map((id) => toObjectId(id))
+
     await this.forecastTopicRepository.withTransaction(async (session) => {
       await this.forecastTopicRepository.hardDeleteMany(
         {
-          forecastId: toObjectId(forecastId),
-          topicId: { $nin: topicIds }
+          forecastId: forecastIdObj,
+          topicId: { $nin: targetTopicIds }
         },
         { session }
       )
 
-      const ops = selectedTopics.map((item) => ({
+      const ops = topicIds.map((id, index) => ({
         updateOne: {
           filter: {
-            forecastId: toObjectId(forecastId),
-            topicId: toObjectId(item.topicId)
+            forecastId: forecastIdObj,
+            topicId: toObjectId(id)
           },
           update: {
-            $set: { order: item.order }
+            $set: { order: index }
           },
           upsert: true
         }
@@ -59,5 +61,9 @@ export class ForecastTopicService {
     })
     if (!forecastTopic) throw new AppError('Forecast topic not found', StatusCodes.NOT_FOUND)
     return this.forecastTopicMapper.toResponse(forecastTopic)
+  }
+
+  public async getRandomTopics(forecastId: string, excludeIds: string[], limit: number) {
+    return await this.forecastTopicRepository.getRandom(forecastId, excludeIds, limit)
   }
 }

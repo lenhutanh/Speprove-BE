@@ -19,6 +19,7 @@ router
     validateMiddleware(createVoiceSchema),
     bindHandler(VoiceController, 'createNew')
   )
+  .get(bindHandler(VoiceController, 'getList'))
 
 router
   .route('/:id')

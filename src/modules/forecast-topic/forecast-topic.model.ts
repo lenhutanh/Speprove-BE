@@ -4,9 +4,20 @@ import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base'
 const forecastTopicSchema = new Schema(
   {
     ...BaseSchemaContent,
-    forecastId: { type: Schema.Types.ObjectId, ref: 'Forecast', required: true },
-    topicId: { type: Schema.Types.ObjectId, ref: 'Topic', required: true },
-    order: { type: Number, default: 0 }
+    forecastId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Forecast',
+      required: true
+    },
+    topicId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Topic',
+      required: true
+    },
+    order: {
+      type: Number,
+      default: 0
+    }
   },
   BaseSchemaOptions
 )
