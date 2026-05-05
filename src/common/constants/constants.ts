@@ -109,21 +109,24 @@ export const AUDIO_MIME_TYPES = {
   WEBM: 'audio/webm'
 } as const
 
-export const PART23_CATEGORY = {
-  PERSON: 'Person',
-  PLACE: 'Place',
+export const PART2_CATEGORY = {
   OBJECT: 'Object',
+  PERSON: 'Person',
+  EVENT: 'Event',
   ACTIVITY: 'Activity',
-  EVENT_EXPERIENCE: 'Event/Experience'
+  PLACE: 'Place',
+  FAVOURITE: 'Favourite'
 } as const
 
-export type Part23CategoryValue = (typeof PART23_CATEGORY)[keyof typeof PART23_CATEGORY]
+export type Part23CategoryValue = (typeof PART2_CATEGORY)[keyof typeof PART2_CATEGORY]
 
-export const PartKind = {
+export const PART_KIND = {
   ONE: 1,
   TWO: 2,
   THREE: 3
 } as const
+
+export type PartKind = (typeof PART_KIND)[keyof typeof PART_KIND]
 
 export const IMAGE_PURPOSE = {
   AVATAR: 'user/avatar',
@@ -259,4 +262,39 @@ export const CREDIT_COST = {
     PART_3: 5
   },
   FULL_TEST: 10
+} as const
+
+export const INSTRUCTION_KEYS = {
+  PART1_INTRO: 'part1Intro',
+  NEW_TOPIC: 'newTopic',
+  PART2_INTRO: 'part2Intro',
+  PREP_TIME: 'prepTime',
+  PART3_INTRO: 'part3Intro',
+  WELL_DONE: 'wellDone'
+} as const
+
+export type InstructionKey = (typeof INSTRUCTION_KEYS)[keyof typeof INSTRUCTION_KEYS]
+
+export const INSTRUCTION_SCRIPTS = {
+  part1Intro: "Now, in this first part, I'd like to ask you some questions about yourself.",
+  newTopic: "Let's move on to another topic.",
+  part2Intro:
+    "Now I'm going to give you a topic and I'd like you to talk about it for one to two minutes. You have one minute to prepare, and you can make some notes if you wish.",
+  part3Intro: "We've been talking about this topic. Now I'd like to discuss some more general questions.",
+  wellDone: 'Thank you. That is the end of the speaking test.'
+}
+
+export const FORECAST_STATUS = {
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+  ARCHIVED: 'archived'
+} as const
+
+export type ForecastStatusType = (typeof FORECAST_STATUS)[keyof typeof FORECAST_STATUS]
+
+export const FREE_SIGNUP_BALANCE = 3
+
+export const PART_GROUP = {
+  PART1: '1',
+  PART23: '2,3'
 } as const
