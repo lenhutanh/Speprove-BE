@@ -1,7 +1,8 @@
-export type SpeakingSessionResponseSto = {
+export type SpeakingSessionResponseDto = {
   id: string
   userId: string
   forecastId: string
+  voiceId: string
   type: string
   status: number
   result?: {

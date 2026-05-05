@@ -13,14 +13,23 @@ const sessionResultSchema = new mongoose.Schema(
   { _id: false }
 )
 
+const sessionPart1TopicSchema = new mongoose.Schema(
+  {
+    forecastTopicId: { type: mongoose.Schema.Types.ObjectId, ref: 'ForecastTopic' },
+    forecastQuestionIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' }]
+  },
+  { _id: false }
+)
+
 const sessionQuestionSchema = new mongoose.Schema(
   {
-    part1: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' }],
-    part2: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' }],
+    part1: { type: [sessionPart1TopicSchema] },
+    part2: { type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' },
     part3: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ForecastQuestion' }]
   },
   { _id: false }
 )
+
 const speakingSessionSchema = new mongoose.Schema(
   {
     ...BaseSchemaContent,
@@ -31,8 +40,10 @@ const speakingSessionSchema = new mongoose.Schema(
       enum: Object.values(SPEAKING_SESSION_TYPE),
       required: true
     },
+    voiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Voice', required: true },
     questions: { type: sessionQuestionSchema, required: true },
     status: { type: Number, enum: [0, 1, 2], default: 0 },
+    currentQuestionIndex: { type: Number, default: 0 },
     result: { type: sessionResultSchema, default: null },
     startedAt: { type: Date, default: Date.now },
     finishedAt: { type: Date, default: null }

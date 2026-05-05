@@ -1,15 +1,16 @@
 import { BaseMapper } from '~/common/base'
 import { SpeakingSessionType } from './speaking-session.model'
-import { SpeakingSessionResponseSto } from './speaking-session.dto'
+import { SpeakingSessionResponseDto } from './speaking-session.dto'
 import { singleton } from 'tsyringe'
 
 @singleton()
-export class SpeakingSessionMapper extends BaseMapper<SpeakingSessionType, SpeakingSessionResponseSto> {
-  toResponse(entity: SpeakingSessionType): SpeakingSessionResponseSto {
+export class SpeakingSessionMapper extends BaseMapper<SpeakingSessionType, SpeakingSessionResponseDto> {
+  toResponse(entity: SpeakingSessionType): SpeakingSessionResponseDto {
     return {
       id: entity._id.toString(),
       userId: entity.userId.toString(),
       forecastId: entity.forecastId.toString(),
+      voiceId: entity.voiceId?.toString(),
       type: entity.type,
       status: entity.status,
       result: entity.result
