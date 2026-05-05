@@ -76,4 +76,10 @@ export class AccountService {
     if (!updated) throw new AppError('Insufficient balance', StatusCodes.BAD_REQUEST, ErrorCodes.INSUFFICIENT_BALANCE)
     return updated
   }
+
+  public async updatePassword(email: string, password: string) {
+    const updated = await this.accountRepository.updateOne({ email }, { password })
+    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    return updated
+  }
 }

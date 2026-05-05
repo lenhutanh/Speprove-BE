@@ -1,5 +1,6 @@
 import { emailSchema, otpSchema, passwordSchema } from '~/common/utils/validators.util'
 import { createSchema } from '~/common/base/base.validation'
+import z from 'zod'
 
 export const loginSchema = createSchema({
   email: emailSchema,
@@ -28,3 +29,18 @@ export const verifySchema = createSchema({
 export const forgotPasswordSchema = createSchema({
   email: emailSchema
 })
+
+export const resetPasswordSchema = createSchema({
+  email: emailSchema,
+  newPassword: passwordSchema,
+  confirmPassword: passwordSchema,
+  resetToken: z.string()
+}).refine(
+  async (data) => {
+    return data.body.newPassword === data.body.confirmPassword
+  },
+  {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['body', 'confirmPassword']
+  }
+)

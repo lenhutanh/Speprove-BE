@@ -6,5 +6,9 @@ export const CACHE_CONFIG = {
   VERIFY: {
     PREFIX: 'auth:verify',
     TTL: 180
+  },
+  RESET_PASSWORD_TOKEN: {
+    PREFIX: 'auth:reset-password-token',
+    TTL: 300
   }
 }

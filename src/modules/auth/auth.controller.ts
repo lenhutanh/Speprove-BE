@@ -25,8 +25,8 @@ export class AuthController {
     return ResponseTransformer.successNoData(res, 'OTP sent successfully to your email.')
   }
 
-  public async verify(req: Request, res: Response) {
-    await this.authService.verify(req.validated.body)
+  public async verifyRegister(req: Request, res: Response) {
+    await this.authService.verifyRegister(req.validated.body)
     return ResponseTransformer.successNoData(res, 'Account verified successfully.')
   }
 
@@ -72,5 +72,15 @@ export class AuthController {
   private clearAuthCookies(res: Response): void {
     res.clearCookie('accessToken')
     res.clearCookie('refreshToken', { path: '/api/v1/auth' })
+  }
+
+  public async verifyForgotPassword(req: Request, res: Response) {
+    const result = await this.authService.verifyForgotPassword(req.validated.body)
+    return ResponseTransformer.success(res, result, 'Verify forgot password successfully')
+  }
+
+  public async resetPassword(req: Request, res: Response) {
+    await this.authService.resetPassword(req.validated.body)
+    return ResponseTransformer.successNoData(res, 'Reset password successfully')
   }
 }
