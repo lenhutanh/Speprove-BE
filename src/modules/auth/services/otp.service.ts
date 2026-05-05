@@ -18,7 +18,6 @@ export class OtpService {
 
     if (!cachedOtp || cachedOtp !== otp) return false
 
-    await this.cacheService.delete(key)
     return true
   }
 

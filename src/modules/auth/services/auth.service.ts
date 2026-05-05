@@ -1,7 +1,7 @@
 import { StatusCodes } from 'http-status-codes'
 import bcrypt from 'bcrypt'
 import { AccountService } from '../../account/account.service'
-import { buildRedisKey, generateOtp } from '~/common/utils'
+import { buildRedisKey, generateOtp, generateResetToken } from '~/common/utils'
 import { OtpService } from './otp.service'
 import { registerOtpTemplate } from '~/resources/mail-templates'
 import { STATUS, TOKEN_TYPE } from '~/common/constants/constants'
@@ -10,7 +10,7 @@ import { SessionService } from '../../session/session.service'
 import { ErrorCodes } from '~/common/constants/error-codes'
 import { ITokenService, TokenPayload } from '~/common/interfaces/token.interface'
 import { TOKENS } from '~/common/constants/tokens'
-import { LoginBodyType, RegisterBodyType, VerifyBodyType } from '../types/auth.type'
+import { LoginBodyType, RegisterBodyType, ResetPasswordBodyType, VerifyBodyType } from '../types/auth.type'
 import { AppError } from '~/common/errors'
 import { ICacheService } from '~/infrastructure/cache'
 import { CACHE_CONFIG } from '../auth.constants'
@@ -83,7 +83,7 @@ export class AuthService {
     this.mailProducer.publishSendOtp({ to: data.email, subject, htmlContent })
   }
 
-  public async verify(data: VerifyBodyType) {
+  public async verifyRegister(data: VerifyBodyType) {
     const existedAccount = await this.accountService.findByEmail(data.email)
     if (existedAccount) {
       throw new AppError('Your account is already verified!', StatusCodes.NOT_ACCEPTABLE)
@@ -98,7 +98,7 @@ export class AuthService {
 
     const isOtpValid = await this.otpService.verifyOtp(data.email, data.otp)
     if (!isOtpValid) {
-      throw new AppError('OTP does not match or expired', StatusCodes.NOT_ACCEPTABLE)
+      throw new AppError('OTP is invalid or has expired', StatusCodes.NOT_ACCEPTABLE)
     }
 
     try {
@@ -179,5 +179,40 @@ export class AuthService {
 
     const { subject, htmlContent } = registerOtpTemplate(otp)
     this.mailProducer.publishSendOtp({ to: data.email, subject, htmlContent })
+  }
+
+  public async verifyForgotPassword(data: VerifyBodyType) {
+    const account = await this.accountService.findByEmail(data.email)
+
+    if (!account) throw new AppError('Account not found', StatusCodes.NOT_FOUND)
+
+    const isOtpValid = await this.otpService.verifyOtp(data.email, data.otp)
+    if (!isOtpValid) {
+      throw new AppError('OTP is invalid or has expired', StatusCodes.NOT_ACCEPTABLE)
+    }
+
+    await this.otpService.deleteOtp(data.email)
+
+    const resetToken = generateResetToken()
+    const cacheKey = buildRedisKey(CACHE_CONFIG.RESET_PASSWORD_TOKEN, data.email)
+    await this.cacheService.set(cacheKey, resetToken, CACHE_CONFIG.RESET_PASSWORD_TOKEN.TTL)
+    return { resetToken }
+  }
+
+  public async resetPassword(data: ResetPasswordBodyType) {
+    const account = await this.accountService.findByEmail(data.email)
+
+    if (!account) throw new AppError('Account not found', StatusCodes.NOT_FOUND)
+
+    const cacheKey = buildRedisKey(CACHE_CONFIG.RESET_PASSWORD_TOKEN, data.email)
+    const resetToken = await this.cacheService.get(cacheKey)
+
+    if (!resetToken || resetToken !== data.resetToken)
+      throw new AppError('Reset token is invalid or has expired', StatusCodes.BAD_REQUEST)
+
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10)
+    await this.accountService.updatePassword(data.email, hashedPassword)
+
+    await this.cacheService.delete(cacheKey)
   }
 }
