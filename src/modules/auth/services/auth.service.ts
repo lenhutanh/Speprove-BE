@@ -194,24 +194,21 @@ export class AuthService {
     await this.otpService.deleteOtp(data.email)
 
     const resetToken = generateResetToken()
-    const cacheKey = buildRedisKey(CACHE_CONFIG.RESET_PASSWORD_TOKEN, data.email)
-    await this.cacheService.set(cacheKey, resetToken, CACHE_CONFIG.RESET_PASSWORD_TOKEN.TTL)
+    const cacheKey = buildRedisKey(CACHE_CONFIG.RESET_PASSWORD_TOKEN, resetToken)
+    await this.cacheService.set<string>(cacheKey, data.email, CACHE_CONFIG.RESET_PASSWORD_TOKEN.TTL)
     return { resetToken }
   }
 
   public async resetPassword(data: ResetPasswordBodyType) {
-    const account = await this.accountService.findByEmail(data.email)
+    const cacheKey = buildRedisKey(CACHE_CONFIG.RESET_PASSWORD_TOKEN, data.resetToken)
+    const email = await this.cacheService.get<string>(cacheKey)
+    if (!email) throw new AppError('Reset token is invalid or has expired', StatusCodes.BAD_REQUEST)
 
+    const account = await this.accountService.findByEmail(email)
     if (!account) throw new AppError('Account not found', StatusCodes.NOT_FOUND)
 
-    const cacheKey = buildRedisKey(CACHE_CONFIG.RESET_PASSWORD_TOKEN, data.email)
-    const resetToken = await this.cacheService.get(cacheKey)
-
-    if (!resetToken || resetToken !== data.resetToken)
-      throw new AppError('Reset token is invalid or has expired', StatusCodes.BAD_REQUEST)
-
     const hashedPassword = await bcrypt.hash(data.newPassword, 10)
-    await this.accountService.updatePassword(data.email, hashedPassword)
+    await this.accountService.updatePassword(email, hashedPassword)
 
     await this.cacheService.delete(cacheKey)
   }

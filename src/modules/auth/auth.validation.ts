@@ -31,7 +31,6 @@ export const forgotPasswordSchema = createSchema({
 })
 
 export const resetPasswordSchema = createSchema({
-  email: emailSchema,
   newPassword: passwordSchema,
   confirmPassword: passwordSchema,
   resetToken: z.string()
