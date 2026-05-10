@@ -141,10 +141,7 @@ export class SpeakingSessionService {
 
     const qb = new QueryBuilder<SpeakingSessionType>()
 
-    const { filter, options } = qb
-      .applyFilters({ userId, forecastId })
-      .sort(sortBy, sortOrder)
-      .build()
+    const { filter, options } = qb.applyFilters({ userId, forecastId }).sort(sortBy, sortOrder).build()
 
     const { data, pagination } = await this.speakingSessionRepository.paginate(filter, page, limit, options)
 
@@ -273,6 +270,9 @@ export class SpeakingSessionService {
     return {
       isFinished: false,
       instruction: transitionAudioUrl,
+      mode: speakingSession.type,
+      questionIndex: index,
+      totalQuestions: flatQuestions.length,
       question: {
         id: currentContext.id,
         part: currentContext.part,

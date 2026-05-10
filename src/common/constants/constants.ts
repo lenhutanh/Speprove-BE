@@ -86,7 +86,8 @@ export const CLOUD_FOLDERS = {
   VOICE_SAMPLES: `${env.APP_NAME}/voices/samples`,
   QUESTION_AUDIOS: `${env.APP_NAME}/questions/audios`,
   USER_RECORDINGS: `${env.APP_NAME}/practice/recordings`,
-  FORECAST_THUMBNAIL: `${env.APP_NAME}/forecasts/thumbnails`
+  FORECAST_THUMBNAIL: `${env.APP_NAME}/forecasts/thumbnails`,
+  MOCK_TEST: `${env.APP_NAME}/mock/recordings`
 } as const
 
 export const FILE_KIND = {
@@ -136,8 +137,9 @@ export const IMAGE_PURPOSE = {
 export type ImagePurpose = (typeof IMAGE_PURPOSE)[keyof typeof IMAGE_PURPOSE]
 
 export const AUDIO_PURPOSE = {
-  QUESTION_AUDIO: 'question/audio',
-  USER_RECORDINGS: 'practice/recordings'
+  QUESTION_AUDIO: 'question-audio',
+  PRACTICE: 'practice',
+  MOCK_TEST: 'mock'
 } as const
 
 export type AudioPurpose = (typeof AUDIO_PURPOSE)[keyof typeof AUDIO_PURPOSE]
@@ -149,7 +151,8 @@ export const PURPOSE_TO_FOLDER: Record<ImagePurpose | AudioPurpose, string> = {
 
   // Audio
   [AUDIO_PURPOSE.QUESTION_AUDIO]: CLOUD_FOLDERS.QUESTION_AUDIOS,
-  [AUDIO_PURPOSE.USER_RECORDINGS]: CLOUD_FOLDERS.USER_RECORDINGS
+  [AUDIO_PURPOSE.PRACTICE]: CLOUD_FOLDERS.USER_RECORDINGS,
+  [AUDIO_PURPOSE.MOCK_TEST]: CLOUD_FOLDERS.MOCK_TEST
 }
 
 export const SPEAKING_SESSION_MODE = {

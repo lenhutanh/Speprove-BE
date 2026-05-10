@@ -24,7 +24,8 @@ export class AccountMapper extends BaseMapper<AccountType, AccountResponseDto> {
       group: isPopulated ? this.groupMapper.toResponse(entity.groupId as any) : null,
       isSuperAdmin: !!entity.isSuperAdmin,
       createdAt: entity.createdAt?.toISOString() || '',
-      selectedVoiceId: entity?.selectedVoiceId ? entity?.selectedVoiceId.toString() : undefined
+      selectedVoiceId: entity?.selectedVoiceId ? entity?.selectedVoiceId.toString() : undefined,
+      balance: entity.balance
     }
   }
 }

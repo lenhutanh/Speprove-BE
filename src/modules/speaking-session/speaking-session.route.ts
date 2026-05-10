@@ -30,7 +30,11 @@ router
 
 router
   .route('/:id/current-question')
-  .get(authMiddleware.isAuthorized, bindHandler(SpeakingSessionController, 'getCurrentQuestion'))
+  .get(
+    authMiddleware.isAuthorized,
+    validateMiddleware(idParamSchema),
+    bindHandler(SpeakingSessionController, 'getCurrentQuestion')
+  )
 
 router
   .route('/:id')
