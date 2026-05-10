@@ -70,8 +70,20 @@ export class AuthController {
   }
 
   private clearAuthCookies(res: Response): void {
-    res.clearCookie('accessToken')
-    res.clearCookie('refreshToken', { path: '/api/v1/auth' })
+    const isProduction = env.NODE_ENV === 'production'
+
+    res.clearCookie('accessToken', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax'
+    })
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/api/v1/auth'
+    })
   }
 
   public async verifyForgotPassword(req: Request, res: Response) {

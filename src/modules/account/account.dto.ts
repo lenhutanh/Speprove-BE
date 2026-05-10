@@ -12,4 +12,5 @@ export type AccountResponseDto = {
   isSuperAdmin: boolean
   createdAt: string
   selectedVoiceId?: string
+  balance: number
 }
