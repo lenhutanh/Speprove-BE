@@ -10,14 +10,14 @@ export const loginSchema = createSchema({
 export const registerSchema = createSchema({
   email: emailSchema,
   password: passwordSchema,
-  confirmedPassword: passwordSchema
+  confirmPassword: passwordSchema
 }).refine(
   async (data) => {
-    return data.body.password === data.body.confirmedPassword
+    return data.body.password === data.body.confirmPassword
   },
   {
     message: 'Mật khẩu xác nhận không khớp',
-    path: ['body', 'confirmedPassword']
+    path: ['body', 'confirmPassword']
   }
 )
 

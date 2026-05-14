@@ -22,12 +22,12 @@ export class AuthController {
 
   public async register(req: Request, res: Response) {
     await this.authService.register(req.validated.body)
-    return ResponseTransformer.successNoData(res, 'OTP sent successfully to your email.')
+    return ResponseTransformer.successNoData(res, 'OTP sent to your email.')
   }
 
   public async verifyRegister(req: Request, res: Response) {
     await this.authService.verifyRegister(req.validated.body)
-    return ResponseTransformer.successNoData(res, 'Account verified successfully.')
+    return ResponseTransformer.successNoData(res, 'Create account successfully.')
   }
 
   public async logout(req: AuthenticatedRequest, res: Response) {
@@ -48,7 +48,7 @@ export class AuthController {
 
   public async forgotPassword(req: Request, res: Response) {
     await this.authService.forgotPassword(req.validated.body)
-    return ResponseTransformer.successNoData(res, 'OTP sent to your email')
+    return ResponseTransformer.successNoData(res, 'OTP sent to your email.')
   }
 
   private setAuthCookies(res: Response, tokens: { accessToken: string; refreshToken: string }): void {
