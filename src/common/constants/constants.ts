@@ -85,7 +85,7 @@ export const CLOUD_FOLDERS = {
   AVATARS: `${env.APP_NAME}/users/avatars`,
   VOICE_SAMPLES: `${env.APP_NAME}/voices/samples`,
   QUESTION_AUDIOS: `${env.APP_NAME}/questions/audios`,
-  USER_RECORDINGS: `${env.APP_NAME}/practice/recordings`,
+  PRACTICE: `${env.APP_NAME}/practice/recordings`,
   FORECAST_THUMBNAIL: `${env.APP_NAME}/forecasts/thumbnails`,
   MOCK_TEST: `${env.APP_NAME}/mock/recordings`
 } as const
@@ -151,7 +151,7 @@ export const PURPOSE_TO_FOLDER: Record<ImagePurpose | AudioPurpose, string> = {
 
   // Audio
   [AUDIO_PURPOSE.QUESTION_AUDIO]: CLOUD_FOLDERS.QUESTION_AUDIOS,
-  [AUDIO_PURPOSE.PRACTICE]: CLOUD_FOLDERS.USER_RECORDINGS,
+  [AUDIO_PURPOSE.PRACTICE]: CLOUD_FOLDERS.PRACTICE,
   [AUDIO_PURPOSE.MOCK_TEST]: CLOUD_FOLDERS.MOCK_TEST
 }
 
