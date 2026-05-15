@@ -47,7 +47,12 @@ const envSchema = z.object({
   // PayOS
   PAYOS_CLIENT_ID: z.string(),
   PAYOS_API_KEY: z.string(),
-  PAYOS_CHECKSUM_KEY: z.string()
+  PAYOS_CHECKSUM_KEY: z.string(),
+
+  // Google
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  GOOGLE_REDIRECT_URI: z.string()
 })
 
 const parsed = envSchema.safeParse(process.env)

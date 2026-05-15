@@ -5,6 +5,8 @@ import { ResponseTransformer } from '~/common/utils'
 import { injectable } from 'tsyringe'
 import { AuthenticatedRequest } from '~/common/interfaces/request.interface'
 import { AuthService } from './services'
+import { AppError } from '~/common/errors'
+import { ErrorCodes } from '~/common/constants/error-codes'
 
 @injectable()
 export class AuthController {
@@ -94,5 +96,33 @@ export class AuthController {
   public async resetPassword(req: Request, res: Response) {
     await this.authService.resetPassword(req.validated.body)
     return ResponseTransformer.successNoData(res, 'Reset password successfully')
+  }
+
+  public async googleLogin(req: Request, res: Response) {
+    const { url } = await this.authService.getGoogleLoginUrl()
+    res.redirect(url)
+  }
+
+  public async googleCallback(req: Request, res: Response) {
+    try {
+      const metadata = {
+        ipAddress: req.ip,
+        deviceInfo: req.headers['user-agent']
+      }
+
+      const result = await this.authService.handleGoogleCallback(req.validated.query, metadata)
+
+      this.setAuthCookies(res, result)
+
+      return res.redirect(`${env.APP_URL}/auth/callback`)
+    } catch (error) {
+      const errorCode = error instanceof AppError ? error.errorCode : ErrorCodes.INTERNAL_SERVER_ERROR
+
+      const params = new URLSearchParams({
+        errorCode
+      })
+
+      return res.redirect(`${env.APP_URL}/auth/callback?${params.toString()}`)
+    }
   }
 }

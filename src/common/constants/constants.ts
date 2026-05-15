@@ -301,3 +301,8 @@ export const PART_GROUP = {
   PART1: '1',
   PART23: '2,3'
 } as const
+
+export const LOGIN_PROVIDER = {
+  LOCAL: 'local',
+  GOOGLE: 'google'
+} as const

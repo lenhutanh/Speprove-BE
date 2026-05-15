@@ -1,5 +1,5 @@
 import { emailSchema, otpSchema, passwordSchema } from '~/common/utils/validators.util'
-import { createSchema } from '~/common/base/base.validation'
+import { createSchema, querySchema } from '~/common/base/base.validation'
 import z from 'zod'
 
 export const loginSchema = createSchema({
@@ -43,3 +43,8 @@ export const resetPasswordSchema = createSchema({
     path: ['body', 'confirmPassword']
   }
 )
+
+export const googleCallbackSchema = querySchema({
+  code: z.string(),
+  state: z.string()
+})
