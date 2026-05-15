@@ -1,20 +1,28 @@
 import { StatusCodes } from 'http-status-codes'
 import bcrypt from 'bcrypt'
 import { AccountService } from '../../account/account.service'
-import { buildRedisKey, generateOtp, generateResetToken } from '~/common/utils'
+import { buildRedisKey, generateOtp, generateSecureToken } from '~/common/utils'
 import { OtpService } from './otp.service'
 import { registerOtpTemplate } from '~/resources/mail-templates'
-import { STATUS, TOKEN_TYPE } from '~/common/constants/constants'
+import { LOGIN_PROVIDER, STATUS, TOKEN_TYPE } from '~/common/constants/constants'
 import { inject, singleton } from 'tsyringe'
 import { SessionService } from '../../session/session.service'
 import { ErrorCodes } from '~/common/constants/error-codes'
 import { ITokenService, TokenPayload } from '~/common/interfaces/token.interface'
 import { TOKENS } from '~/common/constants/tokens'
-import { LoginBodyType, RegisterBodyType, ResetPasswordBodyType, VerifyBodyType } from '../types/auth.type'
+import {
+  GoogleCallbackType,
+  LoginBodyType,
+  RegisterBodyType,
+  ResetPasswordBodyType,
+  VerifyBodyType
+} from '../types/auth.type'
 import { AppError } from '~/common/errors'
 import { ICacheService } from '~/infrastructure/cache'
 import { CACHE_CONFIG } from '../auth.constants'
 import { MailProducer } from '~/infrastructure/queues/publishers/mail.producer'
+import { UserInfoGoogleDto } from '../types/google.type'
+import { GoogleService } from './google.service'
 
 @singleton()
 export class AuthService {
@@ -24,7 +32,8 @@ export class AuthService {
     private readonly sessionService: SessionService,
     private readonly mailProducer: MailProducer,
     @inject(TOKENS.ITokenService) private readonly tokenService: ITokenService,
-    @inject(TOKENS.ICacheService) private readonly cacheService: ICacheService
+    @inject(TOKENS.ICacheService) private readonly cacheService: ICacheService,
+    private readonly googleService: GoogleService
   ) {}
 
   public async login(data: LoginBodyType, metadata: { ipAddress?: string; deviceInfo?: string }) {
@@ -143,7 +152,7 @@ export class AuthService {
     }
 
     if (account.status === STATUS.LOCKED || account.status === STATUS.DELETED) {
-      throw new AppError('Your account is locked or deleted', StatusCodes.FORBIDDEN)
+      throw new AppError('Your account is locked or deleted', StatusCodes.FORBIDDEN, ErrorCodes.ACCOUNT_LOCKED)
     }
 
     const group = account.groupId as any
@@ -193,7 +202,7 @@ export class AuthService {
 
     await this.otpService.deleteOtp(data.email)
 
-    const resetToken = generateResetToken()
+    const resetToken = generateSecureToken()
     const cacheKey = buildRedisKey(CACHE_CONFIG.RESET_PASSWORD_TOKEN, resetToken)
     await this.cacheService.set<string>(cacheKey, data.email, CACHE_CONFIG.RESET_PASSWORD_TOKEN.TTL)
     return { resetToken }
@@ -211,5 +220,79 @@ export class AuthService {
     await this.accountService.updatePassword(email, hashedPassword)
 
     await this.cacheService.delete(cacheKey)
+  }
+
+  public async getGoogleLoginUrl() {
+    const state = generateSecureToken()
+    const cacheKey = buildRedisKey(CACHE_CONFIG.GOOGLE_OAUTH_STATE, state)
+    await this.cacheService.set<string>(cacheKey, state, CACHE_CONFIG.GOOGLE_OAUTH_STATE.TTL)
+    return this.googleService.generateAuthUrl(state)
+  }
+
+  public async handleGoogleCallback(data: GoogleCallbackType, metadata: { ipAddress?: string; deviceInfo?: string }) {
+    const cacheKey = buildRedisKey(CACHE_CONFIG.GOOGLE_OAUTH_STATE, data.state)
+
+    const storedState = await this.cacheService.get<string>(cacheKey)
+
+    if (!storedState) {
+      throw new AppError('Invalid Google OAuth state', StatusCodes.UNAUTHORIZED, ErrorCodes.OAUTH_STATE_INVALID)
+    }
+
+    await this.cacheService.delete(cacheKey)
+
+    const userInfo = await this.googleService.getUserInfo(data.code)
+    return await this.handleSocialLogin(userInfo, metadata)
+  }
+
+  public async handleSocialLogin(userInfo: UserInfoGoogleDto, metadata: { ipAddress?: string; deviceInfo?: string }) {
+    if (!userInfo.emailVerified) {
+      throw new AppError('Google email is not verified', StatusCodes.UNAUTHORIZED, ErrorCodes.GOOGLE_EMAIL_NOT_VERIFIED)
+    }
+
+    let account = await this.accountService.findByEmail(userInfo.email)
+
+    if (account && account.provider !== LOGIN_PROVIDER.GOOGLE) {
+      throw new AppError(
+        'This email is already registered with another login method',
+        StatusCodes.CONFLICT,
+        ErrorCodes.GOOGLE_ACCOUNT_CONFLICT
+      )
+    }
+
+    if (account && account.provider === LOGIN_PROVIDER.GOOGLE && account.providerId !== userInfo.providerId) {
+      throw new AppError('Google account mismatch', StatusCodes.UNAUTHORIZED, ErrorCodes.GOOGLE_ACCOUNT_MISMATCH)
+    }
+
+    if (!account) {
+      account = await this.accountService.createUserSocial(userInfo)
+    }
+
+    if (account.status === STATUS.LOCKED || account.status === STATUS.DELETED) {
+      throw new AppError('Your account is locked or deleted', StatusCodes.FORBIDDEN)
+    }
+
+    const group = account.groupId as any
+    const permissions = group?.permissionIds?.map((p: any) => p.pCode) || []
+
+    const payload = {
+      _id: account._id.toString(),
+      email: account.email,
+      permissions
+    }
+
+    const refreshToken = this.tokenService.generateRefreshToken({
+      ...payload,
+      type: TOKEN_TYPE.REFRESH
+    })
+
+    await this.sessionService.createOrUpdate(account._id, refreshToken, metadata)
+
+    return {
+      accessToken: this.tokenService.generateAccessToken({
+        ...payload,
+        type: TOKEN_TYPE.ACCESS
+      }),
+      refreshToken
+    }
   }
 }

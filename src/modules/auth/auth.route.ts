@@ -1,7 +1,14 @@
 import express from 'express'
 import { AuthController } from '~/modules/auth/auth.controller'
 import { validateMiddleware } from '~/common/middlewares/validate.middleware'
-import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema, verifySchema } from './auth.validation'
+import {
+  forgotPasswordSchema,
+  googleCallbackSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  verifySchema
+} from './auth.validation'
 import { bindHandler } from '~/common/utils'
 import { container } from 'tsyringe'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
@@ -28,5 +35,9 @@ router.post(
   bindHandler(AuthController, 'verifyForgotPassword')
 )
 router.post('/reset-password', validateMiddleware(resetPasswordSchema), bindHandler(AuthController, 'resetPassword'))
+
+router.get('/google', bindHandler(AuthController, 'googleLogin'))
+
+router.get('/google/callback', validateMiddleware(googleCallbackSchema), bindHandler(AuthController, 'googleCallback'))
 
 export const authRoutes = router
