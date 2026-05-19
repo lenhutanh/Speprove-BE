@@ -13,4 +13,5 @@ export type AccountResponseDto = {
   createdAt: string
   selectedVoiceId?: string
   balance: number
+  hasPassword: boolean
 }

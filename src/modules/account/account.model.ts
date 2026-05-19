@@ -1,6 +1,6 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '../../common/base/base.model'
-import { ACCOUNT_KIND, LOGIN_PROVIDER, STATUS } from '~/common/constants/constants'
+import { ACCOUNT_KIND, STATUS } from '~/common/constants/constants'
 
 const accountSchema = new Schema(
   {
@@ -9,22 +9,8 @@ const accountSchema = new Schema(
     email: { type: String, required: true, unique: true, lowercase: true },
     password: {
       type: String,
-      required: function (this: any) {
-        return this.provider === LOGIN_PROVIDER.LOCAL
-      },
+      default: null,
       select: false
-    },
-    provider: {
-      type: String,
-      enum: Object.values(LOGIN_PROVIDER),
-      default: LOGIN_PROVIDER.LOCAL,
-      required: true
-    },
-    providerId: {
-      type: String,
-      required: function (this: any) {
-        return this.provider === LOGIN_PROVIDER.GOOGLE
-      }
     },
     fullName: { type: String, trim: true },
     groupId: { type: Schema.Types.ObjectId, ref: 'Group', required: true },
@@ -36,16 +22,6 @@ const accountSchema = new Schema(
     balance: { type: Schema.Types.Number, default: 0, required: true }
   },
   BaseSchemaOptions
-)
-
-accountSchema.index(
-  { provider: 1, providerId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: {
-      providerId: { $exists: true }
-    }
-  }
 )
 
 export type AccountType = InferSchemaType<typeof accountSchema> & {

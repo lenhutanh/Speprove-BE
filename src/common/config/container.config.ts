@@ -28,6 +28,7 @@ import { registerPaymentModule } from '~/modules/payment/payment.di'
 import { registerCreditPackageModule } from '~/modules/credit-package/credit-package.di'
 import { registerCreditLogModule } from '~/modules/credit-log/credit-log.di'
 import { registerInstructionAudioModule } from '~/modules/instruction-audio/instruction-audio.di'
+import { registerAccountProviderModule } from '~/modules/account-provider/account-provider.di';
 
 export function setupContainer(): void {
   console.log('🔧 Setting up DI container...')
@@ -62,6 +63,7 @@ export function setupContainer(): void {
   registerCreditPackageModule()
   registerCreditLogModule()
   registerInstructionAudioModule()
+  registerAccountProviderModule()
 
   console.log('✅ DI container ready\n')
 }

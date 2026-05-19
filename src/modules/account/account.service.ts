@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import { Account, AccountType } from '~/modules/account/account.model'
-import { FREE_SIGNUP_BALANCE, GROUP_NAME, LOGIN_PROVIDER, STATUS } from '~/common/constants/constants'
+import { FREE_SIGNUP_BALANCE, GROUP_NAME, STATUS } from '~/common/constants/constants'
 import { inject, singleton } from 'tsyringe'
 import { GroupService } from '../group/group.service'
 import { TOKENS } from '~/common/constants/tokens'
@@ -8,28 +8,36 @@ import { IAccountRepository } from './repositories/account.repository.interface'
 import { AppError } from '~/common/errors'
 import { VoiceService } from '../voice/voice.service'
 import { ErrorCodes } from '~/common/constants/error-codes'
-import { UserInfoGoogleDto } from '../auth/types/google.type'
-import { toObjectId } from '~/common/utils'
+import { AccountMapper } from './account.mapper'
+import { UpdateProfileBodyType } from '../auth/types/auth.type'
 
 @singleton()
 export class AccountService {
   constructor(
     private readonly groupService: GroupService,
     @inject(TOKENS.IAccountRepository) private readonly accountRepository: IAccountRepository,
-    private readonly voiceService: VoiceService
+    private readonly voiceService: VoiceService,
+    private readonly accountMapper: AccountMapper
   ) {}
 
   public async getById(id: string): Promise<AccountType> {
     const account = await this.accountRepository.findById(id, {
-      select: '-password',
-      populate: 'groupId'
+      select: '+password',
+      populate: {
+        path: 'groupId',
+        populate: { path: 'permissionIds' }
+      }
     })
 
     if (!account) throw new AppError('Account not found', StatusCodes.NOT_FOUND)
     return account
   }
 
-  public async createUser(data: any) {
+  public async withTransaction<R>(callback: (session: any) => Promise<R>): Promise<R> {
+    return await this.accountRepository.withTransaction(callback)
+  }
+
+  public async createUser(data: any, session?: any) {
     const [group, defaultVoice] = await Promise.all([
       this.groupService.findByName(GROUP_NAME.USER),
       this.voiceService.getDefault()
@@ -38,34 +46,42 @@ export class AccountService {
     if (!group) {
       throw new AppError('Default user group not found', StatusCodes.INTERNAL_SERVER_ERROR)
     }
+
     const newData = {
       ...data,
       username: data.email.split('@')[0],
       status: STATUS.ACTIVE,
       groupId: group._id,
       selectedVoiceId: defaultVoice.id,
-      balance: FREE_SIGNUP_BALANCE,
-      provider: LOGIN_PROVIDER.LOCAL
+      balance: FREE_SIGNUP_BALANCE
     }
-    return await this.accountRepository.create(newData)
+    return await this.accountRepository.create(newData, { session })
   }
 
   public async getList() {
-    return await Account.find({}).select('-password').populate('group', 'name description')
+    return await Account.find({}).select('-password').populate('groupId', 'name description')
   }
 
-  public async getMe(id: string): Promise<AccountType> {
+  public async getMe(id: string) {
     const account = await this.accountRepository.getAccountWithPermissions(id)
 
     if (!account) {
       throw new AppError('Account not found', StatusCodes.NOT_FOUND)
     }
 
-    return account
+    return this.accountMapper.toResponse(account)
   }
 
-  async findByEmail(email: string): Promise<AccountType | null> {
-    return await this.accountRepository.findByEmailWithPassword(email)
+  public async findByEmail(email: string): Promise<AccountType | null> {
+    return await this.accountRepository.findByEmail(email)
+  }
+
+  public async findByEmailForLogin(email: string): Promise<AccountType | null> {
+    return await this.accountRepository.findByEmailForLogin(email)
+  }
+
+  public async findByEmailForToken(email: string): Promise<AccountType | null> {
+    return await this.accountRepository.findByEmailForToken(email)
   }
 
   public async addBalance(userId: string, amount: number, session: any) {
@@ -86,28 +102,9 @@ export class AccountService {
     return updated
   }
 
-  public async createUserSocial(userInfo: UserInfoGoogleDto) {
-    const [group, defaultVoice] = await Promise.all([
-      this.groupService.findByName(GROUP_NAME.USER),
-      this.voiceService.getDefault()
-    ])
-
-    if (!group) {
-      throw new AppError('Default user group not found', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-
-    const newData = {
-      email: userInfo.email,
-      fullName: userInfo.fullName,
-      username: userInfo.email.split('@')[0],
-      status: STATUS.ACTIVE,
-      groupId: group._id,
-      selectedVoiceId: toObjectId(defaultVoice.id),
-      balance: FREE_SIGNUP_BALANCE,
-      provider: LOGIN_PROVIDER.GOOGLE,
-      providerId: userInfo.providerId
-    }
-
-    return await this.accountRepository.create(newData)
+  public async updateProfile(userId: string, data: UpdateProfileBodyType) {
+    const updated = await this.accountRepository.updateById(userId, data)
+    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    return this.getMe(userId)
   }
 }

@@ -303,6 +303,7 @@ export const PART_GROUP = {
 } as const
 
 export const LOGIN_PROVIDER = {
-  LOCAL: 'local',
   GOOGLE: 'google'
 } as const
+
+export type LoginProviderType = (typeof LOGIN_PROVIDER)[keyof typeof LOGIN_PROVIDER]

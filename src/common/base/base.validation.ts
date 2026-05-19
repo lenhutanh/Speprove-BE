@@ -22,7 +22,7 @@ export const createUnionSchema = <T extends ZodTypeAny>(schema: T) =>
 export const updateSchema = <T extends ZodRawShape>(fields: T) =>
   z.object({
     params: z.object({
-      id: objectIdSchema
+      id: objectIdSchema.optional()
     }),
     body: z.object(fields).strip()
   })
