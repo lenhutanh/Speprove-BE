@@ -14,4 +14,6 @@ export interface TokenPayload extends jwt.JwtPayload {
   email: string
   permissions: string[]
   type: TokenType
+  sid?: string
+  jti?: string
 }

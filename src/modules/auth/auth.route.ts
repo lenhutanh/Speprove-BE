@@ -29,8 +29,8 @@ router.post(
 )
 router.post('/register', validateMiddleware(registerSchema), bindHandler(AuthController, 'register'))
 router.post('/verify-register', validateMiddleware(verifySchema), bindHandler(AuthController, 'verifyRegister'))
-router.post('/refresh', bindHandler(AuthController, 'refreshToken'))
-router.post('/logout', authMiddleware.isAuthorized, bindHandler(AuthController, 'logout'))
+router.post('/refresh', rateLimitMiddleware(10, 10000, 'auth:refresh'), bindHandler(AuthController, 'refreshToken'))
+router.post('/logout', authMiddleware.isAuthorizedOptional, bindHandler(AuthController, 'logout'))
 router.post('/forgot-password', validateMiddleware(forgotPasswordSchema), bindHandler(AuthController, 'forgotPassword'))
 router.post(
   '/verify-forgot-password',

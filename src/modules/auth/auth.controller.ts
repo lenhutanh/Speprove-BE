@@ -1,12 +1,14 @@
 import { Request, Response } from 'express'
-import ms from 'ms'
 import { env } from '~/common/config/env.config'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer, tokenLifeToMs } from '~/common/utils'
 import { injectable } from 'tsyringe'
 import { AuthenticatedRequest } from '~/common/interfaces/request.interface'
 import { AuthService } from './services'
 import { AppError } from '~/common/errors'
 import { ErrorCodes } from '~/common/constants/error-codes'
+
+type AuthClientType = 'web' | 'mobile'
+type AuthTokens = { accessToken: string; refreshToken: string; refreshTokenExpiresAt: Date }
 
 @injectable()
 export class AuthController {
@@ -18,8 +20,7 @@ export class AuthController {
       deviceInfo: req.headers['user-agent']
     }
     const result = await this.authService.login(req.validated.body, metadata)
-    this.setAuthCookies(res, result)
-    return ResponseTransformer.success(res, result, 'Login successfully.')
+    return this.respondWithAuthTokens(req, res, result, 'Login successfully.')
   }
 
   public async register(req: Request, res: Response) {
@@ -32,20 +33,31 @@ export class AuthController {
     return ResponseTransformer.successNoData(res, 'Create account successfully.')
   }
 
-  public async logout(req: AuthenticatedRequest, res: Response) {
-    await this.authService.logout(req.user._id)
-    this.clearAuthCookies(res)
+  public async logout(req: Request, res: Response) {
+    await this.authService.logout(req.user?._id, req.user?.sid, this.getClientRefreshToken(req))
+
+    if (this.getClientType(req) === 'web') {
+      this.clearAuthCookies(res)
+    }
+
     return ResponseTransformer.successNoData(res, 'Logout successfully.')
   }
 
   public async refreshToken(req: Request, res: Response) {
-    const metadata = {
-      ipAddress: req.ip,
-      deviceInfo: req.headers['user-agent']
+    try {
+      const metadata = {
+        ipAddress: req.ip,
+        deviceInfo: req.headers['user-agent']
+      }
+      const result = await this.authService.refreshToken(this.getClientRefreshToken(req), metadata)
+      return this.respondWithAuthTokens(req, res, result, 'Refresh token successfully')
+    } catch (error) {
+      if (this.getClientType(req) === 'web') {
+        this.clearAuthCookies(res)
+      }
+
+      throw error
     }
-    const result = await this.authService.refreshToken(req.cookies?.refreshToken, metadata)
-    this.setAuthCookies(res, result)
-    return ResponseTransformer.success(res, result, 'Refresh token successfully')
   }
 
   public async forgotPassword(req: Request, res: Response) {
@@ -53,20 +65,41 @@ export class AuthController {
     return ResponseTransformer.successNoData(res, 'OTP sent to your email.')
   }
 
-  private setAuthCookies(res: Response, tokens: { accessToken: string; refreshToken: string }): void {
+  private respondWithAuthTokens(req: Request, res: Response, tokens: AuthTokens, message: string) {
+    if (this.getClientType(req) === 'mobile') {
+      return ResponseTransformer.success(res, tokens, message)
+    }
+
+    this.setAuthCookies(res, tokens)
+    return ResponseTransformer.successNoData(res, message)
+  }
+
+  private getClientType(req: Request): AuthClientType {
+    return req.headers['x-client-type'] === 'mobile' ? 'mobile' : 'web'
+  }
+
+  private getClientRefreshToken(req: Request): string | undefined {
+    if (this.getClientType(req) === 'mobile') {
+      return req.body?.refreshToken
+    }
+
+    return req.cookies?.refreshToken
+  }
+
+  private setAuthCookies(res: Response, tokens: AuthTokens): void {
     const isProduction = env.NODE_ENV === 'production'
     res.cookie('accessToken', tokens.accessToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
-      maxAge: ms('1h')
+      maxAge: tokenLifeToMs(env.ACCESS_TOKEN_LIFE, 'ACCESS_TOKEN_LIFE')
     })
 
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax',
-      maxAge: ms('14 days'),
+      maxAge: Math.max(0, new Date(tokens.refreshTokenExpiresAt).getTime() - Date.now()),
       path: '/api/v1/auth'
     })
   }
@@ -95,6 +128,7 @@ export class AuthController {
 
   public async resetPassword(req: Request, res: Response) {
     await this.authService.resetPassword(req.validated.body)
+    this.clearAuthCookies(res)
     return ResponseTransformer.successNoData(res, 'Reset password successfully')
   }
 
@@ -128,6 +162,7 @@ export class AuthController {
 
   public async changePassword(req: AuthenticatedRequest, res: Response) {
     await this.authService.changePassword(req.user._id, req.validated.body)
+    this.clearAuthCookies(res)
     return ResponseTransformer.successNoData(res, 'Change password successfully')
   }
 
