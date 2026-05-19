@@ -28,6 +28,7 @@ import { UserInfoGoogleDto } from '../types/google.type'
 import { GoogleService } from './google.service'
 import { AccountProviderService } from '~/modules/account-provider/account-provider.service'
 import { FileService } from '~/modules/file/file.service'
+import crypto from 'crypto'
 
 @singleton()
 export class AuthService {
@@ -111,31 +112,12 @@ export class AuthService {
     }
   }
 
-  async refreshToken(token: string, metadata: { ipAddress?: string; deviceInfo?: string }) {
+  async refreshToken(token: string | undefined, metadata: { ipAddress?: string; deviceInfo?: string }) {
     if (!token) {
       throw new AppError('Refresh token not found', StatusCodes.UNAUTHORIZED, ErrorCodes.NOT_FOUND)
     }
 
     const decoded = this.tokenService.verifyRefreshToken(token) as TokenPayload
-
-    const currentSession = await this.sessionService.findValid(decoded._id, token)
-    if (!currentSession) {
-      const existingOtherSession = await this.sessionService.findByUserId(decoded._id)
-
-      if (existingOtherSession) {
-        throw new AppError(
-          'Your account has been logged in from another device.',
-          StatusCodes.UNAUTHORIZED,
-          ErrorCodes.SESSION_REPLACED
-        )
-      }
-
-      throw new AppError(
-        'Your session has expired. Please log in again.',
-        StatusCodes.UNAUTHORIZED,
-        ErrorCodes.SESSION_EXPIRED
-      )
-    }
 
     const account = await this.accountService.findByEmailForToken(decoded.email)
 
@@ -147,26 +129,83 @@ export class AuthService {
 
     const group = account.groupId as any
     const permissions = group?.permissionIds?.map((p: any) => p.pCode) || []
+    const currentSession = decoded.sid
+      ? await this.sessionService.findByUserIdAndSid(account._id, decoded.sid)
+      : await this.sessionService.findByUserId(account._id)
+
+    if (!currentSession) {
+      return await this.handleRefreshRotationFailure(decoded)
+    }
+
+    if (currentSession.revokedAt || new Date(currentSession.expiresAt).getTime() <= Date.now()) {
+      return await this.handleRefreshRotationFailure(decoded)
+    }
+
+    const refreshTokenExpiresAt = currentSession.expiresAt
+    const sessionId = decoded.sid || crypto.randomUUID()
+    const refreshTokenId = crypto.randomUUID()
 
     const payload = {
       _id: account._id.toString(),
       email: account.email,
-      permissions
+      permissions,
+      sid: sessionId
     }
 
-    const newRefreshToken = this.tokenService.generateRefreshToken({ ...payload, type: TOKEN_TYPE.REFRESH })
+    const newRefreshToken = this.tokenService.generateRefreshToken({
+      ...payload,
+      jti: refreshTokenId,
+      type: TOKEN_TYPE.REFRESH
+    })
 
-    await this.sessionService.createOrUpdate(account._id, newRefreshToken, metadata)
+    const rotatedSession = await this.sessionService.rotateRefreshToken(
+      account._id,
+      token,
+      {
+        sid: decoded.sid,
+        refreshTokenId: decoded.jti
+      },
+      newRefreshToken,
+      { sid: sessionId, refreshTokenId },
+      refreshTokenExpiresAt,
+      metadata
+    )
+
+    if (!rotatedSession) {
+      await this.handleRefreshRotationFailure(decoded)
+    }
 
     return {
       accessToken: this.tokenService.generateAccessToken({ ...payload, type: TOKEN_TYPE.ACCESS }),
-      refreshToken: newRefreshToken
+      refreshToken: newRefreshToken,
+      refreshTokenExpiresAt
     }
   }
 
-  public async logout(userId: string): Promise<void> {
-    if (!userId) return
-    await this.sessionService.deleteByUserId(userId)
+  public async logout(userId?: string, sid?: string, refreshToken?: string): Promise<void> {
+    if (userId) {
+      if (sid) {
+        await this.sessionService.revokeByUserIdAndSid(userId, sid, 'LOGOUT')
+        return
+      }
+
+      await this.sessionService.revokeByUserId(userId, 'LOGOUT')
+      return
+    }
+
+    if (!refreshToken) return
+
+    try {
+      const decoded = this.tokenService.verifyRefreshToken(refreshToken) as TokenPayload
+      if (decoded.sid) {
+        await this.sessionService.revokeByUserIdAndSid(decoded._id, decoded.sid, 'LOGOUT')
+        return
+      }
+
+      await this.sessionService.revokeByUserId(decoded._id, 'LOGOUT')
+    } catch {
+      return
+    }
   }
 
   public async forgotPassword(data: { email: string }): Promise<void> {
@@ -208,6 +247,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(data.newPassword, 10)
     await this.accountService.updatePassword(email, hashedPassword)
+    await this.sessionService.revokeByUserId(account._id, 'PASSWORD_RESET')
 
     await this.cacheService.delete(cacheKey)
   }
@@ -335,6 +375,53 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(data.newPassword, 10)
     await this.accountService.updatePassword(account.email, hashedPassword)
+    await this.sessionService.revokeByUserId(userId, 'PASSWORD_CHANGED')
+  }
+
+  private async handleRefreshRotationFailure(decoded: TokenPayload): Promise<never> {
+    const session = decoded.sid
+      ? await this.sessionService.findByUserIdAndSid(decoded._id, decoded.sid)
+      : await this.sessionService.findByUserId(decoded._id)
+
+    if (!session) {
+      const activeSession = await this.sessionService.findByUserId(decoded._id)
+      if (activeSession) {
+        throw new AppError(
+          'Your account has been logged in from another device.',
+          StatusCodes.UNAUTHORIZED,
+          ErrorCodes.SESSION_REPLACED
+        )
+      }
+
+      throw new AppError(
+        'Your session has expired. Please log in again.',
+        StatusCodes.UNAUTHORIZED,
+        ErrorCodes.SESSION_EXPIRED
+      )
+    }
+
+    if (session.revokedAt || new Date(session.expiresAt).getTime() <= Date.now()) {
+      throw new AppError(
+        'Your session has expired. Please log in again.',
+        StatusCodes.UNAUTHORIZED,
+        ErrorCodes.SESSION_EXPIRED
+      )
+    }
+
+    if (decoded.sid) {
+      await this.sessionService.revokeByUserIdAndSid(decoded._id, decoded.sid, 'TOKEN_REUSE_DETECTED')
+      throw new AppError(
+        'Refresh token reuse detected. Please log in again.',
+        StatusCodes.UNAUTHORIZED,
+        ErrorCodes.TOKEN_REUSED
+      )
+    }
+
+    throw new AppError(
+      'Your account has been logged in from another device.',
+      StatusCodes.UNAUTHORIZED,
+      ErrorCodes.SESSION_REPLACED
+    )
   }
 
   private async issueAuthTokens(account: any, metadata: { ipAddress?: string; deviceInfo?: string }) {
@@ -343,25 +430,36 @@ export class AuthService {
     const group = account.groupId as any
     const permissions = group?.permissionIds?.map((p: any) => p.pCode) || []
 
+    const sessionId = crypto.randomUUID()
+    const refreshTokenId = crypto.randomUUID()
+
     const payload = {
       _id: account._id.toString(),
       email: account.email,
-      permissions
+      permissions,
+      sid: sessionId
     }
 
     const refreshToken = this.tokenService.generateRefreshToken({
       ...payload,
+      jti: refreshTokenId,
       type: TOKEN_TYPE.REFRESH
     })
 
-    await this.sessionService.createOrUpdate(account._id, refreshToken, metadata)
+    const session = await this.sessionService.createOrUpdate(
+      account._id,
+      refreshToken,
+      { sid: sessionId, refreshTokenId },
+      metadata
+    )
 
     return {
       accessToken: this.tokenService.generateAccessToken({
         ...payload,
         type: TOKEN_TYPE.ACCESS
       }),
-      refreshToken
+      refreshToken,
+      refreshTokenExpiresAt: session.expiresAt
     }
   }
 

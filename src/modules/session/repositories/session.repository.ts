@@ -1,7 +1,7 @@
 import { BaseRepository } from '~/common/base/base.repository'
 import { Session, SessionType } from '../session.model'
 import { ISessionRepository } from './session.repository.interface'
-import { Types } from 'mongoose'
+import { QueryFilter, Types } from 'mongoose'
 
 export class SessionRepository extends BaseRepository<SessionType> implements ISessionRepository {
   constructor() {
@@ -24,19 +24,72 @@ export class SessionRepository extends BaseRepository<SessionType> implements IS
       .exec()
   }
 
-  public async findValidSession(userId: string | Types.ObjectId, hashedToken: string): Promise<SessionType | null> {
-    return await this.findOne({
+  public async rotateRefreshToken(
+    userId: string | Types.ObjectId,
+    currentHashedToken: string,
+    data: Partial<SessionType>,
+    sessionIdentifier?: { sid?: string; refreshTokenId?: string }
+  ): Promise<SessionType | null> {
+    const filter: QueryFilter<SessionType> & { sid?: string; refreshTokenId?: string } = {
       userId,
-      token: hashedToken,
-      expiresAt: { $gt: new Date() }
-    })
+      token: currentHashedToken,
+      expiresAt: { $gt: new Date() },
+      revokedAt: null
+    }
+
+    if (sessionIdentifier?.sid) {
+      filter.sid = sessionIdentifier.sid
+    }
+
+    if (sessionIdentifier?.refreshTokenId) {
+      filter.refreshTokenId = sessionIdentifier.refreshTokenId
+    }
+
+    return await this.model
+      .findOneAndUpdate(
+        filter,
+        { $set: data },
+        {
+          new: true,
+          lean: true
+        }
+      )
+      .exec()
   }
 
   public async findOneByUserId(userId: string | Types.ObjectId): Promise<SessionType | null> {
     return await this.findOne({ userId })
   }
 
-  public async deleteByUserId(userId: string | Types.ObjectId): Promise<any> {
-    return await this.model.deleteOne({ userId }).exec()
+  public async findOneByUserIdAndSid(userId: string | Types.ObjectId, sid: string): Promise<SessionType | null> {
+    return await this.findOne({ userId, sid })
+  }
+
+  public async revokeByUserId(userId: string | Types.ObjectId, reason?: string): Promise<unknown> {
+    return await this.model
+      .updateOne(
+        { userId, revokedAt: null },
+        {
+          $set: {
+            revokedAt: new Date(),
+            revokedReason: reason
+          }
+        }
+      )
+      .exec()
+  }
+
+  public async revokeByUserIdAndSid(userId: string | Types.ObjectId, sid: string, reason?: string): Promise<unknown> {
+    return await this.model
+      .updateOne(
+        { userId, sid, revokedAt: null },
+        {
+          $set: {
+            revokedAt: new Date(),
+            revokedReason: reason
+          }
+        }
+      )
+      .exec()
   }
 }
