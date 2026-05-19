@@ -2,11 +2,14 @@ import express from 'express'
 import { AuthController } from '~/modules/auth/auth.controller'
 import { validateMiddleware } from '~/common/middlewares/validate.middleware'
 import {
+  changePasswordSchema,
   forgotPasswordSchema,
   googleCallbackSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  setPasswordSchema,
+  updateProfileSchema,
   verifySchema
 } from './auth.validation'
 import { bindHandler } from '~/common/utils'
@@ -39,5 +42,26 @@ router.post('/reset-password', validateMiddleware(resetPasswordSchema), bindHand
 router.get('/google', bindHandler(AuthController, 'googleLogin'))
 
 router.get('/google/callback', validateMiddleware(googleCallbackSchema), bindHandler(AuthController, 'googleCallback'))
+
+router.put(
+  '/change-password',
+  authMiddleware.isAuthorized,
+  validateMiddleware(changePasswordSchema),
+  bindHandler(AuthController, 'changePassword')
+)
+
+router.put(
+  '/set-password',
+  authMiddleware.isAuthorized,
+  validateMiddleware(setPasswordSchema),
+  bindHandler(AuthController, 'setPassword')
+)
+
+router.put(
+  '/update-profile',
+  authMiddleware.isAuthorized,
+  validateMiddleware(updateProfileSchema),
+  bindHandler(AuthController, 'updateProfile')
+)
 
 export const authRoutes = router

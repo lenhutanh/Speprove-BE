@@ -16,10 +16,25 @@ export class AccountRepository extends BaseRepository<AccountType> implements IA
     return await this.updateOne({ _id: userId, balance: { $gte: amount } }, { $inc: { balance: -amount } }, { session })
   }
 
-  async findByEmailWithPassword(email: string): Promise<AccountType | null> {
+  async findByEmail(email: string): Promise<AccountType | null> {
+    return this.model.findOne(this.getEmailFilter(email)).lean().exec()
+  }
+
+  async findByEmailForLogin(email: string): Promise<AccountType | null> {
     return this.model
-      .findOne({ email: email.toLowerCase().trim() })
+      .findOne(this.getEmailFilter(email))
       .select('+password')
+      .populate({
+        path: 'groupId',
+        populate: { path: 'permissionIds' }
+      })
+      .lean()
+      .exec()
+  }
+
+  async findByEmailForToken(email: string): Promise<AccountType | null> {
+    return this.model
+      .findOne(this.getEmailFilter(email))
       .populate({
         path: 'groupId',
         populate: { path: 'permissionIds' }
@@ -31,12 +46,17 @@ export class AccountRepository extends BaseRepository<AccountType> implements IA
   async getAccountWithPermissions(id: string): Promise<AccountType | null> {
     return this.model
       .findById(id)
-      .select('-password')
+      .select('+password')
       .populate({
         path: 'groupId',
         populate: { path: 'permissionIds' }
       })
+      .populate('avatarId')
       .lean()
       .exec()
+  }
+
+  private getEmailFilter(email: string) {
+    return { email: email.toLowerCase().trim() }
   }
 }

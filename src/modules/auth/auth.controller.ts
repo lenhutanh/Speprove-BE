@@ -98,7 +98,7 @@ export class AuthController {
     return ResponseTransformer.successNoData(res, 'Reset password successfully')
   }
 
-  public async googleLogin(req: Request, res: Response) {
+  public async googleLogin(_req: Request, res: Response) {
     const { url } = await this.authService.getGoogleLoginUrl()
     res.redirect(url)
   }
@@ -124,5 +124,20 @@ export class AuthController {
 
       return res.redirect(`${env.APP_URL}/auth/callback?${params.toString()}`)
     }
+  }
+
+  public async changePassword(req: AuthenticatedRequest, res: Response) {
+    await this.authService.changePassword(req.user._id, req.validated.body)
+    return ResponseTransformer.successNoData(res, 'Change password successfully')
+  }
+
+  public async setPassword(req: AuthenticatedRequest, res: Response) {
+    await this.authService.setPassword(req.user._id, req.validated.body)
+    return ResponseTransformer.successNoData(res, 'Set password successfully')
+  }
+
+  public async updateProfile(req: AuthenticatedRequest, res: Response) {
+    const result = await this.authService.updateProfile(req.user._id, req.validated.body)
+    return ResponseTransformer.success(res, result, 'Update profile successfully')
   }
 }

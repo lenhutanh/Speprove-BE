@@ -1,5 +1,5 @@
-import { emailSchema, otpSchema, passwordSchema } from '~/common/utils/validators.util'
-import { createSchema, querySchema } from '~/common/base/base.validation'
+import { emailSchema, objectIdSchema, otpSchema, passwordSchema, requiredString } from '~/common/utils/validators.util'
+import { createSchema, querySchema, updateSchema } from '~/common/base/base.validation'
 import z from 'zod'
 
 export const loginSchema = createSchema({
@@ -47,4 +47,36 @@ export const resetPasswordSchema = createSchema({
 export const googleCallbackSchema = querySchema({
   code: z.string(),
   state: z.string()
+})
+
+export const changePasswordSchema = updateSchema({
+  currentPassword: passwordSchema,
+  newPassword: passwordSchema,
+  confirmPassword: z.string()
+}).refine(
+  async (data) => {
+    return data.body.newPassword === data.body.confirmPassword
+  },
+  {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['body', 'confirmPassword']
+  }
+)
+
+export const setPasswordSchema = updateSchema({
+  password: passwordSchema,
+  confirmPassword: z.string()
+}).refine(
+  async (data) => {
+    return data.body.password === data.body.confirmPassword
+  },
+  {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['body', 'confirmPassword']
+  }
+)
+
+export const updateProfileSchema = updateSchema({
+  avatarId: objectIdSchema.nullable().optional(),
+  fullName: requiredString(1, 56).optional()
 })

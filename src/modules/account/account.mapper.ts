@@ -25,7 +25,8 @@ export class AccountMapper extends BaseMapper<AccountType, AccountResponseDto> {
       isSuperAdmin: !!entity.isSuperAdmin,
       createdAt: entity.createdAt?.toISOString() || '',
       selectedVoiceId: entity?.selectedVoiceId ? entity?.selectedVoiceId.toString() : undefined,
-      balance: entity.balance
+      balance: entity.balance,
+      hasPassword: Boolean(entity.password)
     }
   }
 }
