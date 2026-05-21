@@ -97,7 +97,7 @@ export class VoiceService {
 
   public async getDefault() {
     const voice = await this.voiceRepository.findOne(
-      { isDefault: true },
+      { isDefault: true, status: STATUS.ACTIVE },
       {
         populate: 'sampleAudioFileId'
       }
@@ -115,6 +115,12 @@ export class VoiceService {
   public async findById(id: string) {
     const voice = await this.voiceRepository.findById(id)
     if (!voice) throw new AppError('Voice not found', StatusCodes.NOT_FOUND)
+    return voice
+  }
+
+  public async findActiveById(id: string) {
+    const voice = await this.voiceRepository.findOne({ _id: id, status: STATUS.ACTIVE })
+    if (!voice) throw new AppError('Active voice not found', StatusCodes.NOT_FOUND)
     return voice
   }
 }

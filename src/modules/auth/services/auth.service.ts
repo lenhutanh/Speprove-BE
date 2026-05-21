@@ -489,15 +489,4 @@ export class AuthService {
 
     await this.accountService.updatePassword(account.email, hashedPassword)
   }
-
-  public async updateProfile(userId: string, data: UpdateProfileBodyType) {
-    await this.accountService.getById(userId)
-    if (data.avatarId) {
-      const avatarFile = await this.fileService.findById(data.avatarId)
-      if (avatarFile.ownerId && avatarFile.ownerId.toString() !== userId) {
-        throw new AppError('You do not own this file', StatusCodes.FORBIDDEN)
-      }
-    }
-    return await this.accountService.updateProfile(userId, data)
-  }
 }

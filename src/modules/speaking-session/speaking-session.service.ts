@@ -41,7 +41,7 @@ export class SpeakingSessionService {
 
   public async createNew(userId: string, data: CreateSpeakingSessionBodyType) {
     const [voice, activeForecast, recentSpeakingSessions] = await Promise.all([
-      data.voiceId ? this.voiceService.findById(data.voiceId) : this.voiceService.getRandomVoice(),
+      data.voiceId ? this.voiceService.findActiveById(data.voiceId) : this.voiceService.getRandomVoice(),
       this.forecastService.getCurrentActiveForecast(),
       this.getRecentSpeakingSessions(userId, 3)
     ])

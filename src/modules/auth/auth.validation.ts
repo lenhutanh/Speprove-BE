@@ -75,8 +75,3 @@ export const setPasswordSchema = updateSchema({
     path: ['body', 'confirmPassword']
   }
 )
-
-export const updateProfileSchema = updateSchema({
-  avatarId: objectIdSchema.nullable().optional(),
-  fullName: requiredString(1, 56).optional()
-})
