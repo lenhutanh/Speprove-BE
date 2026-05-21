@@ -9,7 +9,6 @@ import {
   registerSchema,
   resetPasswordSchema,
   setPasswordSchema,
-  updateProfileSchema,
   verifySchema
 } from './auth.validation'
 import { bindHandler } from '~/common/utils'
@@ -55,13 +54,6 @@ router.put(
   authMiddleware.isAuthorized,
   validateMiddleware(setPasswordSchema),
   bindHandler(AuthController, 'setPassword')
-)
-
-router.put(
-  '/update-profile',
-  authMiddleware.isAuthorized,
-  validateMiddleware(updateProfileSchema),
-  bindHandler(AuthController, 'updateProfile')
 )
 
 export const authRoutes = router

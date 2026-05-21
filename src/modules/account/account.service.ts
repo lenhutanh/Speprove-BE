@@ -10,6 +10,7 @@ import { VoiceService } from '../voice/voice.service'
 import { ErrorCodes } from '~/common/constants/error-codes'
 import { AccountMapper } from './account.mapper'
 import { UpdateProfileBodyType } from '../auth/types/auth.type'
+import { UpdateSelectedVoiceBodyType } from './account.type'
 
 @singleton()
 export class AccountService {
@@ -106,5 +107,11 @@ export class AccountService {
     const updated = await this.accountRepository.updateById(userId, data)
     if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
     return this.getMe(userId)
+  }
+
+  public async updateSelectedVoice(userId: string, data: UpdateSelectedVoiceBodyType) {
+    const voice = await this.voiceService.findActiveById(data.selectedVoiceId)
+    const updated = await this.accountRepository.updateById(userId, { selectedVoiceId: voice._id })
+    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
   }
 }

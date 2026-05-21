@@ -170,9 +170,4 @@ export class AuthController {
     await this.authService.setPassword(req.user._id, req.validated.body)
     return ResponseTransformer.successNoData(res, 'Set password successfully')
   }
-
-  public async updateProfile(req: AuthenticatedRequest, res: Response) {
-    const result = await this.authService.updateProfile(req.user._id, req.validated.body)
-    return ResponseTransformer.success(res, result, 'Update profile successfully')
-  }
 }
