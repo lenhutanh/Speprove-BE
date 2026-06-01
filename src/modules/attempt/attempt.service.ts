@@ -165,8 +165,27 @@ export class AttemptService {
     const attempt = await this.attemptRepository.findById(attemptId)
     if (!attempt) throw new AppError('Attempt not found', StatusCodes.NOT_FOUND)
     if (attempt.userId.toString() !== userId) throw new AppError('Forbidden', StatusCodes.FORBIDDEN)
-    const analysis = await this.attemptAnalysisRepository.findOne({ attemptId: toObjectId(attemptId) })
-    return this.attemptMapper.toResponse(attempt, analysis)
+    const analysis = await this.attemptAnalysisRepository.findOne(
+      { attemptId: toObjectId(attemptId) },
+      {
+        select: [
+          'transcription.scoringTranscript',
+          'evaluation',
+          'speechAnalysis.fluencyMetrics',
+          'pronunciationAssessment.scores',
+          'pronunciationAssessment.words.wordIndex',
+          'pronunciationAssessment.words.word',
+          'pronunciationAssessment.words.accuracyScore',
+          'pronunciationAssessment.words.errorType',
+          'pronunciationAssessment.words.offset',
+          'pronunciationAssessment.words.duration',
+          'pronunciationAssessment.words.punctuationAfter',
+          'pronunciationAssessment.words.expectedIpa',
+          'pronunciationAssessment.words.spokenIpa'
+        ].join(' ')
+      }
+    )
+    return this.attemptMapper.toDetailResponse(attempt, analysis)
   }
 
   public async getList(userId: string, queryOptions: AttemptQueryType) {
