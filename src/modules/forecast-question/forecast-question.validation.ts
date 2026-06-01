@@ -10,6 +10,10 @@ export const forecastQuestionQuerySchema = querySchema({
   category: z.nativeEnum(PART2_CATEGORY).optional()
 })
 
+export const getAttemptsOfQuestionSchema = querySchema({
+  band: z.coerce.number().min(1).max(9)
+})
+
 export const getForecastQuestionDetailQuerySchema = simpleQuerySchema({
   voiceId: objectIdSchema
 }).merge(idParamSchema)

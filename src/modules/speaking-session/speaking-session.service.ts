@@ -17,6 +17,7 @@ import { SpeakingSessionType } from './speaking-session.model'
 import {
   CREDIT_LOG_REF_TYPE,
   PART_KIND,
+  SESSION_STATUS,
   SPEAKING_SESSION_TYPE,
   INSTRUCTION_KEYS,
   InstructionKey
@@ -163,7 +164,7 @@ export class SpeakingSessionService {
     return await this.speakingSessionRepository.findOne(
       {
         userId: toObjectId(userId),
-        status: { $in: [0, 1] }
+        status: { $in: [SESSION_STATUS.NOT_STARTED, SESSION_STATUS.IN_PROGRESS] }
       },
       { sort: { createdAt: -1 } }
     )
@@ -180,7 +181,7 @@ export class SpeakingSessionService {
       throw new AppError('You do not own this session', StatusCodes.FORBIDDEN)
     }
 
-    if (speakingSession.status === 2) {
+    if (speakingSession.status === SESSION_STATUS.COMPLETED) {
       const wellDoneAudioUrl = await this.instructionAudioService.getUrlByVoiceIdAndKey(
         speakingSession.voiceId.toString(),
         INSTRUCTION_KEYS.WELL_DONE

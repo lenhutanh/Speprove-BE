@@ -1,6 +1,7 @@
 import { delay, inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { IAttemptRepository } from './attempt.repository.interface'
+import { IAttemptAnalysisRepository } from './attempt-analysis.repository.interface'
 import { AttemptQueryType, CreateAttemptBodyType, GetTopAttemptQueryType } from './attempt.type'
 import { SpeakingSessionService } from '../speaking-session/speaking-session.service'
 import { AppError } from '~/common/errors'
@@ -9,7 +10,14 @@ import { ForecastQuestionService } from '../forecast-question/forecast-question.
 import { FileService } from '../file/file.service'
 import { calculateCreditCost, toObjectId } from '~/common/utils'
 import { AttemptMapper } from './attempt.mapper'
-import { ATTEMPT_STATUS, CREDIT_LOG_REF_TYPE, SPEAKING_SESSION_MODE } from '~/common/constants/constants'
+import {
+  ANALYSIS_PROFILE,
+  AnalysisProfile,
+  ATTEMPT_STATUS,
+  CREDIT_LOG_REF_TYPE,
+  SESSION_STATUS,
+  SPEAKING_SESSION_MODE
+} from '~/common/constants/constants'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 import { AudioFileType } from '../file/file.model'
 import { ForecastQuestionResponseDto } from '../forecast-question/forecast-question.dto'
@@ -23,6 +31,8 @@ export class AttemptService {
   constructor(
     @inject(TOKENS.IAttemptRepository)
     private readonly attemptRepository: IAttemptRepository,
+    @inject(TOKENS.IAttemptAnalysisRepository)
+    private readonly attemptAnalysisRepository: IAttemptAnalysisRepository,
     @inject(delay(() => SpeakingSessionService))
     private readonly speakingSessionService: SpeakingSessionService,
     private readonly forecastQuestionService: ForecastQuestionService,
@@ -57,7 +67,7 @@ export class AttemptService {
         throw new AppError('You do not own this session', StatusCodes.FORBIDDEN)
       }
 
-      if (speakingSession.status === 2) {
+      if (speakingSession.status === SESSION_STATUS.COMPLETED) {
         throw new AppError('This speaking session is already finished', StatusCodes.BAD_REQUEST)
       }
 
@@ -77,7 +87,7 @@ export class AttemptService {
               reason: `Luyện tập Part ${forecastQuestion.part}: ${forecastQuestion.content}`,
               refType: CREDIT_LOG_REF_TYPE.USAGE,
               refId: forecastQuestion.id,
-              balanceBefore: account.balance - pointsToDeduct,
+              balanceBefore: account.balance + pointsToDeduct,
               balanceAfter: account.balance
             },
             session
@@ -93,8 +103,11 @@ export class AttemptService {
           part: forecastQuestion.part ?? null,
           order,
           status: ATTEMPT_STATUS.PENDING,
-          speechMetrics: {},
-          evaluation: {}
+          analysisProfile: this._resolveAnalysisProfile(data.mode),
+          analysisVersion: 'v1',
+          transcriptPreview: undefined,
+          scores: {},
+          analysisMeta: {}
         }
 
         const newAttempt = await this.attemptRepository.create(attemptPayload, { session })
@@ -103,8 +116,8 @@ export class AttemptService {
           const updateQuery: any = {
             $inc: { currentQuestionIndex: 1 }
           }
-          if (speakingSession.status === 0) {
-            updateQuery.$set = { status: 1 }
+          if (speakingSession.status === SESSION_STATUS.NOT_STARTED) {
+            updateQuery.$set = { status: SESSION_STATUS.IN_PROGRESS }
           }
 
           await this.speakingSessionService.updateOne({ _id: speakingSession._id }, updateQuery, { session })
@@ -144,11 +157,16 @@ export class AttemptService {
     return forecastQuestion.content
   }
 
+  private _resolveAnalysisProfile(mode: string): AnalysisProfile {
+    return mode === SPEAKING_SESSION_MODE.MOCK ? ANALYSIS_PROFILE.PREMIUM : ANALYSIS_PROFILE.STANDARD
+  }
+
   public async getDetails(userId: string, attemptId: string) {
     const attempt = await this.attemptRepository.findById(attemptId)
     if (!attempt) throw new AppError('Attempt not found', StatusCodes.NOT_FOUND)
     if (attempt.userId.toString() !== userId) throw new AppError('Forbidden', StatusCodes.FORBIDDEN)
-    return this.attemptMapper.toResponse(attempt)
+    const analysis = await this.attemptAnalysisRepository.findOne({ attemptId: toObjectId(attemptId) })
+    return this.attemptMapper.toResponse(attempt, analysis)
   }
 
   public async getList(userId: string, queryOptions: AttemptQueryType) {
@@ -177,9 +195,9 @@ export class AttemptService {
       .where('forecastQuestionId', data.forecastQuestionId)
       .where('status', ATTEMPT_STATUS.DONE)
       .where('isPublic', true)
-      .whereGte('evaluation.overall', data.band)
-      .whereLt('evaluation.overall', data.band + 1)
-      .sort('evaluation.overall', 'desc')
+      .whereGte('scores.overall', data.band)
+      .whereLt('scores.overall', data.band + 1)
+      .sort('scores.overall', 'desc')
       .sort('createdAt', 'desc')
       .limit(10)
       .populate('audioFileId')

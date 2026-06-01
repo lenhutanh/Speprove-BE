@@ -4,7 +4,7 @@ import { env } from '~/common/config'
 
 export class GroqLLMProvider implements ILLMProvider {
   private readonly client: Groq
-  private readonly model = 'llama-3.3-70b-versatile'
+  private readonly model = 'openai/gpt-oss-120b'
 
   constructor() {
     this.client = new Groq({ apiKey: env.GROQ_API_KEY })
@@ -14,7 +14,7 @@ export class GroqLLMProvider implements ILLMProvider {
     const completion = await this.client.chat.completions.create({
       model: this.model,
       temperature: 0.1,
-      max_tokens: 1000,
+      max_tokens: 1800,
       response_format: { type: 'json_object' },
       messages: [{ role: 'user', content: prompt }]
     })

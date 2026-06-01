@@ -1,4 +1,4 @@
-import { SpeechMetrics } from '~/modules/attempt/attempt.model'
+import { SpeechAnalysis } from '~/modules/attempt/attempt.model'
 
 export type TranscribeJobData = {
   attemptId: string
@@ -10,6 +10,7 @@ export type TranscribeJobData = {
 export type AssessJobData = {
   attemptId: string
   transcript: string
+  referenceTranscript?: string
   audioUrl: string
   questionContent: string
   part: number
@@ -19,7 +20,7 @@ export type EvaluateJobData = {
   attemptId: string
   transcript: string
   questionContent: string
-  speechMetrics: SpeechMetrics
+  speechAnalysis: SpeechAnalysis
   part: number
 }
 

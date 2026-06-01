@@ -1,6 +1,6 @@
 import { inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
-import { ATTEMPT_STATUS, PART_KIND, PartKind, SPEAKING_SESSION_MODE } from '~/common/constants/constants'
+import { ATTEMPT_STATUS, PART_KIND, SESSION_STATUS, SPEAKING_SESSION_MODE } from '~/common/constants/constants'
 import { AzurePronunciationAssessmentProvider } from '~/infrastructure/providers/speech-assessment/azure.assessment'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 import {
@@ -11,13 +11,14 @@ import {
 } from '~/infrastructure/queues/types/speaking.job.types'
 import { SpeechMapper } from './speech.mapper'
 import { IAttemptRepository } from './attempt.repository.interface'
+import { IAttemptAnalysisRepository } from './attempt-analysis.repository.interface'
 import { ISpeakingSessionRepository } from '../speaking-session/speaking-session.repository.interface'
 import { ISTTProvider } from '~/infrastructure/providers/stt'
-import { normalizeForAssessment } from '~/common/utils'
+import { normalizeForAssessment, toObjectId } from '~/common/utils'
 import { LLMEvaluator } from '~/infrastructure/providers/evaluator/llm-evaluator'
-import { AttemptService } from './attempt.service'
 import { SpeakingSessionService } from '../speaking-session/speaking-session.service'
-import { ICacheService } from '~/infrastructure/cache'
+
+type AnalysisStage = 'transcribe' | 'assess' | 'evaluate' | 'score_session'
 
 @singleton()
 export class SpeakingAnalysisService {
@@ -29,137 +30,285 @@ export class SpeakingAnalysisService {
     private readonly speakingProducer: SpeakingProducer,
     @inject(TOKENS.IAttemptRepository)
     private readonly attemptRepository: IAttemptRepository,
+    @inject(TOKENS.IAttemptAnalysisRepository)
+    private readonly attemptAnalysisRepository: IAttemptAnalysisRepository,
     @inject(TOKENS.ISpeakingSessionRepository)
     private readonly speakingSessionRepository: ISpeakingSessionRepository,
     private readonly speakingSessionService: SpeakingSessionService,
-    private readonly llmEvaluator: LLMEvaluator,
-    private readonly attemptService: AttemptService,
-    @inject(TOKENS.ICacheService)
-    private readonly cacheService: ICacheService
+    private readonly llmEvaluator: LLMEvaluator
   ) {}
 
-  // Job 1: Transcribe
   public async transcribe(data: TranscribeJobData): Promise<void> {
     const { attemptId, audioUrl, questionContent, part } = data
-    await this.attemptRepository.updateById(attemptId, {
-      status: ATTEMPT_STATUS.PROCESSING
-    })
-
-    const { transcript, duration } = await this.sttProvider.transcribe(audioUrl, questionContent)
 
     await this.attemptRepository.updateById(attemptId, {
-      'evaluation.transcript': transcript
-    })
-
-    console.log('Finish transcribing at: ', Date.now())
-
-    await this.speakingProducer.assess({
-      attemptId,
-      transcript: normalizeForAssessment(transcript),
-      audioUrl,
-      questionContent,
-      part
-    })
-  }
-
-  // Job 2: Assess
-  public async assess(data: AssessJobData): Promise<void> {
-    const { attemptId, transcript, audioUrl, questionContent, part } = data
-
-    const result = await this.assessmentProvider.assess(audioUrl, transcript)
-    const speechMetrics = this.speechMapper.toSpeechMetrics(result)
-
-    await this.attemptRepository.updateById(attemptId, {
-      'evaluation.transcript': result.transcript,
-      speechMetrics
-    })
-
-    console.log('Finishing assessing at: ', Date.now())
-
-    // Trigger job 3
-    await this.speakingProducer.evaluate({
-      attemptId,
-      transcript: result.transcript,
-      questionContent,
-      speechMetrics,
-      part
-    })
-  }
-
-  // Job 3: LLM chấm điểm
-  async evaluate(data: EvaluateJobData): Promise<void> {
-    const { attemptId, questionContent, speechMetrics, transcript, part } = data
-
-    const evaluation = await this.llmEvaluator.evaluate({
-      question: questionContent,
-      speechMetrics,
-      transcript,
-      part
-    })
-
-    const updatedAttempt = await this.attemptRepository.updateById(attemptId, {
       $set: {
-        'evaluation.fluency': evaluation.fluency,
-        'evaluation.pronunciation': evaluation.pronunciation,
-        'evaluation.lexical': evaluation.lexical,
-        'evaluation.grammar': evaluation.grammar,
-        'evaluation.overall': evaluation.overall,
-        status: ATTEMPT_STATUS.DONE
+        status: ATTEMPT_STATUS.PROCESSING,
+        'analysisMeta.startedAt': new Date(),
+        'analysisMeta.currentStage': 'transcribe'
+      },
+      $unset: {
+        'analysisMeta.error': 1,
+        'analysisMeta.failedStage': 1
       }
     })
 
-    if (!updatedAttempt) throw new Error(`Attempt not found: ${attemptId}`)
+    try {
+      const sttResult = await this.sttProvider.transcribe(audioUrl, questionContent)
+      const { transcript } = sttResult
+      const displayTranscript = transcript.trim()
+      const normalizedReferenceText = normalizeForAssessment(transcript)
 
-    console.log(`Finish evaluating attempt ${attemptId} at: `, Date.now())
-
-    if (updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
-      const sessionId = updatedAttempt.speakingSessionId.toString()
-      const session = await this.speakingSessionService.findById(sessionId)
-
-      let totalQuestions = 0
-      if (session.questions.part1) {
-        totalQuestions += session.questions.part1.reduce((sum, topic) => sum + topic.forecastQuestionIds.length, 0)
-      }
-      if (session.questions.part2) totalQuestions += 1
-      if (session.questions.part3) totalQuestions += session.questions.part3.length
-
-      const doneCount = await this.attemptRepository.count({
-        speakingSessionId: sessionId,
-        status: ATTEMPT_STATUS.DONE
+      await this.attemptRepository.updateById(attemptId, {
+        transcriptPreview: displayTranscript,
+        duration: sttResult.duration
       })
-      console.log(`[Session ${sessionId}] Progress: ${doneCount} / ${totalQuestions}`)
 
-      if (doneCount === totalQuestions) {
-        console.log(`🎉 Kích hoạt tính điểm tổng cho Session: ${sessionId}`)
-        await this.speakingProducer.scoreSession({ speakingSessionId: sessionId })
-      }
+      await this.attemptAnalysisRepository.updateOne(
+        { attemptId: toObjectId(attemptId) },
+        {
+          $set: {
+            attemptId: toObjectId(attemptId),
+            'transcription.sttTranscript': transcript,
+            'transcription.normalizedReferenceText': normalizedReferenceText,
+            'transcription.confidence': sttResult.confidence,
+            'transcription.segments': sttResult.segments ?? [],
+            'transcription.metadata': {
+              ...(sttResult.metadata ?? {}),
+              duration: sttResult.duration
+            },
+            'providers.stt': sttResult.provider ?? {
+              name: 'unknown',
+              model: 'unknown'
+            }
+          }
+        },
+        { upsert: true }
+      )
+
+      console.log('Finish transcribing at: ', Date.now())
+
+      await this.speakingProducer.assess({
+        attemptId,
+        transcript: normalizedReferenceText,
+        referenceTranscript: transcript,
+        audioUrl,
+        questionContent,
+        part
+      })
+    } catch (error) {
+      await this._markAttemptFailed(attemptId, 'transcribe', error)
+      throw error
     }
   }
 
-  // ─── Job 4: Tổng hợp điểm session (mock only) ───────────────────────────────
+  public async assess(data: AssessJobData): Promise<void> {
+    const { attemptId, transcript, referenceTranscript, audioUrl, questionContent, part } = data
+
+    await this.attemptRepository.updateById(attemptId, {
+      $set: {
+        'analysisMeta.currentStage': 'assess'
+      }
+    })
+
+    try {
+      const result = await this.assessmentProvider.assess(audioUrl, transcript)
+      const speechAnalysis = this.speechMapper.toSpeechAnalysis(result, transcript, questionContent, part)
+      const display = this.speechMapper.buildDisplayTranscript(result.words, referenceTranscript ?? result.transcript)
+      const displayTranscript = display.transcript || referenceTranscript?.trim() || result.transcript
+      const scoringTranscript = this.speechMapper.buildScoringTranscript(display.words) || displayTranscript
+
+      await this.attemptRepository.updateById(attemptId, {
+        transcriptPreview: displayTranscript,
+        'analysisMeta.currentStage': 'assess'
+      })
+
+      await this.attemptAnalysisRepository.updateOne(
+        { attemptId: toObjectId(attemptId) },
+        {
+          $set: {
+            attemptId: toObjectId(attemptId),
+            'transcription.azureTranscript': result.transcript,
+            'transcription.scoringTranscript': scoringTranscript,
+            'providers.pronunciation': {
+              name: 'azure',
+              model: 'speech-pronunciation-assessment',
+              configVersion: 'ipa-nbest-v1'
+            },
+            pronunciationAssessment: {
+              scores: {
+                pronScore: result.pronunciationScore,
+                accuracyScore: result.accuracyScore,
+                fluencyScore: result.fluencyScore,
+                completenessScore: result.completenessScore,
+                prosodyScore: result.prosody?.score
+              },
+              words: display.words,
+              prosodyFeedback: result.prosody?.feedback,
+              raw: result.raw
+            },
+            speechAnalysis
+          }
+        },
+        { upsert: true }
+      )
+
+      console.log('Finishing assessing at: ', Date.now())
+
+      await this.speakingProducer.evaluate({
+        attemptId,
+        transcript: scoringTranscript,
+        questionContent,
+        speechAnalysis,
+        part
+      })
+    } catch (error) {
+      await this._markAttemptFailed(attemptId, 'assess', error)
+      throw error
+    }
+  }
+
+  async evaluate(data: EvaluateJobData): Promise<void> {
+    const { attemptId, questionContent, speechAnalysis, transcript, part } = data
+
+    await this.attemptRepository.updateById(attemptId, {
+      $set: {
+        'analysisMeta.currentStage': 'evaluate'
+      }
+    })
+
+    try {
+      const analysis = await this.attemptAnalysisRepository.findOne(
+        { attemptId: toObjectId(attemptId) },
+        { select: 'transcription.scoringTranscript pronunciationAssessment.words' }
+      )
+      const scoringTranscript = analysis?.transcription?.scoringTranscript || transcript
+
+      const { evaluation, warnings, isValid } = await this.llmEvaluator.evaluate({
+        question: questionContent,
+        speechAnalysis,
+        assessmentWords: analysis?.pronunciationAssessment?.words,
+        transcript: scoringTranscript,
+        part
+      })
+
+      if (!isValid) {
+        await this.attemptAnalysisRepository.updateOne(
+          { attemptId: toObjectId(attemptId) },
+          {
+            $set: {
+              attemptId: toObjectId(attemptId),
+              evaluation
+            }
+          },
+          { upsert: true }
+        )
+
+        await this.attemptRepository.updateById(attemptId, {
+          $set: {
+            'analysisMeta.finishedAt': new Date(),
+            'analysisMeta.currentStage': 'evaluate',
+            'analysisMeta.failedStage': 'evaluate',
+            'analysisMeta.error': 'LLM evaluator output failed backend validation',
+            'analysisMeta.warnings': warnings,
+            status: ATTEMPT_STATUS.FAILED
+          }
+        })
+
+        const validationError = new Error(`LLM evaluator output failed backend validation for attempt ${attemptId}`)
+        validationError.name = 'EvaluatorValidationError'
+        throw validationError
+      }
+
+      await this.attemptAnalysisRepository.updateOne(
+        { attemptId: toObjectId(attemptId) },
+        {
+          $set: {
+            attemptId: toObjectId(attemptId),
+            evaluation,
+            'providers.evaluator': {
+              name: 'groq',
+              model: 'openai/gpt-oss-120b',
+              promptVersion: 'speaking-evaluation-v3'
+            }
+          }
+        },
+        { upsert: true }
+      )
+
+      const updatedAttempt = await this.attemptRepository.updateById(attemptId, {
+        $set: {
+          scores: {
+            overall: evaluation.overall ?? null,
+            fluency: evaluation.fluency?.band ?? null,
+            pronunciation: evaluation.pronunciation?.band ?? null,
+            lexical: evaluation.lexical?.band ?? null,
+            grammar: evaluation.grammar?.band ?? null
+          },
+          'analysisMeta.finishedAt': new Date(),
+          'analysisMeta.warnings': warnings,
+          status: ATTEMPT_STATUS.DONE
+        },
+        $unset: {
+          'analysisMeta.error': 1,
+          'analysisMeta.failedStage': 1,
+          'analysisMeta.currentStage': 1
+        }
+      })
+
+      if (!updatedAttempt) throw new Error(`Attempt not found: ${attemptId}`)
+
+      console.log(`Finish evaluating attempt ${attemptId} at: `, Date.now())
+
+      if (updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
+        const sessionId = updatedAttempt.speakingSessionId.toString()
+        const session = await this.speakingSessionService.findById(sessionId)
+
+        let totalQuestions = 0
+        if (session.questions.part1) {
+          totalQuestions += session.questions.part1.reduce((sum, topic) => sum + topic.forecastQuestionIds.length, 0)
+        }
+        if (session.questions.part2) totalQuestions += 1
+        if (session.questions.part3) totalQuestions += session.questions.part3.length
+
+        const doneCount = await this.attemptRepository.count({
+          speakingSessionId: sessionId,
+          status: ATTEMPT_STATUS.DONE
+        })
+        console.log(`[Session ${sessionId}] Progress: ${doneCount} / ${totalQuestions}`)
+
+        if (doneCount === totalQuestions) {
+          console.log(`Activate session score aggregation for session: ${sessionId}`)
+          await this.speakingProducer.scoreSession({ speakingSessionId: sessionId })
+        }
+      }
+    } catch (error) {
+      if (!(error instanceof Error && error.name === 'EvaluatorValidationError')) {
+        await this._markAttemptFailed(attemptId, 'evaluate', error)
+      }
+      throw error
+    }
+  }
+
   async scoreSession(data: ScoreSessionJobData): Promise<void> {
     const { speakingSessionId } = data
     const attempts = await this.attemptRepository.findMany({ speakingSessionId })
 
-    // Tạm thời vẫn dùng logic check DONE cũ như bạn muốn
     const allDone = attempts.every((a) => a.status === ATTEMPT_STATUS.DONE)
     if (!allDone || attempts.length === 0) {
-      console.warn(`[Job 4] Session ${speakingSessionId} chưa xong hoặc không có attempt. Bỏ qua.`)
+      console.warn(`[Job 4] Session ${speakingSessionId} is not complete or has no attempts. Skip.`)
       return
     }
 
-    // 🌟 Hàm tiện ích: Tính trung bình của 1 tiêu chí cụ thể trong 1 mảng attempts
     const getCriteriaAvg = (atts: typeof attempts, key: 'fluency' | 'pronunciation' | 'lexical' | 'grammar') => {
-      const validScores = atts.map((a) => a.evaluation?.[key]?.band).filter((b): b is number => b != null)
+      const validScores = atts.map((a) => a.scores?.[key]).filter((b): b is number => b != null)
       return validScores.length > 0 ? validScores.reduce((sum, b) => sum + b, 0) / validScores.length : null
     }
 
-    // 🌟 BƯỚC 1: LỌC ATTEMPTS THEO TỪNG PART
     const p1Attempts = attempts.filter((a) => a.part === PART_KIND.ONE)
     const p2Attempts = attempts.filter((a) => a.part === PART_KIND.TWO)
     const p3Attempts = attempts.filter((a) => a.part === PART_KIND.THREE)
 
-    // 🌟 BƯỚC 2: TÍNH ĐIỂM 4 TIÊU CHÍ CHO TỪNG PART (Cân bằng trọng số)
     const criteriaKeys = ['fluency', 'pronunciation', 'lexical', 'grammar'] as const
     const sessionCriteriaScores: Record<string, number> = {}
 
@@ -168,21 +317,15 @@ export class SpeakingAnalysisService {
       const p2Score = getCriteriaAvg(p2Attempts, key)
       const p3Score = getCriteriaAvg(p3Attempts, key)
 
-      // Lấy trung bình cộng của 3 part cho tiêu chí này
       const validPartScores = [p1Score, p2Score, p3Score].filter((s): s is number => s !== null)
       sessionCriteriaScores[key] =
         validPartScores.length > 0 ? validPartScores.reduce((sum, s) => sum + s, 0) / validPartScores.length : 0
     }
 
-    // 🌟 BƯỚC 3: TÍNH OVERALL BAND THEO CHUẨN IELTS OFFICIAL
-    // Điểm tổng = (Fluency + Pronunciation + Lexical + Grammar) / 4
     const sumOfCriteria = Object.values(sessionCriteriaScores).reduce((sum, score) => sum + score, 0)
     const finalAverage = sumOfCriteria / 4
-
-    // Áp dụng luật làm tròn IELTS (Chẵn hoặc rưỡi)
     const overallBand = this._roundToHalf(finalAverage)
 
-    // 🌟 BƯỚC 4: LƯU VÀO DB
     await this.speakingSessionRepository.updateById(speakingSessionId, {
       result: {
         overall: overallBand,
@@ -191,19 +334,34 @@ export class SpeakingAnalysisService {
         lexical: this._roundToHalf(sessionCriteriaScores.lexical),
         grammar: this._roundToHalf(sessionCriteriaScores.grammar)
       },
-      status: 2,
+      status: SESSION_STATUS.COMPLETED,
       finishedAt: new Date()
     })
 
     console.log(
-      `✅ Session ${speakingSessionId} hoàn tất. Điểm Overall: ${overallBand} | FC: ${sessionCriteriaScores.fluency.toFixed(1)}, PR: ${sessionCriteriaScores.pronunciation.toFixed(1)}, LR: ${sessionCriteriaScores.lexical.toFixed(1)}, GRA: ${sessionCriteriaScores.grammar.toFixed(1)}`
+      `Session ${speakingSessionId} completed. Overall: ${overallBand} | FC: ${sessionCriteriaScores.fluency.toFixed(1)}, PR: ${sessionCriteriaScores.pronunciation.toFixed(1)}, LR: ${sessionCriteriaScores.lexical.toFixed(1)}, GRA: ${sessionCriteriaScores.grammar.toFixed(1)}`
     )
-
-    // 🚀 TẠI ĐÂY: Nếu bạn có dùng Socket/SSE, hãy gọi hàm push thông báo cho FE
   }
 
-  // Thuật toán làm tròn cực chuẩn của IELTS
   private _roundToHalf(value: number): number {
     return Math.round(value * 2) / 2
+  }
+
+  private async _markAttemptFailed(attemptId: string, stage: AnalysisStage, error: unknown): Promise<void> {
+    await this.attemptRepository.updateById(attemptId, {
+      $set: {
+        status: ATTEMPT_STATUS.FAILED,
+        'analysisMeta.finishedAt': new Date(),
+        'analysisMeta.currentStage': stage,
+        'analysisMeta.failedStage': stage,
+        'analysisMeta.error': this._formatError(error)
+      }
+    })
+  }
+
+  private _formatError(error: unknown): string {
+    if (error instanceof Error) return error.message
+    if (typeof error === 'string') return error
+    return 'Unknown speaking analysis error'
   }
 }

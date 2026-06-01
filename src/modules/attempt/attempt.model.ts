@@ -1,111 +1,47 @@
 import mongoose from 'mongoose'
 import { BaseSchemaOptions } from '~/common/base'
-import { SPEAKING_SESSION_MODE } from '~/common/constants/constants'
+import { ANALYSIS_PROFILE, AnalysisProfile, SPEAKING_SESSION_MODE } from '~/common/constants/constants'
 
-const pauseSchema = new mongoose.Schema(
+export {
+  AnalysisProviderInfo,
+  AnalysisProviders,
+  AnalysisToken,
+  AssessmentIssue,
+  AssessmentPhoneme,
+  AssessmentScores,
+  AssessmentSyllable,
+  AssessmentWord,
+  AttemptAnalysisType,
+  Evaluation,
+  FluencyEvaluation,
+  IssueCriterionEvaluation,
+  NBestPhoneme,
+  PronunciationAssessmentAnalysis,
+  SpeechAnalysis,
+  SimpleCriterionEvaluation,
+  TranscriptionAnalysis,
+  TranscriptionSegment
+} from './attempt-analysis.model'
+
+const attemptScoresSchema = new mongoose.Schema(
   {
-    start: Number,
-    end: Number,
-    duration: Number,
-    afterWordIndex: Number
+    overall: { type: Number, default: null },
+    fluency: { type: Number, default: null },
+    pronunciation: { type: Number, default: null },
+    lexical: { type: Number, default: null },
+    grammar: { type: Number, default: null }
   },
   { _id: false }
 )
 
-const wordSchema = new mongoose.Schema(
+const analysisMetaSchema = new mongoose.Schema(
   {
-    wordIndex: Number,
-    word: String,
-    sentenceIndex: Number,
-    punctuationAfter: String,
-    isFiller: Boolean,
-    isRepetition: Boolean,
-    isScoreable: Boolean,
-    errorType: { type: String, default: 'None' },
-    score: Number,
-    offset: Number,
-    duration: Number,
-    phonemes: [{ sound: String, score: Number }],
-    spokenIpa: { type: String, default: '' }
-  },
-  { _id: false }
-)
-
-const speechMetricsSchema = new mongoose.Schema(
-  {
-    duration: { type: Number },
-    wordCount: { type: Number },
-    speechRate: { type: Number },
-    pauseCount: { type: Number },
-    longPauses: { type: [pauseSchema], default: [] },
-    fillerCount: { type: Number },
-    fillers: { type: [String], default: [] },
-    repetitionCount: { type: Number },
-    repetitions: { type: [String], default: [] },
-    avgPronunciationScore: { type: Number },
-    prosodyScore: { type: Number },
-    words: { type: [wordSchema], default: [] }
-  },
-  { _id: false }
-)
-
-const criterionSchema = new mongoose.Schema(
-  {
-    band: { type: Number },
-    feedback: { type: String }
-  },
-  { _id: false }
-)
-
-const lexicalWeakWordSchema = new mongoose.Schema(
-  {
-    startWordIndex: { type: Number },
-    endWordIndex: { type: Number },
-    original: { type: String },
-    suggestion: { type: String },
-    reason: { type: String }
-  },
-  { _id: false }
-)
-
-const grammarErrorSchema = new mongoose.Schema(
-  {
-    startWordIndex: { type: Number },
-    endWordIndex: { type: Number },
-    original: { type: String },
-    correction: { type: String },
-    reason: { type: String }
-  },
-  { _id: false }
-)
-
-const evaluationSchema = new mongoose.Schema(
-  {
-    transcript: { type: String },
-
-    fluency: {
-      type: criterionSchema,
-      default: null
-    },
-
-    pronunciation: {
-      type: criterionSchema,
-      default: null
-    },
-
-    lexical: {
-      band: { type: Number, default: null },
-      feedback: { type: String },
-      weakWords: { type: [lexicalWeakWordSchema], default: [] }
-    },
-
-    grammar: {
-      band: { type: Number, default: null },
-      feedback: { type: String },
-      errors: { type: [grammarErrorSchema], default: [] }
-    },
-
-    overall: { type: Number, default: null }
+    startedAt: { type: Date },
+    finishedAt: { type: Date },
+    currentStage: { type: String, enum: ['transcribe', 'assess', 'evaluate', 'score_session'] },
+    failedStage: { type: String, enum: ['transcribe', 'assess', 'evaluate', 'score_session'] },
+    error: { type: String },
+    warnings: { type: [String], default: [] }
   },
   { _id: false }
 )
@@ -147,8 +83,20 @@ const attemptSchema = new mongoose.Schema(
       default: false,
       index: true
     },
-    speechMetrics: { type: speechMetricsSchema, default: {} },
-    evaluation: { type: evaluationSchema, default: {} }
+    analysisProfile: {
+      type: String,
+      enum: Object.values(ANALYSIS_PROFILE),
+      default: ANALYSIS_PROFILE.STANDARD,
+      index: true
+    },
+    analysisVersion: {
+      type: String,
+      default: 'v1'
+    },
+    transcriptPreview: { type: String },
+    duration: { type: Number },
+    scores: { type: attemptScoresSchema, default: {} },
+    analysisMeta: { type: analysisMetaSchema, default: {} }
   },
   BaseSchemaOptions
 )
@@ -170,95 +118,32 @@ attemptSchema.index(
 )
 
 attemptSchema.index({ userId: 1, forecastQuestionId: 1, createdAt: -1 })
+attemptSchema.index({ forecastQuestionId: 1, status: 1, isPublic: 1, 'scores.overall': -1 })
 
-export type PhonemeInfo = {
-  sound: string
-  score: number
+export type AttemptScores = {
+  overall?: number | null
+  fluency?: number | null
+  pronunciation?: number | null
+  lexical?: number | null
+  grammar?: number | null
 }
 
-export type Word = {
-  wordIndex: number
-  word: string
-  sentenceIndex: number
-  punctuationAfter: string
-  isFiller: boolean
-  isRepetition: boolean
-  isScoreable: boolean
-  errorType: 'None' | 'Omission' | 'Insertion' | 'Mispronunciation'
-  score: number
-  offset: number
-  duration: number
-  phonemes: PhonemeInfo[]
-  spokenIpa: string
-}
-
-export type LongPause = {
-  start: number
-  end: number
-  duration: number
-  afterWordIndex: number
-}
-
-export type SpeechMetrics = {
-  duration: number
-  wordCount: number
-  speechRate: number
-  pauseCount: number
-  longPauses: LongPause[]
-  fillerCount: number
-  fillers: string[]
-  repetitionCount: number
-  repetitions: string[]
-  avgPronunciationScore: number
-  prosodyScore: number
-  words: Word[]
-}
-
-export type LexicalWeakWord = {
-  startWordIndex: number
-  endWordIndex: number
-  original: string
-  suggestion: string
-  reason: string
-}
-
-export type GrammarError = {
-  startWordIndex: number
-  endWordIndex: number
-  original: string
-  correction: string
-  reason: string
-}
-
-export type Evaluation = {
-  transcript: string
-  fluency: {
-    band: number
-    feedback: string
-  } | null
-  pronunciation: {
-    band: number
-    feedback: string
-  } | null
-  lexical: {
-    band: number
-    feedback: string
-    weakWords: LexicalWeakWord[]
-  } | null
-  grammar: {
-    band: number
-    feedback: string
-    errors: GrammarError[]
-  } | null
-  overall: number | null
+export type AnalysisMeta = {
+  startedAt?: Date
+  finishedAt?: Date
+  currentStage?: 'transcribe' | 'assess' | 'evaluate' | 'score_session'
+  failedStage?: 'transcribe' | 'assess' | 'evaluate' | 'score_session'
+  error?: string
+  warnings?: string[]
 }
 
 type RawAttemptType = mongoose.InferSchemaType<typeof attemptSchema>
 
-export type AttemptType = Omit<RawAttemptType, 'speechMetrics' | 'evaluation'> & {
+export type AttemptType = Omit<RawAttemptType, 'analysisProfile' | 'scores' | 'analysisMeta'> & {
   _id: mongoose.Types.ObjectId
-  speechMetrics?: Partial<SpeechMetrics>
-  evaluation?: Partial<Evaluation>
+  analysisProfile?: AnalysisProfile
+  scores?: Partial<AttemptScores>
+  analysisMeta?: Partial<AnalysisMeta>
 }
 
 export const Attempt = mongoose.models.Attempt || mongoose.model<AttemptType>('Attempt', attemptSchema)

@@ -35,9 +35,9 @@ export class SpeakingConsumer extends BaseConsumer<SpeakingJobData> {
       case JOB_NAME.SPEAKING.EVALUATE:
         await this.speakingAnalysisService.evaluate(job.data as EvaluateJobData)
         break
-      // case JOB_NAME.SPEAKING.SCORE_SESSION:
-      //   await this.speakingAnalysisService.scoreSession(job.data as ScoreSessionJobData)
-      //   break
+      case JOB_NAME.SPEAKING.SCORE_SESSION:
+        await this.speakingAnalysisService.scoreSession(job.data as ScoreSessionJobData)
+        break
       default:
         throw new Error(`[Speaking Consumer] Unknown job: ${job.name}`)
     }

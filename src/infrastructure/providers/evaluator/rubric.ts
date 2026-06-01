@@ -1,90 +1,77 @@
-export const PART_CONTEXT: Record<number, string> = {
-  1: `IELTS Speaking Part 1 – Introduction & Interview (4–5 min total session).
-Format: Short personal questions on familiar topics (family, hobbies, work, daily life).
-Expected response for THIS question: 10–30 seconds (2–4 sentences). Brevity is APPROPRIATE – do NOT penalise for short answers.
-Fluency: natural conversational pace; occasional hesitation acceptable.
-Lexical/Grammar: familiar-topic vocabulary and basic–intermediate structures; advanced range is a bonus, not required.`,
+export const PART_GUIDANCE: Record<number, string> = {
+  1: `IELTS Speaking Part 1 - Introduction and interview.
+- Expected response for one question: usually short, direct, personal, and natural.
+- Coherence: a concise answer can score well when it directly answers the question and gives enough support for that question type. Closed/simple questions may need only a direct answer plus one brief reason or concrete detail.
+- Do not penalise a 2-4 sentence answer only for being short. Flag coherence only when the answer is too short to communicate meaning, does not answer directly, lacks needed support, becomes repetitive, or goes off topic.
+- Lexical: familiar-topic vocabulary is acceptable; prefer natural spoken English over formal or academic wording. A concise Part 1 answer can still show high lexical control when vocabulary is precise, natural, flexible, and appropriate for the question.
+- Grammar: accurate basic and intermediate structures are enough for a good score if errors are limited. A concise Part 1 answer can still show high grammatical control when the produced clauses are mostly error-free and include flexible spoken structures appropriate for the question.
+- Do not require a Part 1 answer to demonstrate the same breadth of vocabulary or grammar as a Part 2 long turn or a Part 3 discussion.`,
 
-  2: `IELTS Speaking Part 2 – Individual Long Turn / Cue Card (3–4 min total section).
-Format: Candidate receives a cue card (topic + 3–4 bullet points), has 1 min to prepare, then speaks 1–2 minutes uninterrupted.
-Expected response for THIS question: 60–120 seconds of actual speech covering ALL bullet points (intro → each bullet → wrap-up).
-PENALISE (lower fluency band) if: bullet points are skipped, or speech duration is clearly under 45 seconds.
-Lexical/Grammar: higher range expected due to extended speaking time.`,
+  2: `Part 2 scoring guidance:
+- Task context: IELTS Speaking Part 2 - Individual long turn / cue card.
+- Expected response: a developed monologue that addresses the prompt and cue points.
+- Coherence: consider cue coverage, sequence of ideas, development, and whether the response feels like a sustained long turn.
+- Use only the provided cue card/question to judge cue coverage. Do not invent missing cue points.
+- Penalise missing or underdeveloped cue points when they make the answer feel incomplete, but do not require every minor detail to be equally expanded.
+- Lexical: expect enough range to describe details, feelings, reasons, examples, and changes over time where relevant.
+- Grammar: expect more sentence variety than Part 1, but judge errors by their impact on communication.
+- Suggestions should help the speaker extend or organise the answer, not only correct isolated phrases.`,
 
-  3: `IELTS Speaking Part 3 – Two-Way Discussion (4–5 min total section).
-Format: Examiner-led discussion on abstract/social topics linked to Part 2 theme.
-Expected response for THIS question: 30–50 seconds with opinion, reasoning, and examples.
-Fluency: smooth delivery of complex ideas; discourse markers and hedging language expected at higher bands.
-PENALISE vague, very short (under 20 seconds), or surface-level answers.
-Lexical/Grammar: highest standard – wide range, complex structures, precise vocabulary required for high bands.`
+  3: `Part 3 scoring guidance:
+- Task context: IELTS Speaking Part 3 - Two-way discussion.
+- Expected response: a more developed answer with opinion, reasoning, examples, and some abstract/general discussion.
+- Coherence: expect deeper development than Part 1, with reasoning, examples, comparison, cause/effect, or qualification where relevant.
+- Strong Part 3 answers usually include at least two forms of development, such as explanation, example, comparison, cause/effect, or qualification.
+- If the answer only gives a simple opinion plus a surface-level reason, coherence should usually not exceed Band 6.
+- Lexical: expect more precise vocabulary for abstract or social topics. Surface-level development may limit lexical evidence even if individual word choices are accurate.
+- Grammar: reward flexible complex structures; penalise repetitive simple forms or frequent errors.`
 }
 
-export const RUBRIC = `
-═══════════════════════════════════════════════
-CRITERION 1: FLUENCY & COHERENCE
-Key dimensions: speech continuity, hesitation TYPE, repetition/self-correction, discourse markers (range + appropriacy), coherence & topic development.
+export const TRANSCRIPT_SCORING_GUIDANCE = `Transcript handling guidance:
+- Treat the transcript as spoken STT text, not edited writing.
+- Punctuation is included only to make the transcript easier to read and may be imperfect. Do not penalise punctuation, capitalization, sentence breaks, or run-on formatting.
+- Do not create lexical or grammar issues for punctuation, capitalization, hyphenation, comma placement, sentence splitting, or display formatting when spoken meaning is clear.
+- Judge spoken English. Accept natural elliptical answers, discourse fragments, fillers, repairs, and conversational phrasing when meaning is clear.
+- Do not require every spoken response to be a complete written sentence, but do not excuse errors that clearly break grammar, meaning, or natural spoken English.
+- Do not use sentence segmentation as grammar evidence. Use the word sequence and spoken meaning.
+- Do not report minor parallelism, formal wording, or written-style improvements as grammar issues in natural spoken English.
+- Do not create grammar issues for simple stutters or immediate one-word repetitions; delivery mechanics are handled by the backend.
+- Natural fillers such as "you know", "like", or "I mean" are acceptable unless they obscure meaning or create real coherence problems.
+- Ignore harmless display-format differences such as abbreviations or capitalization when the intended word is clear.
+- Do not report hyphenation-only issues such as "floor to ceiling" versus "floor-to-ceiling"; that is written formatting, not speaking performance.
+- Repeated words are delivery evidence unless they make the message hard to follow; do not classify one-word repetition as grammar.`
 
-Band 9: Fluent, rare repetition/self-correction. Hesitation content-related only. Fully coherent throughout. Topics developed fully and logically.
-Band 8: Fluent. Hesitations mainly content-related, rarely language-related. Occasional repetition/self-correction. Wide range of connectives & discourse markers, used flexibly.
-Band 7: Speaks at length without noticeable effort. SOME hesitation (occasionally language-related), some repetition/self-correction without loss of coherence. Wide flexible connectives & discourse markers.
-Band 6: Able and willing to speak at length. Loses coherence AT TIMES due to repetition, self-correction, or hesitation. Range of connectives/discourse markers but NOT ALWAYS appropriately.
-Band 5: Maintains flow via repetition, self-correction, or slowing. Hesitations often to search for BASIC lexis or grammar. May OVERUSE certain connectives. Fluent in simple speech; struggles with complex content.
-Band 4: Noticeably slow, frequent pauses. Frequent repetition/self-correction. Only simple repetitive connectives. Frequent coherence breakdowns.
+export const COHERENCE_RUBRIC = `Coherence band anchors, adapted from IELTS Speaking Fluency and Coherence descriptors for content and organization only:
+Band 9: Response is fully relevant, situationally appropriate, logically organized, and appropriately extended. Cohesive features are natural and fully acceptable.
+Band 8: Topic development is coherent, appropriate, and relevant. Ideas are clearly connected and sufficiently developed for the task.
+Band 7: Ideas are clear and mostly well connected. Spoken discourse markers, connectives, and cohesive features are used flexibly. Minor lapses do not affect coherence.
+Band 6: Response is generally relevant and can be followed, but coherence may be lost at times. Connectives and cohesive features are used, though not always appropriately.
+Band 5: Basic message is usually understandable, but development is limited, repetitive, or uneven. Discourse markers/connectives may be overused or mechanical.
+Band 4: Can link simple ideas, but links are often repetitive or unclear. Some coherence breakdowns occur and topic development is limited.
+Band 3: Limited ability to link simple ideas or go beyond simple responses. The basic message is often unclear.
+Band 2: Isolated words or memorised fragments have very little communicative significance.
+Band 1: Speech is totally incoherent or has no rateable content.`
 
-CRITICAL DECISION RULE – hesitation type determines band 6 vs 7 vs 8:
-- [PAUSE] BETWEEN full sentences/ideas → content hesitation → Band 7–8
-- [PAUSE] MID-SENTENCE before/after a content word or filler → language search → Band 5–6
+export const LEXICAL_RUBRIC = `Lexical Resource band anchors, based on IELTS Speaking descriptors:
+Band 9: Total flexibility and precise vocabulary in all contexts. Sustained accurate and idiomatic language.
+Band 8: Wide vocabulary, readily and flexibly used to discuss all topics and convey precise meaning. Skilful less-common/idiomatic items with only occasional word choice or collocation inaccuracies. Effective paraphrase.
+Band 7: Vocabulary is flexibly used across topics. Some less-common/idiomatic items and awareness of style/collocation, though inappropriacies occur. Effective paraphrase.
+Band 6: Vocabulary is sufficient to discuss topics at length. Some inappropriate word choice may occur but meaning is clear. Generally successful paraphrase.
+Band 5: Vocabulary covers familiar and unfamiliar topics but flexibility is limited. Attempts paraphrase with mixed success.
+Band 4: Vocabulary is enough for familiar topics, but only basic meaning on unfamiliar topics. Frequent word choice errors. Rare paraphrase.
+Band 3: Simple vocabulary mainly for personal information. Inadequate for unfamiliar topics.
+Band 2: Very limited vocabulary; mostly isolated or memorised words.
+Band 1: No lexical resource beyond a few isolated words.
+Lexical issues should target word choice, collocation, word form, register, idiom, or imprecise vocabulary that is clearly unnatural or inaccurate in spoken English. Do not report spelling, capitalization, punctuation, or hyphenation-only issues.`
 
-═══════════════════════════════════════════════
-CRITERION 2: LEXICAL RESOURCE
-Key dimensions: range (familiar vs unfamiliar topics), flexibility & precision, collocations & idioms, paraphrase ability.
-
-Band 9: Full flexibility and precision across all topics. Idioms used naturally and accurately.
-Band 8: Wide flexible vocabulary. Less-common words & idioms skillfully used (occasional collocation errors). Effective paraphrase. Precise meaning.
-Band 7: Flexible vocabulary across many topics. SOME less-common words & idioms, collocation awareness (not always ideal). Paraphrases effectively in multiple ways.
-Band 6: Wide enough range for extended discussion. Word choices may be inappropriate but meaning CLEAR. Generally successful paraphrase.
-Band 5: Sufficient for familiar AND unfamiliar topics but LIMITED flexibility. Paraphrase with MIXED success.
-Band 4: Sufficient for FAMILIAR topics only. Basic meaning only on unfamiliar topics. Frequent word choice errors. RARELY attempts paraphrase.
-
-═══════════════════════════════════════════════
-CRITERION 3: GRAMMATICAL RANGE & ACCURACY
-Key dimensions: range of structures (basic → complex → wide), accuracy of basic vs complex structures, error impact on communication.
-
-Band 9: Consistently accurate. Only very minor native-speaker slips.
-Band 8: Wide range of structures, used flexibly. Majority of sentences error-free. Very occasional inappropriacies.
-Band 7: Range of complex structures with flexibility. Frequently error-free sentences. Only some errors.
-Band 6: Mix of simple and complex structures, less flexible. Frequent errors in complex structures but RARELY cause comprehension problems.
-Band 5: Mostly basic forms with reasonable accuracy. Limited complex structures; usually contain errors when attempted.
-Band 4: Basic forms only, some correct. Rarely uses subordinate clauses. Short repetitive utterances. Frequent errors.
-
-Error severity:
-Band 7–9: errors do not affect communication
-Band 6: complex-structure errors rarely cause comprehension problems
-Band 5: complex-structure errors cause SOME comprehension problems
-Band 4: errors frequently lead to misunderstanding
-
-═══════════════════════════════════════════════
-CRITERION 4: PRONUNCIATION
-Key dimensions: phoneme accuracy, intonation, connected speech/linking, rhythm, intelligibility, sustainability of control.
-
-Band 9: Full range of phonological features, accurate and subtle throughout. Effortless to understand.
-Band 8: Wide range of features with precision. Sustains rhythm, stress & intonation on long utterances (occasional lapses). Easy to understand throughout.
-Band 7: All positive features of Band 6 + some (not all) of Band 8.
-Band 6: Range of features but CONTROL NOT SUSTAINED. Phrase-linking present but rhythm affected. Generally intelligible despite occasional unclear words.
-Band 5: All positive features of Band 4 + some (not all) of Band 6.
-Band 4: Some intonation & stress but LIMITED control. Frequent mispronunciation causes listener difficulty.
-
-HARD BAND FLOOR ANCHORS — strictly binding, override all other judgement:
-- avgPhonemeScore ≥ 95 AND prosodyScore ≥ 80 → band CANNOT be lower than 8.0
-- avgPhonemeScore ≥ 90 AND prosodyScore ≥ 75 → band CANNOT be lower than 7.5
-- avgPhonemeScore ≥ 85 AND prosodyScore ≥ 70 → band CANNOT be lower than 7.0
-- avgPhonemeScore 70–84 → Band 5–6 range
-- avgPhonemeScore < 70 → Band 4 range
-
-STT ARTIFACT WARNING:
-- Words at sentence/phrase END with low score are often STT mismatches, not real errors.
-- If mispronounced word's context is incoherent in transcript (e.g. "kindness and down are") — assume STT artifact, do NOT cite as pronunciation error.
-- Only cite words where: (1) score < 60 AND (2) the surrounding transcript context is coherent.
-
-Sustainability: Band 4 = frequent lapses | Band 6 = effective but not sustained | Band 8 = sustained with occasional lapses | Band 9 = fully sustained
-═══════════════════════════════════════════════`
+export const GRAMMAR_RUBRIC = `Grammatical Range and Accuracy band anchors, based on IELTS Speaking descriptors:
+Band 9: Structures are precise and accurate except for native-speaker-like slips.
+Band 8: Wide range of structures used flexibly. Most sentences are error-free. Occasional non-systematic errors or inappropriacies.
+Band 7: A range of structures used flexibly. Error-free sentences are frequent. Simple and complex sentences are effective despite some errors.
+Band 6: Mix of short and complex sentence forms with variety but limited flexibility. Errors occur frequently in complex structures but rarely impede communication.
+Band 5: Basic sentence forms are fairly well controlled. Complex structures are limited, usually contain errors, and may require reformulation.
+Band 4: Basic sentence forms and some short error-free utterances. Subordinate clauses are rare; turns are short, repetitive, and error-prone.
+Band 3: Basic sentence forms are attempted but grammatical errors are numerous except in memorised utterances.
+Band 2: No evidence of basic sentence forms.
+Band 1: No rateable grammar unless memorised.
+Grammar issues should target spoken structure: tense, agreement, articles, prepositions, word order, clause structure, and missing required sentence elements. Do not report errors that depend only on written sentence boundaries or punctuation.`

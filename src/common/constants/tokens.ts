@@ -55,6 +55,7 @@ export const TOKENS = {
 
   // Attempt
   IAttemptRepository: Symbol('IAttemptRepository'),
+  IAttemptAnalysisRepository: Symbol('IAttemptAnalysisRepository'),
 
   // STT
   ISTTProvider: Symbol('ISTTProvider'),
