@@ -1,10 +1,6 @@
 import {
   AnalysisMeta,
-  AnalysisProviders,
   Evaluation,
-  PronunciationAssessmentAnalysis,
-  SpeechAnalysis,
-  TranscriptionAnalysis,
   AttemptScores
 } from './attempt.model'
 import { AnalysisProfile } from '~/common/constants/constants'
@@ -24,14 +20,29 @@ export type AttemptResponseDto = {
   analysisVersion?: string
   transcriptPreview?: string
   scores?: Partial<AttemptScores>
-  providers?: Partial<AnalysisProviders>
-  transcription?: Partial<TranscriptionAnalysis>
-  pronunciationAssessment?: Partial<PronunciationAssessmentAnalysis>
-  speechAnalysis?: Partial<SpeechAnalysis>
-  evaluation?: Partial<Evaluation>
   analysisMeta?: Partial<AnalysisMeta>
   createdAt: Date
   updatedAt: Date
+}
+
+export type AttemptWordAssessmentDto = {
+  wordIndex: number
+  word: string
+  accuracyScore?: number
+  errorType?: string
+  startTime?: number
+  endTime?: number
+  punctuationAfter?: string
+  expectedIpa?: string
+  spokenIpa?: string
+}
+
+export type AttemptDetailResponseDto = AttemptResponseDto & {
+  transcript?: string
+  evaluation?: Partial<Evaluation>
+  fluencyMetrics?: Record<string, unknown>
+  pronunciationScores?: Record<string, unknown>
+  wordAssessments?: AttemptWordAssessmentDto[]
 }
 
 export type AttemptLeaderboardDto = {
