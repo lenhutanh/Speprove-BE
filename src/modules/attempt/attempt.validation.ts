@@ -1,5 +1,5 @@
 import z from 'zod'
-import { createSchema, querySchema, updateSchema } from '~/common/base'
+import { createSchema, idParamSchema, querySchema, simpleQuerySchema, updateSchema } from '~/common/base'
 import { SPEAKING_SESSION_MODE } from '~/common/constants/constants'
 import { objectIdSchema } from '~/common/utils'
 
@@ -34,3 +34,7 @@ export const getLeaderboardSchema = querySchema({
 export const shareAttemptSchema = updateSchema({
   isPublic: z.boolean()
 })
+
+export const getWordAudioSchema = simpleQuerySchema({
+  wordIndex: z.coerce.number().int().min(0)
+}).merge(idParamSchema)

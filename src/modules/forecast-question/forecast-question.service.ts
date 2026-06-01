@@ -6,10 +6,10 @@ import { ForecastQuestionMapper } from './forecast-question.mapper'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
 import { ForecastQuestionQueryType, ImportQuestionType } from './forecast-question.type'
-import { QuestionAudioService } from '../question-audio/question-audio.service'
 import { ErrorCodes } from '~/common/constants/error-codes'
 import { IQuestionRepository } from '../question/repositories/question.repository.interface'
 import { PART_KIND, PartKind } from '~/common/constants/constants'
+import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 
 @singleton()
 export class ForecastQuestionService {
@@ -17,7 +17,7 @@ export class ForecastQuestionService {
     @inject(TOKENS.IForecastQuestionRepository)
     private readonly forecastQuestionRepository: IForecastQuestionRepository,
     private readonly forecastQuestionMapper: ForecastQuestionMapper,
-    private readonly questionAudioService: QuestionAudioService,
+    private readonly generatedAudioService: GeneratedAudioService,
     @inject(TOKENS.IQuestionRepository)
     private readonly questionRepository: IQuestionRepository
   ) {}
@@ -88,12 +88,7 @@ export class ForecastQuestionService {
 
     const [navigation, audioUrl] = await Promise.all([
       this.getPrevNext(current),
-      voiceId
-        ? this.questionAudioService.getAudioUrl({
-            questionId: current.questionId._id.toString(),
-            voiceId
-          })
-        : Promise.resolve('')
+      this.getGeneratedAudioUrl(current.questionId, voiceId)
     ])
 
     return this.forecastQuestionMapper.toResponse({
@@ -102,6 +97,19 @@ export class ForecastQuestionService {
       prev: navigation.prev,
       next: navigation.next
     })
+  }
+
+  private async getGeneratedAudioUrl(question: any, voiceId?: string) {
+    if (!voiceId || !question?.content) {
+      return ''
+    }
+
+    const audio = await this.generatedAudioService.getOrCreate({
+      text: question.content,
+      voiceId
+    })
+
+    return audio.audioUrl
   }
 
   private async getPrevNext(current: any) {

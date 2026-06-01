@@ -17,7 +17,6 @@ import { QueueFactory } from '~/infrastructure/queues/queue.factory'
 import { WorkerFactory } from '~/infrastructure/workers/worker.factory'
 import { CacheService } from '~/infrastructure/cache/cache.service'
 import { registerMailModule } from '~/modules/mail/mail.di'
-import { registerQuestionAudioModule } from '~/modules/question-audio/question-audio.di'
 import { registerForecastTopicModule } from '~/modules/forecast-topic/forecast-topic.di'
 import { registerForecastQuestionModule } from '~/modules/forecast-question/forecast-question.di'
 import { registerSpeakingSessionModule } from '~/modules/speaking-session/speaking-session.di'
@@ -28,7 +27,8 @@ import { registerPaymentModule } from '~/modules/payment/payment.di'
 import { registerCreditPackageModule } from '~/modules/credit-package/credit-package.di'
 import { registerCreditLogModule } from '~/modules/credit-log/credit-log.di'
 import { registerInstructionAudioModule } from '~/modules/instruction-audio/instruction-audio.di'
-import { registerAccountProviderModule } from '~/modules/account-provider/account-provider.di';
+import { registerAccountProviderModule } from '~/modules/account-provider/account-provider.di'
+import { registerGeneratedAudioModule } from '~/modules/generated-audio/generated-audio.di'
 
 export function setupContainer(): void {
   console.log('🔧 Setting up DI container...')
@@ -54,7 +54,6 @@ export function setupContainer(): void {
   registerTopicModule()
   registerFileModule()
   registerMailModule()
-  registerQuestionAudioModule()
   registerForecastTopicModule()
   registerForecastQuestionModule()
   registerSpeakingSessionModule()
@@ -64,6 +63,7 @@ export function setupContainer(): void {
   registerCreditLogModule()
   registerInstructionAudioModule()
   registerAccountProviderModule()
+  registerGeneratedAudioModule()
 
   console.log('✅ DI container ready\n')
 }

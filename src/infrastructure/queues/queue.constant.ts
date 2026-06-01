@@ -13,9 +13,6 @@ export const JOB_NAME = {
   VOICE: {
     GENERATE: 'voice:generate'
   },
-  QUESTION_AUDIO: {
-    GENERATE: 'question-audio:generate'
-  },
   SPEAKING: {
     TRANSCRIBE: 'speaking:transcribe',
     ASSESS: 'speaking:assess',

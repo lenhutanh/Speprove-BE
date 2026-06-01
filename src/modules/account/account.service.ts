@@ -114,4 +114,13 @@ export class AccountService {
     const updated = await this.accountRepository.updateById(userId, { selectedVoiceId: voice._id })
     if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
   }
+
+  public async resolveSelectedVoiceId(userId: string) {
+    const account = await this.accountRepository.findById(userId, { select: 'selectedVoiceId' })
+    if (!account) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    if (account.selectedVoiceId) return account.selectedVoiceId.toString()
+
+    const defaultVoice = await this.voiceService.getDefault()
+    return defaultVoice.id
+  }
 }
