@@ -35,4 +35,9 @@ export class AttemptController {
     const message = isPublic ? 'Attempt is now public' : 'Attempt is now private'
     return ResponseTransformer.success(res, attempt, message)
   }
+
+  public async getWordAudio(req: AuthenticatedRequest, res: Response) {
+    const result = await this.attemptService.getWordAudio(req.user._id, req.validated.params.id, req.validated.query)
+    return ResponseTransformer.success(res, result, 'Get word audio successfully')
+  }
 }

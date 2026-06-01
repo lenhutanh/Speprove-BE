@@ -2,7 +2,7 @@ import { delay, inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { IAttemptRepository } from './attempt.repository.interface'
 import { IAttemptAnalysisRepository } from './attempt-analysis.repository.interface'
-import { AttemptQueryType, CreateAttemptBodyType, GetTopAttemptQueryType } from './attempt.type'
+import { AttemptQueryType, CreateAttemptBodyType, GetTopAttemptQueryType, GetWordAudioQueryType } from './attempt.type'
 import { SpeakingSessionService } from '../speaking-session/speaking-session.service'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
@@ -25,6 +25,7 @@ import { QueryBuilder } from '~/common/base'
 import { AttemptType } from './attempt.model'
 import { AccountService } from '../account/account.service'
 import { CreditLogService } from '../credit-log/credit-log.service'
+import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 
 @singleton()
 export class AttemptService {
@@ -40,7 +41,8 @@ export class AttemptService {
     private readonly attemptMapper: AttemptMapper,
     private readonly speakingProducer: SpeakingProducer,
     private readonly accountService: AccountService,
-    private readonly creditLogService: CreditLogService
+    private readonly creditLogService: CreditLogService,
+    private readonly generatedAudioService: GeneratedAudioService
   ) {}
 
   public async createNew(userId: string, data: CreateAttemptBodyType) {
@@ -246,5 +248,60 @@ export class AttemptService {
 
   public async findBySpeakingSessionId(speakingSessionId: string) {
     return await this.attemptRepository.findMany({ speakingSessionId })
+  }
+
+  public async getWordAudio(userId: string, attemptId: string, data: GetWordAudioQueryType) {
+    const attempt = await this.attemptRepository.findById(attemptId)
+    if (!attempt) throw new AppError('Attempt not found', StatusCodes.NOT_FOUND)
+    if (attempt.userId.toString() !== userId) throw new AppError('Forbidden', StatusCodes.FORBIDDEN)
+
+    const analysis = await this.attemptAnalysisRepository.findOne(
+      { attemptId: toObjectId(attemptId) },
+      {
+        select: [
+          'pronunciationAssessment.words.wordIndex',
+          'pronunciationAssessment.words.word',
+          'pronunciationAssessment.words.accuracyScore',
+          'pronunciationAssessment.words.errorType',
+          'pronunciationAssessment.words.expectedIpa',
+          'pronunciationAssessment.words.spokenIpa'
+        ].join(' ')
+      }
+    )
+
+    const word = analysis?.pronunciationAssessment?.words?.find((item) => item.wordIndex === data.wordIndex)
+    if (!word) throw new AppError('Word assessment not found', StatusCodes.NOT_FOUND)
+
+    if (!this._shouldGenerateWordAudio(word)) {
+      throw new AppError('This word does not need pronunciation audio', StatusCodes.BAD_REQUEST)
+    }
+
+    const text = word.word?.trim()
+    if (!text) throw new AppError('Word text is empty', StatusCodes.BAD_REQUEST)
+
+    const voiceId = await this.accountService.resolveSelectedVoiceId(userId)
+    const audio = await this.generatedAudioService.getOrCreate({ text, voiceId })
+
+    return {
+      audioUrl: audio.audioUrl,
+      fileId: audio.fileId,
+      cached: audio.cached,
+      word: {
+        wordIndex: word.wordIndex,
+        word: word.word,
+        accuracyScore: word.accuracyScore,
+        errorType: word.errorType,
+        expectedIpa: word.expectedIpa,
+        spokenIpa: word.spokenIpa
+      }
+    }
+  }
+
+  private _shouldGenerateWordAudio(word: any) {
+    const hasErrorType = !!word.errorType && word.errorType !== 'None'
+    const hasLowAccuracy = typeof word.accuracyScore === 'number' && word.accuracyScore < 80
+    const hasIpaMismatch = !!word.expectedIpa && !!word.spokenIpa && word.expectedIpa.trim() !== word.spokenIpa.trim()
+
+    return hasErrorType || hasLowAccuracy || hasIpaMismatch
   }
 }

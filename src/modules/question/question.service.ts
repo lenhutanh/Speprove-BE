@@ -1,23 +1,18 @@
 import { StatusCodes } from 'http-status-codes'
-import { CLOUD_FOLDERS, PART_KIND } from '~/common/constants/constants'
+import { PART_KIND } from '~/common/constants/constants'
 import { inject, singleton } from 'tsyringe'
-import { VoiceService } from '../voice/voice.service'
 import { TOKENS } from '~/common/constants/tokens'
 import { IQuestionRepository } from './repositories/question.repository.interface'
 import { QueryBuilder } from '~/common/base/query-builder'
 import { QuestionType } from './question.model'
 import { CreateQuestionBodyType, UpdateQuestionBodyType } from './types/question.type'
 import { AppError } from '~/common/errors'
-import { JOB_NAME } from '~/infrastructure/queues'
-import { FileProducer } from '../../infrastructure/queues/publishers/file.producer'
 import { checkSpelling, getSuggestions, toObjectId } from '~/common/utils'
 import { QuestionMapper } from './question.mapper'
 
 @singleton()
 export class QuestionService {
   constructor(
-    private readonly voiceService: VoiceService,
-    private readonly fileProducer: FileProducer,
     @inject(TOKENS.IQuestionRepository) private readonly questionRepository: IQuestionRepository,
     private readonly questionMapper: QuestionMapper
   ) {}
@@ -56,23 +51,6 @@ export class QuestionService {
         break
     }
 
-    const voices = await this.voiceService.getAll()
-
-    if (voices.length > 0) {
-      const jobs = voices.map((voice) => ({
-        name: JOB_NAME.QUESTION_AUDIO.GENERATE,
-        data: {
-          questionId: question._id,
-          text: question.content,
-          voiceCode: voice.voiceCode,
-          voiceId: voice._id,
-          speed: voice.speed,
-          pitch: voice.pitch,
-          folder: CLOUD_FOLDERS.QUESTION_AUDIOS
-        }
-      }))
-      await this.fileProducer.addBulk(jobs)
-    }
     return this.questionMapper.toResponse(question)
   }
 

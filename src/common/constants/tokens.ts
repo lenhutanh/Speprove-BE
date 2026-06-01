@@ -30,7 +30,9 @@ export const TOKENS = {
 
   // Question
   IQuestionRepository: Symbol('IQuestionRepository'),
-  IQuestionAudioRepository: Symbol('IQuestionAudioRepository'),
+
+  // Generated audio
+  IGeneratedAudioRepository: Symbol('IGeneratedAudioRepository'),
 
   // Session
   ISessionRepository: Symbol('ISessionRepository'),

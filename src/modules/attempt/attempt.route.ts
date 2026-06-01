@@ -4,7 +4,13 @@ import { validateMiddleware } from '~/common/middlewares'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
 import { bindHandler } from '~/common/utils'
 import { AttemptController } from './attempt.controller'
-import { attemptQuerySchema, createAttemptSchema, getLeaderboardSchema, shareAttemptSchema } from './attempt.validation'
+import {
+  attemptQuerySchema,
+  createAttemptSchema,
+  getLeaderboardSchema,
+  getWordAudioSchema,
+  shareAttemptSchema
+} from './attempt.validation'
 import { idParamSchema } from '~/common/base'
 
 const router = express.Router()
@@ -30,6 +36,14 @@ router
     authMiddleware.isAuthorized,
     validateMiddleware(shareAttemptSchema),
     bindHandler(AttemptController, 'toggleShare')
+  )
+
+router
+  .route('/:id/word-audio')
+  .get(
+    authMiddleware.isAuthorized,
+    validateMiddleware(getWordAudioSchema),
+    bindHandler(AttemptController, 'getWordAudio')
   )
 
 router

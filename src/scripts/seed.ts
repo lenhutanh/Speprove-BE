@@ -7,7 +7,6 @@ import { ACCOUNT_KIND, GROUP_KIND, GROUP_NAME, STATUS } from '~/common/constants
 import { Account } from '~/modules/account/account.model'
 import { Forecast } from '~/modules/forecast/forecast.model'
 import { Question } from '~/modules/question/question.model'
-import { QuestionAudio } from '~/modules/question-audio/question-audio.model'
 import { Session } from '~/modules/session/session.model'
 import { Topic } from '~/modules/topic/topic.model'
 import { Voice } from '~/modules/voice/voice.model'
@@ -24,7 +23,6 @@ export const seedData = async () => {
       Account.deleteMany({}),
       Forecast.deleteMany({}),
       Question.deleteMany({}),
-      QuestionAudio.deleteMany({}),
       Session.deleteMany({}),
       Topic.deleteMany({}),
       Voice.deleteMany({}),
