@@ -1,13 +1,84 @@
 import * as sdk from 'microsoft-cognitiveservices-speech-sdk'
 import { singleton } from 'tsyringe'
 import { env } from '~/common/config'
-import { IPronunciationAssessmentProvider, PronunciationAssessmentResult, Syllable } from './assessment.interface'
+import { IPronunciationAssessmentProvider, PronunciationAssessmentResult } from './assessment.interface'
 import { AZURE_TICKS_PER_SECOND } from '~/common/constants/constants'
 import axios from 'axios'
+
+type AzurePronunciationAssessment = {
+  AccuracyScore?: number
+  CompletenessScore?: number
+  FluencyScore?: number
+  PronScore?: number
+  ProsodyScore?: number
+  ErrorType?: 'None' | 'Omission' | 'Insertion' | 'Mispronunciation'
+  Feedback?: {
+    Prosody?: Record<string, unknown> & {
+      Break?: {
+        BreakLength?: number
+      }
+    }
+  }
+}
+
+type AzureNBestPhoneme = {
+  Phoneme?: string
+  Score?: number
+  Confidence?: number
+}
+
+type AzurePhoneme = {
+  Phoneme?: string
+  Offset?: number
+  Duration?: number
+  PronunciationAssessment?: {
+    AccuracyScore?: number
+    NBestPhonemes?: AzureNBestPhoneme[]
+  }
+}
+
+type AzureSyllable = {
+  Syllable?: string
+  Offset?: number
+  Duration?: number
+  PronunciationAssessment?: {
+    AccuracyScore?: number
+  }
+  IsStress?: boolean
+  IsActualStress?: boolean
+}
+
+type AzureWord = {
+  Word?: string
+  Offset?: number
+  Duration?: number
+  PronunciationAssessment?: AzurePronunciationAssessment
+  Syllables?: AzureSyllable[]
+  Phonemes?: AzurePhoneme[]
+}
+
+type AzureNBest = {
+  Words?: AzureWord[]
+  PronunciationAssessment?: AzurePronunciationAssessment
+}
+
+type AzureJsonResult = {
+  NBest?: AzureNBest[]
+}
+
+type AggregatedPaResult = {
+  pronunciationScore: number
+  accuracyScore: number
+  completenessScore: number
+  fluencyScore: number
+  prosodyScore: number
+}
 
 @singleton()
 export class AzurePronunciationAssessmentProvider implements IPronunciationAssessmentProvider {
   private readonly speechConfig: sdk.SpeechConfig
+  private readonly phonemeAlphabet = 'IPA'
+  private readonly nbestPhonemeCount = 5
 
   constructor() {
     this.speechConfig = sdk.SpeechConfig.fromSubscription(env.AZURE_SPEECH_KEY, env.AZURE_SPEECH_REGION)
@@ -31,6 +102,8 @@ export class AzurePronunciationAssessmentProvider implements IPronunciationAsses
         true
       )
       pronunciationConfig.enableProsodyAssessment = true
+      pronunciationConfig.phonemeAlphabet = this.phonemeAlphabet
+      pronunciationConfig.nbestPhonemeCount = this.nbestPhonemeCount
 
       const audioFormat = sdk.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1)
       const pushStream = sdk.AudioInputStream.createPushStream(audioFormat)
@@ -47,56 +120,33 @@ export class AzurePronunciationAssessmentProvider implements IPronunciationAsses
       const recognizer = new sdk.SpeechRecognizer(this.speechConfig, audioConfig)
       pronunciationConfig.applyTo(recognizer)
 
-      // Các biến để tích lũy dữ liệu từ nhiều đoạn (chunks)
-      const recognizedWords: any[] = []
+      const recognizedWords: AzureWord[] = []
+      const chunkAssessments: AzurePronunciationAssessment[] = []
       let fullTranscript = ''
       let totalAudioDurationTicks = 0
 
-      let chunkCount = 0
-      let totalAccuracy = 0
-      let totalFluency = 0
-      let totalProsody = 0
-      let totalRhythm = 0
-      let totalStress = 0
-      let totalIntonation = 0
-
-      // Sự kiện: Kích hoạt khi Azure nhận diện xong một cụm từ/câu
       recognizer.recognized = (s, e) => {
         if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
-          const pa = sdk.PronunciationAssessmentResult.fromResult(e.result)
           const jsonStr = e.result.properties.getProperty(sdk.PropertyId.SpeechServiceResponse_JsonResult)
 
           if (jsonStr) {
-            const json = JSON.parse(jsonStr)
+            const json = JSON.parse(jsonStr) as AzureJsonResult
             const nBest = json?.NBest?.[0]
 
-            // Gom các từ vào mảng chung
-            if (nBest && nBest.Words) {
+            if (nBest?.Words) {
               recognizedWords.push(...nBest.Words)
             }
 
-            // Tích lũy các điểm chi tiết của Prosody
-            const prosodyRaw = nBest?.PronunciationAssessment?.ProsodyScore
-            if (prosodyRaw?.Feedback) {
-              totalRhythm += prosodyRaw.Feedback.Rhythm?.Score ?? 0
-              totalStress += prosodyRaw.Feedback.Stress?.Score ?? 0
-              totalIntonation += prosodyRaw.Feedback.Intonation?.Score ?? 0
+            if (nBest?.PronunciationAssessment) {
+              chunkAssessments.push(nBest.PronunciationAssessment)
             }
           }
 
           fullTranscript += e.result.text + ' '
           totalAudioDurationTicks += e.result.duration
-
-          // Tích lũy điểm tổng
-          if (pa.accuracyScore) totalAccuracy += pa.accuracyScore
-          if (pa.fluencyScore) totalFluency += pa.fluencyScore
-          if (pa.prosodyScore) totalProsody += pa.prosodyScore
-
-          chunkCount++
         }
       }
 
-      // Sự kiện: Bị lỗi hoặc file stream hỏng
       recognizer.canceled = (s, e) => {
         if (e.reason === sdk.CancellationReason.Error) {
           recognizer.stopContinuousRecognitionAsync()
@@ -104,103 +154,161 @@ export class AzurePronunciationAssessmentProvider implements IPronunciationAsses
         }
       }
 
-      // Sự kiện: Hoàn tất xử lý toàn bộ file audio
-      recognizer.sessionStopped = (s, e) => {
+      recognizer.sessionStopped = () => {
         recognizer.stopContinuousRecognitionAsync(() => {
           recognizer.close()
 
-          // Nếu không nhận diện được gì, trả về rỗng để tránh lỗi chia cho 0
-          if (chunkCount === 0) {
+          if (chunkAssessments.length === 0) {
             return reject(new Error('No speech recognized in the audio stream.'))
           }
 
-          // Tính điểm trung bình cho toàn bộ bài
-          const avgAccuracy = totalAccuracy / chunkCount
-          const avgFluency = totalFluency / chunkCount
-          const avgProsody = totalProsody / chunkCount
-          const avgRhythm = totalRhythm / chunkCount
-          const avgStress = totalStress / chunkCount
-          const avgIntonation = totalIntonation / chunkCount
-
-          // Giả lập lại file JSON tổng hợp để truyền vào hàm _mapResult cũ của bạn
-          const aggregatedJson = {
+          const aggregatedAssessment = this._averageAssessment(chunkAssessments)
+          const aggregatedJson: AzureJsonResult = {
             NBest: [
               {
                 Words: recognizedWords,
-                PronunciationAssessment: {
-                  ProsodyScore: {
-                    Feedback: {
-                      Rhythm: { Score: avgRhythm },
-                      Stress: { Score: avgStress },
-                      Intonation: { Score: avgIntonation }
-                    }
-                  }
-                }
+                PronunciationAssessment: aggregatedAssessment
               }
             ]
           }
 
-          // Giả lập object PA Result
-          const aggregatedPaResult = {
-            accuracyScore: avgAccuracy,
-            fluencyScore: avgFluency,
-            prosodyScore: avgProsody
-          } as sdk.PronunciationAssessmentResult
-
-          // Resolve với mapper
-          resolve(this._mapResult(aggregatedPaResult, aggregatedJson, fullTranscript.trim(), totalAudioDurationTicks))
+          resolve(
+            this._mapResult(
+              {
+                pronunciationScore: aggregatedAssessment.PronScore ?? 0,
+                accuracyScore: aggregatedAssessment.AccuracyScore ?? 0,
+                completenessScore: aggregatedAssessment.CompletenessScore ?? 0,
+                fluencyScore: aggregatedAssessment.FluencyScore ?? 0,
+                prosodyScore: aggregatedAssessment.ProsodyScore ?? 0
+              },
+              aggregatedJson,
+              fullTranscript.trim(),
+              totalAudioDurationTicks
+            )
+          )
         })
       }
 
-      // Bắt đầu nhận diện liên tục thay vì nhận diện 1 lần
       recognizer.startContinuousRecognitionAsync()
     })
   }
 
+  private _averageAssessment(assessments: AzurePronunciationAssessment[]): AzurePronunciationAssessment {
+    const avg = (key: keyof AzurePronunciationAssessment) => {
+      const values = assessments.map((a) => a[key]).filter((v): v is number => typeof v === 'number')
+      return values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : 0
+    }
+
+    return {
+      PronScore: avg('PronScore'),
+      AccuracyScore: avg('AccuracyScore'),
+      CompletenessScore: avg('CompletenessScore'),
+      FluencyScore: avg('FluencyScore'),
+      ProsodyScore: avg('ProsodyScore')
+    }
+  }
+
   private _mapResult(
-    pa: sdk.PronunciationAssessmentResult,
-    json: any,
+    pa: AggregatedPaResult,
+    json: AzureJsonResult,
     transcript: string,
     audioDurationTicks: number
   ): PronunciationAssessmentResult {
     const nBest = json?.NBest?.[0]
     const paResult = nBest?.PronunciationAssessment
-    const prosodyRaw = paResult?.ProsodyScore
 
-    const words = (nBest?.Words ?? []).map((w: any) => {
-      const assessment = w.PronunciationAssessment ?? {}
+    const words =
+      nBest?.Words?.map((w, wordIndex) => {
+        const assessment = w.PronunciationAssessment ?? {}
+        const phonemes =
+          w.Phonemes?.map((p) => {
+            const expectedIpa = p.Phoneme ?? ''
+            const nBestPhonemes =
+              p.PronunciationAssessment?.NBestPhonemes?.map((candidate) => ({
+                phoneme: candidate.Phoneme ?? '',
+                score: candidate.Score,
+                confidence: candidate.Confidence
+              })) ?? []
+            const spokenIpa = this._selectSpokenPhoneme(expectedIpa, nBestPhonemes)
 
-      return {
-        word: w.Word ?? '',
-        accuracyScore: assessment.AccuracyScore ?? 0,
-        errorType: assessment.ErrorType ?? 'None',
-        offset: (w.Offset ?? 0) / AZURE_TICKS_PER_SECOND,
-        duration: (w.Duration ?? 0) / AZURE_TICKS_PER_SECOND,
-        phonemes: (w.Phonemes ?? []).map((p: any) => ({
-          phoneme: p.Phoneme ?? '',
-          accuracyScore: p.PronunciationAssessment?.AccuracyScore ?? 0,
-          offset: (p.Offset ?? 0) / AZURE_TICKS_PER_SECOND
-        })),
-        breakAfter: assessment.Feedback?.Prosody?.Break?.BreakLength
-          ? assessment.Feedback.Prosody.Break.BreakLength / AZURE_TICKS_PER_SECOND
-          : 0
-      }
-    })
+            return {
+              phoneme: expectedIpa,
+              expectedIpa,
+              spokenIpa,
+              accuracyScore: p.PronunciationAssessment?.AccuracyScore ?? 0,
+              offset: (p.Offset ?? 0) / AZURE_TICKS_PER_SECOND,
+              duration: p.Duration != null ? p.Duration / AZURE_TICKS_PER_SECOND : undefined,
+              nBestPhonemes
+            }
+          }) ?? []
+
+        return {
+          wordIndex,
+          word: w.Word ?? '',
+          accuracyScore: assessment.AccuracyScore ?? 0,
+          errorType: assessment.ErrorType ?? 'None',
+          expectedIpa: phonemes.map((p) => p.expectedIpa).join(''),
+          spokenIpa: phonemes.map((p) => p.spokenIpa).join(''),
+          offset: (w.Offset ?? 0) / AZURE_TICKS_PER_SECOND,
+          duration: (w.Duration ?? 0) / AZURE_TICKS_PER_SECOND,
+          syllables:
+            w.Syllables?.map((s) => ({
+              syllable: s.Syllable ?? '',
+              accuracyScore: s.PronunciationAssessment?.AccuracyScore ?? 0,
+              offset: (s.Offset ?? 0) / AZURE_TICKS_PER_SECOND,
+              duration: (s.Duration ?? 0) / AZURE_TICKS_PER_SECOND,
+              expectedStress: s.IsStress,
+              actualStress: s.IsActualStress
+            })) ?? [],
+          phonemes,
+          breakAfter: assessment.Feedback?.Prosody?.Break?.BreakLength
+            ? assessment.Feedback.Prosody.Break.BreakLength / AZURE_TICKS_PER_SECOND
+            : 0,
+          prosodyFeedback: assessment.Feedback?.Prosody
+        }
+      }) ?? []
 
     return {
       transcript,
       audioDuration: audioDurationTicks / AZURE_TICKS_PER_SECOND,
       speechDuration:
         words.length > 0 ? words[words.length - 1].offset + words[words.length - 1].duration - words[0].offset : 0,
+      pronunciationScore: pa.pronunciationScore ?? 0,
       accuracyScore: pa.accuracyScore ?? 0,
+      completenessScore: pa.completenessScore ?? 0,
       fluencyScore: pa.fluencyScore ?? 0,
       prosody: {
         score: pa.prosodyScore ?? 0,
-        rhythm: prosodyRaw?.Feedback?.Rhythm?.Score ?? 0,
-        stress: prosodyRaw?.Feedback?.Stress?.Score ?? 0,
-        intonation: prosodyRaw?.Feedback?.Intonation?.Score ?? 0
+        rhythm: 0,
+        stress: 0,
+        intonation: 0,
+        feedback: paResult?.Feedback
       },
-      words
+      words,
+      raw: {
+        provider: 'azure',
+        phonemeAlphabet: this.phonemeAlphabet,
+        nbestPhonemeCount: this.nbestPhonemeCount,
+        scores: paResult
+      }
     }
+  }
+
+  private _selectSpokenPhoneme(
+    expectedIpa: string,
+    candidates: { phoneme: string; score?: number; confidence?: number }[]
+  ): string {
+    if (!candidates.length) return expectedIpa
+
+    const scores = candidates
+      .map((candidate) => candidate.score)
+      .filter((score): score is number => typeof score === 'number')
+    if (!scores.length) return candidates[0].phoneme || expectedIpa
+
+    const topScore = Math.max(...scores)
+    const topCandidates = candidates.filter((candidate) => candidate.score === topScore)
+    const expectedTopCandidate = topCandidates.find((candidate) => candidate.phoneme === expectedIpa)
+
+    return expectedTopCandidate?.phoneme || topCandidates[0]?.phoneme || candidates[0].phoneme || expectedIpa
   }
 }

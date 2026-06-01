@@ -1,4 +1,13 @@
-import { Evaluation, SpeechMetrics } from './attempt.model'
+import {
+  AnalysisMeta,
+  AnalysisProviders,
+  Evaluation,
+  PronunciationAssessmentAnalysis,
+  SpeechAnalysis,
+  TranscriptionAnalysis,
+  AttemptScores
+} from './attempt.model'
+import { AnalysisProfile } from '~/common/constants/constants'
 
 export type AttemptResponseDto = {
   id: string
@@ -11,8 +20,16 @@ export type AttemptResponseDto = {
   order: number
   status: number
   isPublic: boolean
-  speechMetrics?: Partial<SpeechMetrics>
+  analysisProfile?: AnalysisProfile
+  analysisVersion?: string
+  transcriptPreview?: string
+  scores?: Partial<AttemptScores>
+  providers?: Partial<AnalysisProviders>
+  transcription?: Partial<TranscriptionAnalysis>
+  pronunciationAssessment?: Partial<PronunciationAssessmentAnalysis>
+  speechAnalysis?: Partial<SpeechAnalysis>
   evaluation?: Partial<Evaluation>
+  analysisMeta?: Partial<AnalysisMeta>
   createdAt: Date
   updatedAt: Date
 }

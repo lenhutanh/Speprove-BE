@@ -1,7 +1,7 @@
 import { inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/tokens'
 import { ILLMProvider } from '../llm/llm.interface'
-import { Evaluation, SpeechMetrics } from '~/modules/attempt/attempt.model'
+import { AssessmentWord, Evaluation, SpeechAnalysis } from '~/modules/attempt/attempt.model'
 
 import { EvaluatorPromptBuilder } from './prompt.builder'
 import { EvaluatorResponseParser } from './response.parser'
@@ -9,7 +9,14 @@ export type EvaluateInput = {
   transcript: string
   question: string
   part: number
-  speechMetrics: SpeechMetrics
+  speechAnalysis: SpeechAnalysis
+  assessmentWords?: AssessmentWord[]
+}
+
+export type EvaluatorOutput = {
+  evaluation: Evaluation
+  warnings: string[]
+  isValid: boolean
 }
 
 @singleton()
@@ -20,7 +27,7 @@ export class LLMEvaluator {
     private readonly responseParser: EvaluatorResponseParser
   ) {}
 
-  public async evaluate(input: EvaluateInput): Promise<Evaluation> {
+  public async evaluate(input: EvaluateInput): Promise<EvaluatorOutput> {
     const prompt = this.promptBuilder.build(input)
     const raw = await this.llmProvider.complete(prompt)
     return this.responseParser.parse(raw, input)

@@ -7,9 +7,9 @@ import {
   registerSchema,
   resetPasswordSchema,
   setPasswordSchema,
-  updateProfileSchema,
   verifySchema
 } from '../auth.validation'
+import { updateProfileSchema } from '~/modules/account/account.validation'
 
 export type LoginBodyType = z.infer<typeof loginSchema>['body']
 export type RegisterBodyType = z.infer<typeof registerSchema>['body']

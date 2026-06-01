@@ -5,9 +5,28 @@ import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
 import { ISTTProvider, STTResult } from './stt.interface'
 
+type GroqVerboseSegment = {
+  text?: string
+  start?: number
+  end?: number
+  avg_logprob?: number
+  compression_ratio?: number
+  no_speech_prob?: number
+  temperature?: number
+}
+
+type GroqVerboseTranscription = {
+  text?: string
+  duration?: number
+  language?: string
+  task?: string
+  segments?: GroqVerboseSegment[]
+}
+
 @singleton()
 export class GroqSTTProvider implements ISTTProvider {
   private readonly client: Groq
+  private readonly model = 'whisper-large-v3'
 
   constructor() {
     this.client = new Groq({
@@ -26,15 +45,38 @@ export class GroqSTTProvider implements ISTTProvider {
       const response = (await this.client.audio.transcriptions.create({
         url: audioUrl,
         language: 'en',
-        model: 'whisper-large-v3',
+        model: this.model,
         response_format: 'verbose_json',
         temperature: 0,
         prompt: whisperPrompt
-      })) as any
+      })) as GroqVerboseTranscription
 
       return {
-        transcript: response.text,
-        duration: response.duration || 0
+        transcript: response.text ?? '',
+        duration: response.duration || 0,
+        provider: {
+          name: 'groq',
+          model: this.model
+        },
+        segments: Array.isArray(response.segments)
+          ? response.segments.map((segment, index) => ({
+              index,
+              text: String(segment.text ?? ''),
+              startTime: typeof segment.start === 'number' ? segment.start : undefined,
+              endTime: typeof segment.end === 'number' ? segment.end : undefined,
+              metadata: {
+                avgLogprob: segment.avg_logprob,
+                compressionRatio: segment.compression_ratio,
+                noSpeechProb: segment.no_speech_prob,
+                temperature: segment.temperature
+              }
+            }))
+          : [],
+        metadata: {
+          language: response.language,
+          task: response.task,
+          model: this.model
+        }
       }
     } catch (error) {
       console.error('Groq STT Error:', error)

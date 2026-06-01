@@ -163,9 +163,9 @@ export const SPEAKING_SESSION_MODE = {
 export const SPEAKING_PART = [1, 2, 3] as const
 
 export const SESSION_STATUS = {
-  IN_PROGRESS: 0,
-  COMPLETED: 1,
-  FAILED: 2
+  NOT_STARTED: 0,
+  IN_PROGRESS: 1,
+  COMPLETED: 2
 } as const
 
 export const ATTEMPT_STATUS = {
@@ -176,6 +176,14 @@ export const ATTEMPT_STATUS = {
 } as const
 
 export type AttemptStatus = (typeof ATTEMPT_STATUS)[keyof typeof ATTEMPT_STATUS]
+
+export const ANALYSIS_PROFILE = {
+  FAST: 'fast',
+  STANDARD: 'standard',
+  PREMIUM: 'premium'
+} as const
+
+export type AnalysisProfile = (typeof ANALYSIS_PROFILE)[keyof typeof ANALYSIS_PROFILE]
 
 export const AZURE_TICKS_PER_MS = 10_000
 export const AZURE_TICKS_PER_SECOND = 10_000_000

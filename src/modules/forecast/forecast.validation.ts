@@ -29,6 +29,8 @@ export const forecastQuerySchema = querySchema({
   quarter: z.coerce.number().min(1).max(3).optional()
 })
 
+export const getForecastsSchema = forecastQuerySchema
+
 export const importTopicsSchema = createSchema({
   topics: z.array(objectIdSchema).default([])
 }).merge(idParamSchema)
