@@ -164,7 +164,9 @@ export class AttemptService {
   }
 
   public async getDetails(userId: string, attemptId: string) {
-    const attempt = await this.attemptRepository.findById(attemptId)
+    const attempt = await this.attemptRepository.findById(attemptId, {
+      populate: 'audioFileId'
+    })
     if (!attempt) throw new AppError('Attempt not found', StatusCodes.NOT_FOUND)
     if (attempt.userId.toString() !== userId) throw new AppError('Forbidden', StatusCodes.FORBIDDEN)
     const analysis = await this.attemptAnalysisRepository.findOne(
@@ -183,7 +185,11 @@ export class AttemptService {
           'pronunciationAssessment.words.duration',
           'pronunciationAssessment.words.punctuationAfter',
           'pronunciationAssessment.words.expectedIpa',
-          'pronunciationAssessment.words.spokenIpa'
+          'pronunciationAssessment.words.spokenIpa',
+          'pronunciationAssessment.words.phonemes.phoneme',
+          'pronunciationAssessment.words.phonemes.expectedIpa',
+          'pronunciationAssessment.words.phonemes.spokenIpa',
+          'pronunciationAssessment.words.phonemes.accuracyScore'
         ].join(' ')
       }
     )
@@ -198,7 +204,7 @@ export class AttemptService {
     const { filter, options } = qb
       .applyFilters({ userId, forecastQuestionId, speakingSessionId })
       .populate('audioFileId')
-      .sort(sortBy, sortOrder)
+      .sort(sortBy, 'desc')
       .build()
 
     const { data, pagination } = await this.attemptRepository.paginate(filter, page, limit, options)

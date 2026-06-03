@@ -96,6 +96,12 @@ export class SpeechMapper {
       totalPauseDuration: this._round2(totalPauseDuration),
       pauseRatio: speechDuration > 0 ? this._round2(totalPauseDuration / speechDuration) : 0,
       meanLengthOfRun: this._round1(this._meanLengthOfRun(enrichedWords, longPauses)),
+      pauses: pauses.map((pause) => ({
+        startTime: this._round2(pause.start),
+        endTime: this._round2(pause.end),
+        duration: this._round2(pause.duration),
+        afterWordIndex: pause.afterWordIndex
+      })),
       fillerCount: fillerWords.length,
       fillers: [...new Set(fillerWords)],
       repetitionCount: repetitions.length,
@@ -256,15 +262,25 @@ export class SpeechMapper {
   }
 
   private _extractPauses(words: PronunciationAssessmentResult['words']): LongPause[] {
-    return words
-      .map((w, index) => ({ w, index }))
-      .filter(({ w }) => w.breakAfter != null && w.breakAfter > 0)
-      .map(({ w, index }) => ({
-        start: w.offset + w.duration,
-        end: w.offset + w.duration + w.breakAfter!,
-        duration: w.breakAfter!,
-        afterWordIndex: index
-      }))
+    const pauses: LongPause[] = []
+
+    for (let index = 0; index < words.length - 1; index++) {
+      const current = words[index]
+      const next = words[index + 1]
+      const currentEnd = current.offset + current.duration
+      const duration = next.offset - currentEnd
+
+      if (duration <= 0) continue
+
+      pauses.push({
+        start: currentEnd,
+        end: next.offset,
+        duration,
+        afterWordIndex: current.wordIndex
+      })
+    }
+
+    return pauses
   }
 
   private _detectRepetitions(words: EnrichedWord[]): string[] {
@@ -423,7 +439,9 @@ export class SpeechMapper {
   }
 
   private _alignTokenIndexes(assessmentWords: string[], sourceWords: string[]): Array<number | undefined> {
-    const dp = Array.from({ length: assessmentWords.length + 1 }, () => new Array<number>(sourceWords.length + 1).fill(0))
+    const dp = Array.from({ length: assessmentWords.length + 1 }, () =>
+      new Array<number>(sourceWords.length + 1).fill(0)
+    )
 
     for (let i = assessmentWords.length; i >= 0; i--) dp[i][sourceWords.length] = assessmentWords.length - i
     for (let j = sourceWords.length; j >= 0; j--) dp[assessmentWords.length][j] = sourceWords.length - j
@@ -431,11 +449,7 @@ export class SpeechMapper {
     for (let i = assessmentWords.length - 1; i >= 0; i--) {
       for (let j = sourceWords.length - 1; j >= 0; j--) {
         const substitutionCost = assessmentWords[i] === sourceWords[j] ? 0 : 1
-        dp[i][j] = Math.min(
-          substitutionCost + dp[i + 1][j + 1],
-          1 + dp[i + 1][j],
-          1 + dp[i][j + 1]
-        )
+        dp[i][j] = Math.min(substitutionCost + dp[i + 1][j + 1], 1 + dp[i + 1][j], 1 + dp[i][j + 1])
       }
     }
 

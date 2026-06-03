@@ -1,8 +1,4 @@
-import {
-  AnalysisMeta,
-  Evaluation,
-  AttemptScores
-} from './attempt.model'
+import { AnalysisMeta, Evaluation, AttemptScores, FluencyMetrics } from './attempt.model'
 import { AnalysisProfile } from '~/common/constants/constants'
 
 export type AttemptResponseDto = {
@@ -35,12 +31,20 @@ export type AttemptWordAssessmentDto = {
   punctuationAfter?: string
   expectedIpa?: string
   spokenIpa?: string
+  phonemes?: AttemptPhonemeAssessmentDto[]
+}
+
+export type AttemptPhonemeAssessmentDto = {
+  phoneme?: string
+  expectedIpa?: string
+  spokenIpa?: string
+  accuracyScore?: number
 }
 
 export type AttemptDetailResponseDto = AttemptResponseDto & {
   transcript?: string
   evaluation?: Partial<Evaluation>
-  fluencyMetrics?: Record<string, unknown>
+  fluencyMetrics?: Partial<FluencyMetrics>
   pronunciationScores?: Record<string, unknown>
   wordAssessments?: AttemptWordAssessmentDto[]
 }

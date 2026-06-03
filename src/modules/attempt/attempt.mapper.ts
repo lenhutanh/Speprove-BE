@@ -1,5 +1,5 @@
 import { BaseMapper } from '~/common/base'
-import { AttemptAnalysisType, AttemptType } from './attempt.model'
+import { AssessmentIssue, AttemptAnalysisType, AttemptType, Evaluation, FluencyMetrics } from './attempt.model'
 import {
   AttemptDetailResponseDto,
   AttemptLeaderboardDto,
@@ -45,16 +45,17 @@ export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
       'totalPauseDuration',
       'pauseRatio',
       'meanLengthOfRun',
+      'pauses',
       'fillerCount',
       'fillers',
       'repetitionCount',
       'repetitions'
-    ])
+    ]) as Partial<FluencyMetrics> | undefined
 
     return {
       ...summary,
       transcript: analysis?.transcription?.scoringTranscript ?? entity.transcriptPreview ?? undefined,
-      evaluation: this._hasData(analysis?.evaluation) ? analysis?.evaluation : undefined,
+      evaluation: this._normalizeEvaluation(analysis?.evaluation),
       fluencyMetrics,
       pronunciationScores: this._hasData(analysis?.pronunciationAssessment?.scores)
         ? analysis?.pronunciationAssessment?.scores
@@ -98,28 +99,40 @@ export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
     const words = analysis?.pronunciationAssessment?.words
     if (!Array.isArray(words) || words.length === 0) return undefined
 
-    return words.map((word) => ({
-      wordIndex: word.wordIndex,
-      word: word.word,
-      accuracyScore: word.accuracyScore,
-      errorType: word.errorType,
-      startTime: word.offset,
-      endTime:
-        typeof word.offset === 'number' && typeof word.duration === 'number' ? word.offset + word.duration : undefined,
-      punctuationAfter: word.punctuationAfter,
-      expectedIpa: word.expectedIpa,
-      spokenIpa: word.spokenIpa
-    }))
+    return words.map((word) => {
+      const phonemes = Array.isArray(word.phonemes)
+        ? word.phonemes.map((phoneme) => ({
+            phoneme: phoneme.phoneme,
+            expectedIpa: phoneme.expectedIpa,
+            spokenIpa: phoneme.spokenIpa,
+            accuracyScore: phoneme.accuracyScore
+          }))
+        : []
+
+      return {
+        wordIndex: word.wordIndex,
+        word: word.word,
+        accuracyScore: word.accuracyScore,
+        errorType: word.errorType,
+        startTime: word.offset,
+        endTime:
+          typeof word.offset === 'number' && typeof word.duration === 'number'
+            ? word.offset + word.duration
+            : undefined,
+        punctuationAfter: word.punctuationAfter,
+        expectedIpa: word.expectedIpa,
+        spokenIpa: word.spokenIpa,
+        phonemes: phonemes.length ? phonemes : undefined
+      }
+    })
   }
 
-  private _pickRecord(
-    record: Record<string, unknown> | undefined,
-    keys: string[]
-  ): Record<string, unknown> | undefined {
+  private _pickRecord(record: object | undefined, keys: string[]): Record<string, unknown> | undefined {
     if (!record) return undefined
 
+    const source = record as Record<string, unknown>
     const picked = keys.reduce<Record<string, unknown>>((acc, key) => {
-      if (record[key] !== undefined) acc[key] = record[key]
+      if (source[key] !== undefined) acc[key] = source[key]
       return acc
     }, {})
 
@@ -128,5 +141,45 @@ export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
 
   private _hasData(obj: unknown): boolean {
     return !!obj && typeof obj === 'object' && Object.keys(obj).length > 0
+  }
+
+  private _normalizeEvaluation(evaluation?: Partial<Evaluation>): Partial<Evaluation> | undefined {
+    if (!this._hasData(evaluation)) return undefined
+
+    return {
+      ...evaluation,
+      fluency: evaluation?.fluency
+        ? {
+            ...evaluation.fluency,
+            coherenceIssues: this._normalizeIssues(evaluation.fluency.coherenceIssues)
+          }
+        : evaluation?.fluency,
+      lexical: evaluation?.lexical
+        ? {
+            ...evaluation.lexical,
+            issues: this._normalizeIssues(evaluation.lexical.issues)
+          }
+        : evaluation?.lexical,
+      grammar: evaluation?.grammar
+        ? {
+            ...evaluation.grammar,
+            issues: this._normalizeIssues(evaluation.grammar.issues)
+          }
+        : evaluation?.grammar
+    }
+  }
+
+  private _normalizeIssues(issues?: AssessmentIssue[]): AssessmentIssue[] {
+    if (!Array.isArray(issues)) return []
+
+    return issues.map((issue) => ({
+      ...issue,
+      severity: this._normalizeSeverity((issue as { severity?: unknown }).severity)
+    }))
+  }
+
+  private _normalizeSeverity(severity: unknown): 'minor' | 'major' {
+    if (severity === 'minor' || severity === 'low') return 'minor'
+    return 'major'
   }
 }
