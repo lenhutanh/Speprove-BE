@@ -27,3 +27,7 @@ export type EvaluateJobData = {
 export type ScoreSessionJobData = {
   speakingSessionId: string
 }
+
+export type ExtractVocabularyJobData = {
+  attemptId: string
+}

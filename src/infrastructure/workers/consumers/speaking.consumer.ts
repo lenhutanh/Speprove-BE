@@ -6,12 +6,19 @@ import { QUEUE_NAME, JOB_NAME } from '~/infrastructure/queues'
 import {
   AssessJobData,
   EvaluateJobData,
+  ExtractVocabularyJobData,
   ScoreSessionJobData,
   TranscribeJobData
 } from '~/infrastructure/queues/types/speaking.job.types'
 import { SpeakingAnalysisService } from '~/modules/attempt/speaking-analysis.service'
+import { VocabularyExtractionService } from '~/modules/vocabulary-suggestion/vocabulary-extraction.service'
 
-type SpeakingJobData = TranscribeJobData | AssessJobData | EvaluateJobData | ScoreSessionJobData
+type SpeakingJobData =
+  | TranscribeJobData
+  | AssessJobData
+  | EvaluateJobData
+  | ScoreSessionJobData
+  | ExtractVocabularyJobData
 
 @singleton()
 export class SpeakingConsumer extends BaseConsumer<SpeakingJobData> {
@@ -19,7 +26,8 @@ export class SpeakingConsumer extends BaseConsumer<SpeakingJobData> {
 
   constructor(
     workerFactory: WorkerFactory,
-    private readonly speakingAnalysisService: SpeakingAnalysisService
+    private readonly speakingAnalysisService: SpeakingAnalysisService,
+    private readonly vocabularyExtractionService: VocabularyExtractionService
   ) {
     super(workerFactory)
   }
@@ -37,6 +45,9 @@ export class SpeakingConsumer extends BaseConsumer<SpeakingJobData> {
         break
       case JOB_NAME.SPEAKING.SCORE_SESSION:
         await this.speakingAnalysisService.scoreSession(job.data as ScoreSessionJobData)
+        break
+      case JOB_NAME.SPEAKING.EXTRACT_VOCABULARY:
+        await this.vocabularyExtractionService.extractFromAttempt(job.data as ExtractVocabularyJobData)
         break
       default:
         throw new Error(`[Speaking Consumer] Unknown job: ${job.name}`)

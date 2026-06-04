@@ -1,7 +1,13 @@
 import { singleton } from 'tsyringe'
 import { BaseProducer } from '~/infrastructure/queues/publishers/base.producer'
 import { JOB_NAME, QUEUE_NAME, QueueFactory } from '~/infrastructure/queues'
-import { AssessJobData, EvaluateJobData, ScoreSessionJobData, TranscribeJobData } from '../types/speaking.job.types'
+import {
+  AssessJobData,
+  EvaluateJobData,
+  ExtractVocabularyJobData,
+  ScoreSessionJobData,
+  TranscribeJobData
+} from '../types/speaking.job.types'
 
 @singleton()
 export class SpeakingProducer extends BaseProducer {
@@ -31,6 +37,12 @@ export class SpeakingProducer extends BaseProducer {
   public async scoreSession(data: ScoreSessionJobData) {
     return this.addJob(JOB_NAME.SPEAKING.SCORE_SESSION, data, {
       attempts: 3
+    })
+  }
+
+  public async extractVocabulary(data: ExtractVocabularyJobData) {
+    return this.addJob(JOB_NAME.SPEAKING.EXTRACT_VOCABULARY, data, {
+      attempts: 2
     })
   }
 }

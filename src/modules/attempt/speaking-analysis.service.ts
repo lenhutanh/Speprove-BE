@@ -260,6 +260,12 @@ export class SpeakingAnalysisService {
 
       console.log(`Finish evaluating attempt ${attemptId} at: `, Date.now())
 
+      try {
+        await this.speakingProducer.extractVocabulary({ attemptId })
+      } catch (error) {
+        console.warn(`Skip enqueueing vocabulary extraction for attempt ${attemptId}: ${this._formatError(error)}`)
+      }
+
       if (updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
         const sessionId = updatedAttempt.speakingSessionId.toString()
         const session = await this.speakingSessionService.findById(sessionId)

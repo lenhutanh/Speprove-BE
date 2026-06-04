@@ -79,5 +79,8 @@ export const TOKENS = {
   IInstructionAudioRepository: Symbol('IInstructionAudioRepository'),
 
   // Account provider
-  IAccountProviderRepository: Symbol('IAccountProviderRepository')
+  IAccountProviderRepository: Symbol('IAccountProviderRepository'),
+
+  // Vocabulary suggestion
+  IVocabularySuggestionRepository: Symbol('IVocabularySuggestionRepository')
 }

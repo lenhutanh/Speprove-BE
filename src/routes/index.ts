@@ -15,6 +15,7 @@ import { speakingSessionRoutes } from '~/modules/speaking-session/speaking-sessi
 import { attemptRoutes } from '~/modules/attempt/attempt.route'
 import { paymentRoutes } from '~/modules/payment/payment.route'
 import { creditPackageRoutes } from '~/modules/credit-package/credit-package.route'
+import { vocabularySuggestionRoutes } from '~/modules/vocabulary-suggestion/vocabulary-suggestion.route'
 
 const router = express.Router()
 
@@ -34,5 +35,6 @@ router.use('/speaking-session', speakingSessionRoutes)
 router.use('/attempt', attemptRoutes)
 router.use('/payment', paymentRoutes)
 router.use('/credit-package', creditPackageRoutes)
+router.use('/vocabulary-suggestion', vocabularySuggestionRoutes)
 
 export const APIs_V1 = router
