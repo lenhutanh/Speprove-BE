@@ -10,8 +10,7 @@ const generatedAudioSchema = new Schema(
     voiceId: { type: Schema.Types.ObjectId, ref: 'Voice', required: true, index: true },
     fileId: { type: Schema.Types.ObjectId, ref: 'File', required: true },
     cacheKey: { type: String, required: true, unique: true, index: true },
-    usageCount: { type: Number, default: 0 },
-    lastUsedAt: { type: Date },
+    lastUsedAt: { type: Date, default: Date.now, index: true },
     status: { type: Number, default: STATUS.ACTIVE, required: true }
   },
   BaseSchemaOptions

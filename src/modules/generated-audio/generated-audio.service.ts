@@ -29,7 +29,6 @@ export class GeneratedAudioService {
 
     if (existing) {
       await this.generatedAudioRepository.updateById(existing._id, {
-        $inc: { usageCount: 1 },
         $set: { lastUsedAt: new Date() }
       })
 
@@ -51,7 +50,6 @@ export class GeneratedAudioService {
       voiceId: toObjectId(data.voiceId),
       fileId: file._id,
       cacheKey,
-      usageCount: 1,
       lastUsedAt: new Date(),
       status: STATUS.ACTIVE
     })
