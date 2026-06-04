@@ -17,7 +17,8 @@ export const JOB_NAME = {
     TRANSCRIBE: 'speaking:transcribe',
     ASSESS: 'speaking:assess',
     EVALUATE: 'speaking:evaluate',
-    SCORE_SESSION: 'speaking:score-session'
+    SCORE_SESSION: 'speaking:score-session',
+    EXTRACT_VOCABULARY: 'speaking:extract-vocabulary'
   },
   INSTRUCTION_AUDIO: {
     GENERATE: 'instruction-audio:generate'

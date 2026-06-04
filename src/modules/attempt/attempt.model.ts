@@ -13,6 +13,8 @@ export {
   AssessmentWord,
   AttemptAnalysisType,
   Evaluation,
+  FluencyMetrics,
+  FluencyPause,
   FluencyEvaluation,
   IssueCriterionEvaluation,
   NBestPhoneme,

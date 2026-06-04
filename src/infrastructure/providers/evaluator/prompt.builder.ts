@@ -71,7 +71,9 @@ Issue guidance:
 - suggestion must be a direct replacement for spanText when spanText is present and must preserve the speaker's intended meaning.
 - Reasons must be concise Vietnamese explanations and must accurately describe the problem.
 - For countable nouns, explain singular/plural countability precisely; do not call countable nouns uncountable.
-- severity must be "low", "medium", or "high".
+- severity must be "minor" or "major".
+- Use "major" for clearly wrong or noticeably unnatural problems that affect meaning, naturalness, or the criterion band.
+- Use "minor" for understandable problems that are useful polish but not urgent.
 
 Scoring calibration:
 - Calibrate bands from the whole answer, not the worst local phrase. Consider range, accuracy, frequency of errors, severity, and impact on meaning.
@@ -92,7 +94,7 @@ Output schema:
         "spanText": "optional exact text from transcript",
         "suggestion": "optional practical improvement",
         "reason": "Vietnamese explanation",
-        "severity": "low|medium|high"
+        "severity": "minor|major"
       }
     ]
   },
@@ -104,7 +106,7 @@ Output schema:
         "spanText": "exact text from transcript",
         "suggestion": "better English word or phrase",
         "reason": "Vietnamese explanation",
-        "severity": "low|medium|high"
+        "severity": "minor|major"
       }
     ]
   },
@@ -116,7 +118,7 @@ Output schema:
         "spanText": "exact text from transcript",
         "suggestion": "corrected English phrase",
         "reason": "Vietnamese explanation",
-        "severity": "low|medium|high"
+        "severity": "minor|major"
       }
     ]
   }

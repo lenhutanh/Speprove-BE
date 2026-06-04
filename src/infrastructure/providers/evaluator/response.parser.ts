@@ -334,8 +334,10 @@ export class EvaluatorResponseParser {
     return typeof v === 'string' && v.trim().length ? v.trim() : undefined
   }
 
-  private _severity(v: unknown): 'low' | 'medium' | 'high' {
-    return v === 'low' || v === 'medium' || v === 'high' ? v : 'medium'
+  private _severity(v: unknown): 'minor' | 'major' {
+    if (v === 'minor' || v === 'low') return 'minor'
+    if (v === 'major' || v === 'medium' || v === 'high') return 'major'
+    return 'major'
   }
 
   private _asRecord(v: unknown): Record<string, unknown> | null {

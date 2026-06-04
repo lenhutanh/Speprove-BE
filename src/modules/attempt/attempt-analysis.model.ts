@@ -134,7 +134,7 @@ const assessmentIssueSchema = new mongoose.Schema(
     spanText: { type: String },
     suggestion: { type: String },
     reason: { type: String },
-    severity: { type: String, enum: ['low', 'medium', 'high'] },
+    severity: { type: String, enum: ['minor', 'major'] },
     startWordIndex: { type: Number },
     endWordIndex: { type: Number },
     alignmentStatus: { type: String, enum: ['aligned', 'unmatched', 'not_applicable'] },
@@ -301,8 +301,34 @@ export type PronunciationAssessmentAnalysis = {
   raw?: Record<string, unknown>
 }
 
+export type FluencyPause = {
+  startTime: number
+  endTime: number
+  duration: number
+  afterWordIndex: number
+}
+
+export type FluencyMetrics = {
+  duration?: number
+  speechDuration?: number
+  wordCount?: number
+  speechRate?: number
+  articulationRate?: number
+  pauseCount?: number
+  longPauseCount?: number
+  totalPauseDuration?: number
+  pauseRatio?: number
+  meanLengthOfRun?: number
+  pauses?: FluencyPause[]
+  fillerCount?: number
+  fillers?: string[]
+  repetitionCount?: number
+  repetitions?: string[]
+  selfCorrectionCandidates?: string[]
+}
+
 export type SpeechAnalysis = {
-  fluencyMetrics?: Record<string, unknown>
+  fluencyMetrics?: Partial<FluencyMetrics>
   pronunciationCandidates?: Record<string, unknown>
   transcriptMismatch?: Record<string, unknown>
 }
@@ -311,7 +337,7 @@ export type AssessmentIssue = {
   spanText?: string
   suggestion?: string
   reason: string
-  severity: 'low' | 'medium' | 'high'
+  severity: 'minor' | 'major'
   startWordIndex?: number
   endWordIndex?: number
   alignmentStatus?: 'aligned' | 'unmatched' | 'not_applicable'

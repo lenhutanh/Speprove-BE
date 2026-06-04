@@ -29,6 +29,7 @@ import { registerCreditLogModule } from '~/modules/credit-log/credit-log.di'
 import { registerInstructionAudioModule } from '~/modules/instruction-audio/instruction-audio.di'
 import { registerAccountProviderModule } from '~/modules/account-provider/account-provider.di'
 import { registerGeneratedAudioModule } from '~/modules/generated-audio/generated-audio.di'
+import { registerVocabularySuggestionModule } from '~/modules/vocabulary-suggestion/vocabulary-suggestion.di'
 
 export function setupContainer(): void {
   console.log('🔧 Setting up DI container...')
@@ -64,6 +65,7 @@ export function setupContainer(): void {
   registerInstructionAudioModule()
   registerAccountProviderModule()
   registerGeneratedAudioModule()
+  registerVocabularySuggestionModule()
 
   console.log('✅ DI container ready\n')
 }
