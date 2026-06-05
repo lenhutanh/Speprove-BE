@@ -92,14 +92,14 @@ export class AuthController {
     res.cookie('accessToken', tokens.accessToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: tokenLifeToMs(env.ACCESS_TOKEN_LIFE, 'ACCESS_TOKEN_LIFE')
     })
 
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: Math.max(0, new Date(tokens.refreshTokenExpiresAt).getTime() - Date.now()),
       path: '/api/v1/auth'
     })
@@ -111,13 +111,13 @@ export class AuthController {
     res.clearCookie('accessToken', {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax'
+      sameSite: isProduction ? 'none' : 'lax'
     })
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/api/v1/auth'
     })
   }
