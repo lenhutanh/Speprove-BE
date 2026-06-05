@@ -10,6 +10,7 @@ const envSchema = z.object({
   APP_HOST: z.string().default('localhost'),
   APP_PORT: z.preprocess((val) => Number(val), z.number().default(5000)),
   PORT: z.preprocess((val) => (val ? Number(val) : undefined), z.number().optional()),
+  CORS_ORIGINS: z.string().default('http://localhost:3000'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   AUTHOR: z.string(),
 
@@ -67,6 +68,9 @@ export const env = {
   ...parsed.data,
   APP_HOST: parsed.data.NODE_ENV === 'production' ? '0.0.0.0' : parsed.data.APP_HOST,
   APP_PORT: parsed.data.PORT ?? parsed.data.APP_PORT,
+  CORS_ORIGINS: parsed.data.CORS_ORIGINS.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   REDIS: {
     HOST: parsed.data.REDIS_HOST,
     PORT: parsed.data.REDIS_PORT,
