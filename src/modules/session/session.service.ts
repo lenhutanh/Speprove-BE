@@ -1,10 +1,10 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
-import { ITokenService } from '~/common/interfaces/token.interface'
+import { TOKENS } from '~/common/constants/di.tokens'
+import { ITokenService } from '~/common/contracts/token-service.contract'
 import { ISessionRepository } from './repositories/session.repository.interface'
 import { Types } from 'mongoose'
 import { env } from '~/common/config/env.config'
-import { tokenLifeToMs } from '~/common/utils'
+import { tokenLifeToMs } from '~/infrastructure/security/token-duration.util'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
 
@@ -97,3 +97,4 @@ export class SessionService {
     return await this.sessionRepository.revokeByUserIdAndSid(userId, sid, reason)
   }
 }
+

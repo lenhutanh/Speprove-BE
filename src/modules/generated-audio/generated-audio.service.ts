@@ -1,7 +1,8 @@
 import crypto from 'crypto'
 import { inject, singleton } from 'tsyringe'
-import { CLOUD_FOLDERS, STATUS } from '~/common/constants/constants'
-import { TOKENS } from '~/common/constants/tokens'
+import { STATUS } from '~/common/constants/status.constants'
+import { CLOUD_FOLDERS } from '~/infrastructure/providers/storage/storage.constants'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { toObjectId } from '~/common/utils'
 import { FileService } from '../file/file.service'
 import { VoiceService } from '../voice/voice.service'
@@ -91,3 +92,4 @@ export class GeneratedAudioService {
     return text.trim().replace(/\s+/g, ' ').toLowerCase()
   }
 }
+

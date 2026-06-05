@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import { BaseSchemaOptions } from '~/common/base'
-import { ANALYSIS_PROFILE, AnalysisProfile, SPEAKING_SESSION_MODE } from '~/common/constants/constants'
+import { ANALYSIS_PROFILE, AnalysisProfile } from './attempt.constants'
+import { SPEAKING_SESSION_MODE } from '../speaking-session/speaking-session.constants'
 
 export {
   AnalysisProviderInfo,

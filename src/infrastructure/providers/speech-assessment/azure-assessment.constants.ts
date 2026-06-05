@@ -1,0 +1,1 @@
+export const AZURE_TICKS_PER_SECOND = 10_000_000

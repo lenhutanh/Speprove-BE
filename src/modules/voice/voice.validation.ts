@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { GENDER_KIND, VOICES } from '~/common/constants/constants'
 import { createSchema } from '~/common/base/base.validation'
+import { GENDER_KIND, VOICES } from './voice.constants'
 
 export const createVoiceSchema = createSchema({
   name: z

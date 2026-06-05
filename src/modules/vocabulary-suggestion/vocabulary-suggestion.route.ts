@@ -2,7 +2,7 @@ import express from 'express'
 import { container } from 'tsyringe'
 import { idParamSchema } from '~/common/base'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
-import { bindHandler } from '~/common/utils'
+import { bindHandler } from '~/common/http'
 import { VocabularySuggestionController } from './vocabulary-suggestion.controller'
 import {
   approvedVocabularySuggestionQuerySchema,

@@ -1,6 +1,6 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '../../common/base/base.model'
-import { FORECAST_STATUS } from '~/common/constants/constants'
+import { FORECAST_STATUS } from './forecast.constants'
 
 const forecastSchema = new Schema(
   {

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { injectable } from 'tsyringe'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 import { PermissionService } from '~/modules/permission/permission.service'
 
 @injectable()

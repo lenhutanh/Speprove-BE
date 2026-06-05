@@ -1,8 +1,8 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { ISpeakingSessionRepository } from './speaking-session.repository.interface'
 import { CreateSpeakingSessionBodyType, SpeakingSessionQueryType } from './speaking-session.type'
-import { calculateCreditCost, toObjectId } from '~/common/utils'
+import { toObjectId } from '~/common/utils'
 import { SpeakingSessionMapper } from './speaking-session.mapper'
 import { ForecastService } from '../forecast/forecast.service'
 import { AppError } from '~/common/errors'
@@ -14,16 +14,13 @@ import { AccountService } from '../account/account.service'
 import { CreditLogService } from '../credit-log/credit-log.service'
 import { QueryBuilder } from '~/common/base'
 import { SpeakingSessionType } from './speaking-session.model'
-import {
-  CREDIT_LOG_REF_TYPE,
-  PART_KIND,
-  SESSION_STATUS,
-  SPEAKING_SESSION_TYPE,
-  INSTRUCTION_KEYS,
-  InstructionKey
-} from '~/common/constants/constants'
 import { AttemptService } from '../attempt/attempt.service'
 import { InstructionAudioService } from '../instruction-audio/instruction-audio.service'
+import { INSTRUCTION_KEYS, InstructionKey } from '../instruction-audio/instruction-audio.constants'
+import { PART_KIND } from '../question/question.constants'
+import { SESSION_STATUS, SPEAKING_SESSION_TYPE } from './speaking-session.constants'
+import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
+import { calculateCreditCost } from '../credit-log/credit.util'
 
 @singleton()
 export class SpeakingSessionService {
@@ -288,3 +285,4 @@ export class SpeakingSessionService {
     return this.speakingSessionRepository.updateOne(filter, updateData, options)
   }
 }
+

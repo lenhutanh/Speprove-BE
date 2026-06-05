@@ -1,3 +1,9 @@
+export const LOGIN_PROVIDER = {
+  GOOGLE: 'google'
+} as const
+
+export type LoginProviderType = (typeof LOGIN_PROVIDER)[keyof typeof LOGIN_PROVIDER]
+
 export const CACHE_CONFIG = {
   REGISTER: {
     PREFIX: 'register',

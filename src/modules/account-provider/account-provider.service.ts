@@ -1,7 +1,7 @@
 import { inject, singleton } from 'tsyringe'
 import { IAccountProviderRepository } from './account-provider.repository.interface'
-import { TOKENS } from '~/common/constants/tokens'
-import { LoginProviderType } from '~/common/constants/constants'
+import { TOKENS } from '~/common/constants/di.tokens'
+import { LoginProviderType } from '~/modules/auth/auth.constants'
 
 @singleton()
 export class AccountProviderService {
@@ -18,3 +18,4 @@ export class AccountProviderService {
     return await this.accountProviderRepository.create(data, { session })
   }
 }
+

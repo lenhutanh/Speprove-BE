@@ -1,5 +1,5 @@
 import express from 'express'
-import { bindHandler } from '~/common/utils'
+import { bindHandler } from '~/common/http'
 import { AccountController } from './account.controller'
 import { container } from 'tsyringe'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'

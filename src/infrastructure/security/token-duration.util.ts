@@ -1,7 +1,7 @@
 import { StatusCodes } from 'http-status-codes'
 import jwt from 'jsonwebtoken'
 import ms from 'ms'
-import { AppError } from '../errors'
+import { AppError } from '~/common/errors'
 
 export const tokenLifeToMs = (life: jwt.SignOptions['expiresIn'], label: string): number => {
   if (typeof life === 'number') {

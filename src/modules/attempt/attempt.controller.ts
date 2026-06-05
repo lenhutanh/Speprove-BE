@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
-import { AuthenticatedRequest } from '~/common/interfaces/request.interface'
+import { AuthenticatedRequest } from '~/common/types/request.type'
 import { AttemptService } from './attempt.service'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 import { singleton } from 'tsyringe'
 
 @singleton()

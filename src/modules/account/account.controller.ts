@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 import { singleton } from 'tsyringe'
 import { AccountService } from './account.service'
-import { AuthenticatedRequest } from '~/common/interfaces/request.interface'
+import { AuthenticatedRequest } from '~/common/types/request.type'
 
 @singleton()
 export class AccountController {

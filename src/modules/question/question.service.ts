@@ -1,14 +1,15 @@
 import { StatusCodes } from 'http-status-codes'
-import { PART_KIND } from '~/common/constants/constants'
+import { PART_KIND } from './question.constants'
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IQuestionRepository } from './repositories/question.repository.interface'
 import { QueryBuilder } from '~/common/base/query-builder'
 import { QuestionType } from './question.model'
 import { CreateQuestionBodyType, UpdateQuestionBodyType } from './types/question.type'
 import { AppError } from '~/common/errors'
-import { checkSpelling, getSuggestions, toObjectId } from '~/common/utils'
+import { toObjectId } from '~/common/utils'
 import { QuestionMapper } from './question.mapper'
+import { checkSpelling, getSuggestions } from './question-spelling.service'
 
 @singleton()
 export class QuestionService {

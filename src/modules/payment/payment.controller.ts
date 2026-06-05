@@ -1,10 +1,10 @@
 import { Request, Response } from 'express'
 import { singleton } from 'tsyringe'
-import { AuthenticatedRequest } from '~/common/interfaces/request.interface'
+import { AuthenticatedRequest } from '~/common/types/request.type'
 import { PaymentService } from './payment.service'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 import { StatusCodes } from 'http-status-codes'
-import { PAYMENT_PROVIDER } from '~/common/constants/constants'
+import { PAYMENT_PROVIDER } from './payment.constants'
 
 @singleton()
 export class PaymentController {

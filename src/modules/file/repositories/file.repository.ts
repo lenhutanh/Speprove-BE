@@ -1,7 +1,7 @@
 import { BaseRepository } from '~/common/base/base.repository'
 import { AudioFileType, File, FileType } from '../file.model'
 import { IFileRepository } from './file.repository.interface'
-import { FILE_KIND } from '~/common/constants/constants'
+import { FILE_KIND } from '../file.constants'
 
 export class FileRepository extends BaseRepository<FileType> implements IFileRepository {
   constructor() {

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ForecastService } from '~/modules/forecast/forecast.service'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 import { injectable } from 'tsyringe'
 import { ForecastTopicService } from '../forecast-topic/forecast-topic.service'
 

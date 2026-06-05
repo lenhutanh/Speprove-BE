@@ -1,16 +1,16 @@
+import { NextFunction, Request, Response } from 'express'
+import { fileTypeFromBuffer } from 'file-type'
 import { StatusCodes } from 'http-status-codes'
 import multer from 'multer'
 import path from 'path'
-import { NextFunction, Request, Response } from 'express'
-import { AppError } from '../errors'
-import { ALLOWED_AUDIO_TYPES, ALLOWED_IMAGE_TYPES, LIMIT_AUDIO_SIZE, LIMIT_IMAGE_SIZE } from '../constants/constants'
-import { fileTypeFromBuffer } from 'file-type'
+import { AppError } from '~/common/errors'
+import { ALLOWED_AUDIO_TYPES, ALLOWED_IMAGE_TYPES, LIMIT_AUDIO_SIZE, LIMIT_IMAGE_SIZE } from './file.constants'
 
 const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
 const ALLOWED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.ogg', '.webm']
 
 const createUploadMiddleware = (
-  fieldName: string, // key mong muốn
+  fieldName: string,
   allowedTypes: string[],
   allowedExtensions: string[],
   limitSize: number
@@ -22,10 +22,12 @@ const createUploadMiddleware = (
       if (!allowedTypes.includes(file.mimetype)) {
         return callback(new AppError('File type is invalid.', StatusCodes.UNPROCESSABLE_ENTITY), false)
       }
+
       const ext = path.extname(file.originalname).toLowerCase()
       if (!allowedExtensions.includes(ext)) {
         return callback(new AppError('File extension is mismatch.', StatusCodes.UNPROCESSABLE_ENTITY), false)
       }
+
       callback(null, true)
     }
   })
@@ -34,13 +36,14 @@ const createUploadMiddleware = (
     multerInstance.single(fieldName)(req, res, (err: any) => {
       if (err) {
         if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-          return next(new AppError(`File key is invalid`, StatusCodes.BAD_REQUEST))
+          return next(new AppError('File key is invalid', StatusCodes.BAD_REQUEST))
         }
+
         return next(err)
       }
 
       if (!req.file) {
-        return next(new AppError(`File is required`, StatusCodes.BAD_REQUEST))
+        return next(new AppError('File is required', StatusCodes.BAD_REQUEST))
       }
 
       next()
@@ -62,7 +65,7 @@ const createValidateFileContent = (allowedTypes: string[]) => {
   }
 }
 
-export const multerMiddleware = {
+export const fileUploadMiddleware = {
   uploadImage: createUploadMiddleware('image', ALLOWED_IMAGE_TYPES, ALLOWED_IMAGE_EXTENSIONS, LIMIT_IMAGE_SIZE),
   uploadAudio: createUploadMiddleware('audio', ALLOWED_AUDIO_TYPES, ALLOWED_AUDIO_EXTENSIONS, LIMIT_AUDIO_SIZE)
 }

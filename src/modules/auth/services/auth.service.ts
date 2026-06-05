@@ -1,15 +1,18 @@
 import { StatusCodes } from 'http-status-codes'
-import bcrypt from 'bcrypt'
 import { AccountService } from '../../account/account.service'
-import { buildRedisKey, generateOtp, generateSecureToken } from '~/common/utils'
+import { buildRedisKey } from '~/infrastructure/redis/redis-key.util'
 import { OtpService } from './otp.service'
 import { registerOtpTemplate } from '~/resources/mail-templates'
-import { LOGIN_PROVIDER, STATUS, TOKEN_TYPE } from '~/common/constants/constants'
+import { STATUS } from '~/common/constants/status.constants'
+import { LOGIN_PROVIDER } from '../auth.constants'
+import { generateOtp, generateSecureToken } from '../auth.util'
 import { inject, singleton } from 'tsyringe'
 import { SessionService } from '../../session/session.service'
 import { ErrorCodes } from '~/common/constants/error-codes'
-import { ITokenService, TokenPayload } from '~/common/interfaces/token.interface'
-import { TOKENS } from '~/common/constants/tokens'
+import { ITokenService } from '~/common/contracts/token-service.contract'
+import { IHasher } from '~/common/contracts/hasher.contract'
+import { TOKEN_TYPE, TokenPayload } from '~/common/types/token-payload.type'
+import { TOKENS } from '~/common/constants/di.tokens'
 import {
   ChangePasswordBodyType,
   GoogleCallbackType,
@@ -27,7 +30,6 @@ import { MailProducer } from '~/infrastructure/queues/publishers/mail.producer'
 import { UserInfoGoogleDto } from '../types/google.type'
 import { GoogleService } from './google.service'
 import { AccountProviderService } from '~/modules/account-provider/account-provider.service'
-import { FileService } from '~/modules/file/file.service'
 import crypto from 'crypto'
 
 @singleton()
@@ -38,10 +40,10 @@ export class AuthService {
     private readonly sessionService: SessionService,
     private readonly mailProducer: MailProducer,
     @inject(TOKENS.ITokenService) private readonly tokenService: ITokenService,
+    @inject(TOKENS.IHasher) private readonly hasher: IHasher,
     @inject(TOKENS.ICacheService) private readonly cacheService: ICacheService,
     private readonly googleService: GoogleService,
-    private readonly accountProviderService: AccountProviderService,
-    private readonly fileService: FileService
+    private readonly accountProviderService: AccountProviderService
   ) {}
 
   public async login(data: LoginBodyType, metadata: { ipAddress?: string; deviceInfo?: string }) {
@@ -57,7 +59,7 @@ export class AuthService {
       throw loginError
     }
 
-    const isMatch = await bcrypt.compare(data.password, account.password)
+    const isMatch = await this.hasher.compare(data.password, account.password)
 
     if (!isMatch) {
       throw loginError
@@ -76,7 +78,7 @@ export class AuthService {
     const otp = generateOtp()
     await this.otpService.storeOtp(data.email, otp)
 
-    const hashedPassword = await bcrypt.hash(data.password, 10)
+    const hashedPassword = await this.hasher.hash(data.password)
     const tempData = { email: data.email, password: hashedPassword }
 
     await this.cacheService.set(buildRedisKey(CACHE_CONFIG.REGISTER, data.email), tempData, CACHE_CONFIG.REGISTER.TTL)
@@ -245,7 +247,7 @@ export class AuthService {
     const account = await this.accountService.findByEmail(email)
     if (!account) throw new AppError('Account not found', StatusCodes.NOT_FOUND)
 
-    const hashedPassword = await bcrypt.hash(data.newPassword, 10)
+    const hashedPassword = await this.hasher.hash(data.newPassword)
     await this.accountService.updatePassword(email, hashedPassword)
     await this.sessionService.revokeByUserId(account._id, 'PASSWORD_RESET')
 
@@ -369,11 +371,11 @@ export class AuthService {
     if (!account.password)
       throw new AppError('This account does not have a password. Please set a password first.', StatusCodes.BAD_REQUEST)
 
-    const isCurrentPasswordValid = await bcrypt.compare(data.currentPassword, account.password)
+    const isCurrentPasswordValid = await this.hasher.compare(data.currentPassword, account.password)
 
     if (!isCurrentPasswordValid) throw new AppError('Current password is wrong', StatusCodes.BAD_REQUEST)
 
-    const hashedPassword = await bcrypt.hash(data.newPassword, 10)
+    const hashedPassword = await this.hasher.hash(data.newPassword)
     await this.accountService.updatePassword(account.email, hashedPassword)
     await this.sessionService.revokeByUserId(userId, 'PASSWORD_CHANGED')
   }
@@ -485,7 +487,7 @@ export class AuthService {
     const account = await this.accountService.getById(userId)
     if (account.password) throw new AppError('Account already has password')
 
-    const hashedPassword = await bcrypt.hash(data.password, 10)
+    const hashedPassword = await this.hasher.hash(data.password)
 
     await this.accountService.updatePassword(account.email, hashedPassword)
   }

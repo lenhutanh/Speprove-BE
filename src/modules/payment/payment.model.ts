@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { PAYMENT_METHOD, PAYMENT_PROVIDER, PAYMENT_STATUS } from '~/common/constants/constants'
+import { PAYMENT_METHOD, PAYMENT_PROVIDER, PAYMENT_STATUS } from './payment.constants'
 
 const paymentSchema = new mongoose.Schema({
   userId: { type: mongoose.Types.ObjectId, ref: 'Account', required: true },

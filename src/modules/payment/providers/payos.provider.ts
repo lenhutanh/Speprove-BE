@@ -4,7 +4,7 @@ import { env } from '~/common/config'
 import { CreatePaymentLinkParams, CreatePaymentLinkResult, NormalizedWebhookData } from '../payment.type'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
-import { PAYMENT_STATUS } from '~/common/constants/constants'
+import { PAYMENT_STATUS } from '../payment.constants'
 import { singleton } from 'tsyringe'
 
 @singleton()

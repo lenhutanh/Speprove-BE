@@ -1,7 +1,7 @@
 import { BaseRepository } from '~/common/base/base.repository'
 import { Part2QuestionType, Part3QuestionType, Question, QuestionType } from '../question.model'
 import { IQuestionRepository } from './question.repository.interface'
-import { PART_KIND } from '~/common/constants/constants'
+import { PART_KIND } from '../question.constants'
 
 export class QuestionRepository extends BaseRepository<QuestionType> implements IQuestionRepository {
   constructor() {

@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IPermissionGroupRepository } from './repositories/permission-group.repository.interface'
 import { CreatePermissionGroupBodyType, UpdatePermissionGroupBodyType } from './types/permission-group.type'
 import { AppError } from '~/common/errors'
@@ -45,3 +45,4 @@ export class PermissionGroupService {
     }
   }
 }
+

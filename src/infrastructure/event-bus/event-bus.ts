@@ -3,7 +3,7 @@ import { IEventBus } from './event-bus.interface'
 import { AppEventEmitter } from './event-emitter'
 import { DomainEventName } from './event.types'
 import { DomainEventHandler } from './domain-event.handler'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 
 @singleton()
 export class EventBus implements IEventBus {

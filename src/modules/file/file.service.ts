@@ -1,17 +1,10 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IFileRepository } from './repositories/file.repository.interface'
-import {
-  AUDIO_MIME_TYPES,
-  AudioPurpose,
-  FILE_KIND,
-  FileKind,
-  ImagePurpose,
-  PURPOSE_TO_FOLDER,
-  STORAGE_PROVIDER,
-  UploadPreset
-} from '~/common/constants/constants'
-import { generateFileName, toObjectId } from '~/common/utils'
+import { AUDIO_MIME_TYPES, AudioPurpose, FILE_KIND, FileKind, ImagePurpose, PURPOSE_TO_FOLDER } from './file.constants'
+import { STORAGE_PROVIDER, UploadPreset } from '~/infrastructure/providers/storage/storage.constants'
+import { toObjectId } from '~/common/utils'
+import { generateFileName } from './file.util'
 import { FileType } from './file.model'
 import { CloudinaryStorageProvider } from '~/infrastructure/providers/storage/cloudinary-storage.provider'
 import { EdgeTTSProvider } from '~/infrastructure/providers/tts/edge-tts.provider'

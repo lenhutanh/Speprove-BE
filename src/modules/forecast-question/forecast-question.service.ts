@@ -1,5 +1,5 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IForecastQuestionRepository } from './forecast-question.repository.interface'
 import { toObjectId } from '~/common/utils'
 import { ForecastQuestionMapper } from './forecast-question.mapper'
@@ -8,7 +8,7 @@ import { StatusCodes } from 'http-status-codes'
 import { ForecastQuestionQueryType, ImportQuestionType } from './forecast-question.type'
 import { ErrorCodes } from '~/common/constants/error-codes'
 import { IQuestionRepository } from '../question/repositories/question.repository.interface'
-import { PART_KIND, PartKind } from '~/common/constants/constants'
+import { PART_KIND, PartKind } from '../question/question.constants'
 import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 
 @singleton()

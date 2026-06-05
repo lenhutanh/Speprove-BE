@@ -1,8 +1,9 @@
 import { CorsOptions } from 'cors'
 import { env } from '~/common/config/env.config'
 import { StatusCodes } from 'http-status-codes'
-import { WHITELIST_DOMAINS } from '~/common/constants/constants'
 import { AppError } from '../errors'
+
+const WHITELIST_DOMAINS = ['http://localhost:3000']
 
 export const corsOptions: CorsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {

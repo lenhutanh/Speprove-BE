@@ -1,5 +1,4 @@
-import jwt from 'jsonwebtoken'
-import { TokenType } from '../constants/constants'
+import { TokenPayload } from '../types/token-payload.type'
 
 export interface ITokenService {
   generateAccessToken(payload: TokenPayload): string
@@ -7,13 +6,4 @@ export interface ITokenService {
   verifyAccessToken(token: string): TokenPayload
   verifyRefreshToken(token: string): TokenPayload
   hashToken(token: string): string
-}
-
-export interface TokenPayload extends jwt.JwtPayload {
-  _id: string
-  email: string
-  permissions: string[]
-  type: TokenType
-  sid?: string
-  jti?: string
 }

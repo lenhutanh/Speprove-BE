@@ -1,8 +1,9 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IInstructionAudioRepository } from './instruction-audio.repository.interface'
 import { FileService } from '../file/file.service'
-import { InstructionKey, STATUS } from '~/common/constants/constants'
+import { STATUS } from '~/common/constants/status.constants'
+import { InstructionKey } from './instruction-audio.constants'
 
 @singleton()
 export class InstructionAudioService {

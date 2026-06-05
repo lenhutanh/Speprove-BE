@@ -1,6 +1,6 @@
 import z from 'zod'
 import { createSchema, idParamSchema, querySchema, simpleQuerySchema, updateSchema } from '~/common/base'
-import { SPEAKING_SESSION_MODE } from '~/common/constants/constants'
+import { SPEAKING_SESSION_MODE } from '../speaking-session/speaking-session.constants'
 import { objectIdSchema } from '~/common/utils'
 
 export const createAttemptSchema = createSchema({

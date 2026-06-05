@@ -4,11 +4,11 @@ import helmet from 'helmet'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import swaggerUi from 'swagger-ui-express'
-import { setupContainer } from './common/config/container.config'
-;import { initSpelling } from './common/utils'
+import { setupContainer } from './bootstrap/container'
+import { initQuestionSpelling } from './modules/question/question-spelling.service'
 (async () => {
   try {
-    await initSpelling()
+    await initQuestionSpelling()
     setupContainer()
 
     const { connectDB, closeDB } = await import('./common/config')

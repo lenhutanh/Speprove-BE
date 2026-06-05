@@ -1,5 +1,5 @@
 import { container } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { AttemptAnalysisRepository } from './attempt-analysis.repository'
 import { AttemptRepository } from './attempt.repository'
 

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { objectIdSchema, requiredString } from '~/common/utils/validators.util'
-import { GROUP_KIND } from '~/common/constants/constants'
+import { GROUP_KIND } from './group.constants'
 import { createSchema, updateSchema } from '~/common/base'
 
 export const createGroupSchema = createSchema({

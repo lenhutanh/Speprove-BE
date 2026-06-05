@@ -1,7 +1,7 @@
 import { singleton } from 'tsyringe'
 import { CreditPackageService } from './credit-package.service'
 import { Request, Response } from 'express'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 import { StatusCodes } from 'http-status-codes'
 
 @singleton()

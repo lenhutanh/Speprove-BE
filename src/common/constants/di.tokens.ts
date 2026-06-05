@@ -9,6 +9,7 @@ export const TOKENS = {
   IEventBus: Symbol('IEventBus'),
 
   ITokenService: Symbol('ITokenService'),
+  IHasher: Symbol('IHasher'),
 
   // Mail
   IMailService: Symbol('IMailService'),
@@ -67,7 +68,6 @@ export const TOKENS = {
 
   // Payment
   IPaymentRepository: Symbol('IPaymentRepository'),
-  IPaymentProvider: Symbol('IPaymentProvider'),
 
   // Credit package
   ICreditPackageRepository: Symbol('ICreditPackageRepository'),

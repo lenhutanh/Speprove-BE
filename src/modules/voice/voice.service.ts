@@ -1,15 +1,17 @@
 import { StatusCodes } from 'http-status-codes'
-import { CLOUD_FOLDERS, INSTRUCTION_SCRIPTS, STATUS } from '~/common/constants/constants'
+import { STATUS } from '~/common/constants/status.constants'
+import { CLOUD_FOLDERS } from '~/infrastructure/providers/storage/storage.constants'
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IVoiceRepository } from './repositories/voice.repository.interface'
 import { CreateVoiceBodyType, UpdateVoiceBodyType } from './types/voice.type'
 import { AppError } from '~/common/errors'
-import { getVoiceSampleText } from '~/common/utils'
 import { FileService } from '../file/file.service'
 import { VoiceMapper } from './voice.mapper'
 import { FileProducer } from '~/infrastructure/queues/publishers/file.producer'
 import { JOB_NAME } from '~/infrastructure/queues'
+import { INSTRUCTION_SCRIPTS } from '../instruction-audio/instruction-audio.constants'
+import { VOICE_SAMPLE_TEXT } from './voice.constants'
 
 @singleton()
 export class VoiceService {
@@ -63,10 +65,8 @@ export class VoiceService {
       throw new AppError('Cannot activate', StatusCodes.FORBIDDEN)
     }
 
-    const text = getVoiceSampleText()
-
     const audioFile = await this.fileService.generateAndSaveAudio({
-      text,
+      text: VOICE_SAMPLE_TEXT,
       voiceCode: voice.voiceCode,
       speed: voice.speed,
       pitch: voice.pitch,
@@ -124,3 +124,4 @@ export class VoiceService {
     return voice
   }
 }
+

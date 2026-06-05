@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { createSchema, idParamSchema, querySchema, updateSchema } from '~/common/base/base.validation'
-import { FORECAST_STATUS } from '~/common/constants/constants'
+import { FORECAST_STATUS } from './forecast.constants'
 import { objectIdSchema } from '~/common/utils'
 
 export const createForecastSchema = createSchema({

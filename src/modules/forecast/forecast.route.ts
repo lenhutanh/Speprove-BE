@@ -1,7 +1,7 @@
 import express from 'express'
 import { validateMiddleware } from '~/common/middlewares'
 import { createForecastSchema, forecastQuerySchema, importTopicsSchema } from './forecast.validation'
-import { bindHandler } from '~/common/utils'
+import { bindHandler } from '~/common/http'
 import { ForecastController } from './forecast.controller'
 import { container } from 'tsyringe'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
