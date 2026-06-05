@@ -16,10 +16,9 @@ const ALLOWED_WORDS = new Set(
     'chatgpt',
     'smartphone',
     'tv'
-  ].map((w) => w.toLowerCase())
+  ].map((word) => word.toLowerCase())
 )
 
-// Helper để load từ điển từ callback sang Promise
 const loadDict = (dictFn: any) => {
   return new Promise<any>((resolve, reject) => {
     dictFn((err: any, dict: any) => {
@@ -29,9 +28,8 @@ const loadDict = (dictFn: any) => {
   })
 }
 
-export async function initSpelling() {
+export async function initQuestionSpelling() {
   try {
-    // Import rõ ràng 2 bộ US và GB
     const [{ default: enUS }, { default: enGB }] = await Promise.all([
       import('dictionary-en'),
       import('dictionary-en-gb')
@@ -42,15 +40,15 @@ export async function initSpelling() {
     spellUS = nspell(dictUS)
     spellGB = nspell(dictGB)
 
-    console.log('✅ Spelling engine: US & GB initialized separately')
+    console.log('Spelling engine initialized')
   } catch (error) {
-    console.error('❌ Spelling init failed:', error)
+    console.error('Spelling init failed:', error)
   }
 }
 
 function normalizeText(text: string) {
   return text
-    .replace(/[‘’]/g, "'")
+    .replace(/[\u2018\u2019]/g, "'")
     .toLowerCase()
     .replace(/[^a-z'\s]/g, ' ')
     .replace(/\s+/g, ' ')
@@ -70,13 +68,11 @@ export function checkSpelling(text: string) {
     if (!word || ALLOWED_WORDS.has(word)) continue
 
     const cleanWord = word.replace(/'$/, '')
-
     const isCorrectUS = spellUS.correct(cleanWord)
     const isCorrectGB = spellGB.correct(cleanWord)
 
     if (!isCorrectUS && !isCorrectGB) {
       const capitalized = cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1)
-
       const isCapitalizedCorrect = spellUS.correct(capitalized) || spellGB.correct(capitalized)
 
       if (isCapitalizedCorrect) {
@@ -99,7 +95,6 @@ export function checkSpelling(text: string) {
 export function getSuggestions(word: string) {
   if (!spellUS || !spellGB) return []
 
-  // Gộp gợi ý từ cả hai từ điển và xóa trùng
   const suggestions = [...spellUS.suggest(word), ...spellGB.suggest(word)]
   return [...new Set(suggestions)]
 }

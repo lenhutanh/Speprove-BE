@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IGroupRepository } from './repositories/group.repository.interface'
 import { CreateGroupBodyType, UpdateGroupBodyType } from './types/group.type'
 import { AppError } from '~/common/errors'

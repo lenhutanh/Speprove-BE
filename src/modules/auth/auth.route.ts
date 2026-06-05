@@ -11,7 +11,7 @@ import {
   setPasswordSchema,
   verifySchema
 } from './auth.validation'
-import { bindHandler } from '~/common/utils'
+import { bindHandler } from '~/common/http'
 import { container } from 'tsyringe'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
 import { rateLimitMiddleware } from '~/infrastructure/rate-limiter/rate-limiter.middleware'

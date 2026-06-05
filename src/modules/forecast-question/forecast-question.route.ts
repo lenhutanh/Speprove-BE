@@ -1,6 +1,6 @@
 import express from 'express'
 import { validateMiddleware } from '~/common/middlewares'
-import { bindHandler } from '~/common/utils'
+import { bindHandler } from '~/common/http'
 import { ForecastQuestionController } from './forecast-question.controller'
 import {
   forecastQuestionQuerySchema,

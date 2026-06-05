@@ -1,5 +1,5 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IPaymentRepository } from './payment.repository.interface'
 import { CreatePaymentBodyType } from './payment.type'
 import { CreditPackageService } from '../credit-package/credit-package.service'
@@ -7,12 +7,12 @@ import { env } from '~/common/config'
 import { toObjectId } from '~/common/utils'
 import {
   BUFFER_TIME,
-  CREDIT_LOG_REF_TYPE,
   EXPIRED_DURATION,
   METHOD_TO_PROVIDER,
   PAYMENT_STATUS,
   PaymentProviderType
-} from '~/common/constants/constants'
+} from './payment.constants'
+import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
 import { PaymentProviderFactory } from './providers/payment-provider.factory'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'

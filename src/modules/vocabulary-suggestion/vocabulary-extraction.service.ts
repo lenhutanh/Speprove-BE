@@ -1,11 +1,11 @@
 import { inject, singleton } from 'tsyringe'
+import { ATTEMPT_STATUS } from '../attempt/attempt.constants'
 import {
-  ATTEMPT_STATUS,
   VOCABULARY_BAND_LEVEL,
   VOCABULARY_SUGGESTION_STATUS,
   VocabularyBandLevel
-} from '~/common/constants/constants'
-import { TOKENS } from '~/common/constants/tokens'
+} from './vocabulary-suggestion.constants'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { toObjectId } from '~/common/utils'
 import { LLMVocabularyExtractor, ExtractedVocabularyItem } from '~/infrastructure/providers/vocabulary-extractor'
 import { IAttemptAnalysisRepository } from '../attempt/attempt-analysis.repository.interface'
@@ -214,3 +214,4 @@ export class VocabularyExtractionService {
       .replace(/\s+/g, ' ')
   }
 }
+

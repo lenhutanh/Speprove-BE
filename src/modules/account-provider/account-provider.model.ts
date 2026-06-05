@@ -1,6 +1,6 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '../../common/base/base.model'
-import { LOGIN_PROVIDER } from '~/common/constants/constants'
+import { LOGIN_PROVIDER } from '~/modules/auth/auth.constants'
 
 const accountProviderSchema = new Schema(
   {

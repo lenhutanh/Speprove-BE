@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base'
-import { SPEAKING_SESSION_TYPE } from '~/common/constants/constants'
+import { SPEAKING_SESSION_TYPE } from './speaking-session.constants'
 
 const sessionResultSchema = new mongoose.Schema(
   {

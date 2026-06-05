@@ -2,7 +2,7 @@ import * as sdk from 'microsoft-cognitiveservices-speech-sdk'
 import { singleton } from 'tsyringe'
 import { env } from '~/common/config'
 import { IPronunciationAssessmentProvider, PronunciationAssessmentResult } from './assessment.interface'
-import { AZURE_TICKS_PER_SECOND } from '~/common/constants/constants'
+import { AZURE_TICKS_PER_SECOND } from './azure-assessment.constants'
 import axios from 'axios'
 
 type AzurePronunciationAssessment = {

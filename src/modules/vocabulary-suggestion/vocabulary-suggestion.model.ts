@@ -5,7 +5,7 @@ import {
   VOCABULARY_SUGGESTION_KIND,
   VOCABULARY_SUGGESTION_SOURCE,
   VOCABULARY_SUGGESTION_STATUS
-} from '~/common/constants/constants'
+} from './vocabulary-suggestion.constants'
 
 const vocabularySuggestionSchema = new mongoose.Schema(
   {

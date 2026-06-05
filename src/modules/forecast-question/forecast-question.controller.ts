@@ -1,7 +1,7 @@
 import { singleton } from 'tsyringe'
 import { ForecastQuestionService } from './forecast-question.service'
 import { Request, Response } from 'express'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 
 @singleton()
 export class ForecastQuestionController {

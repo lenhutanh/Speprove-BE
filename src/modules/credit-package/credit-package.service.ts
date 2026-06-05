@@ -1,5 +1,5 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { ICreditPackageRepository } from './credit-package.repository.interface'
 import { CreateCreditPackageBodyType } from './credit-package.type'
 import { StatusCodes } from 'http-status-codes'

@@ -1,7 +1,7 @@
 import express from 'express'
 import { validateMiddleware } from '~/common/middlewares'
 import { createQuestionSchema, getQuestionsSchema, updateQuestionSchema } from './question.validation'
-import { bindHandler } from '~/common/utils'
+import { bindHandler } from '~/common/http'
 import { QuestionController } from './question.controller'
 import { container } from 'tsyringe'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'

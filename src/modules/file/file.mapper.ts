@@ -2,7 +2,7 @@ import { singleton } from 'tsyringe'
 import { BaseMapper } from '~/common/base'
 import { FileType, AudioFileType, ImageFileType } from './file.model'
 import { FileResponseDto } from './file.dto'
-import { FILE_KIND } from '~/common/constants/constants'
+import { FILE_KIND } from './file.constants'
 
 @singleton()
 export class FileMapper extends BaseMapper<FileType, FileResponseDto> {

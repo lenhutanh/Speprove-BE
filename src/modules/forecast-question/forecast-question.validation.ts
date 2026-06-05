@@ -1,6 +1,7 @@
 import z from 'zod'
 import { createSchema, idParamSchema, querySchema, simpleQuerySchema } from '~/common/base'
-import { PART2_CATEGORY, PART_GROUP, PART_KIND } from '~/common/constants/constants'
+import { PART2_CATEGORY, PART_KIND } from '../question/question.constants'
+import { PART_GROUP } from '../forecast/forecast.constants'
 import { objectIdSchema } from '~/common/utils'
 
 export const forecastQuestionQuerySchema = querySchema({

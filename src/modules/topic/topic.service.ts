@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { ITopicRepository } from './repositories/topic.repository.interface'
 import { QueryBuilder } from '~/common/base/query-builder'
 import { TopicType } from './topic.model'
@@ -51,3 +51,4 @@ export class TopicService {
     }
   }
 }
+

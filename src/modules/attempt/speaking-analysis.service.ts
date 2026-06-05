@@ -1,6 +1,8 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
-import { ATTEMPT_STATUS, PART_KIND, SESSION_STATUS, SPEAKING_SESSION_MODE } from '~/common/constants/constants'
+import { TOKENS } from '~/common/constants/di.tokens'
+import { ATTEMPT_STATUS } from './attempt.constants'
+import { PART_KIND } from '../question/question.constants'
+import { SESSION_STATUS, SPEAKING_SESSION_MODE } from '../speaking-session/speaking-session.constants'
 import { AzurePronunciationAssessmentProvider } from '~/infrastructure/providers/speech-assessment/azure.assessment'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 import {
@@ -14,9 +16,10 @@ import { IAttemptRepository } from './attempt.repository.interface'
 import { IAttemptAnalysisRepository } from './attempt-analysis.repository.interface'
 import { ISpeakingSessionRepository } from '../speaking-session/speaking-session.repository.interface'
 import { ISTTProvider } from '~/infrastructure/providers/stt'
-import { normalizeForAssessment, toObjectId } from '~/common/utils'
+import { toObjectId } from '~/common/utils'
 import { LLMEvaluator } from '~/infrastructure/providers/evaluator/llm-evaluator'
 import { SpeakingSessionService } from '../speaking-session/speaking-session.service'
+import { normalizeForAssessment } from './speaking-analysis.util'
 
 type AnalysisStage = 'transcribe' | 'assess' | 'evaluate' | 'score_session'
 

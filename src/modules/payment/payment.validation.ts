@@ -1,6 +1,6 @@
 import z from 'zod'
 import { createSchema } from '~/common/base'
-import { PAYMENT_METHOD } from '~/common/constants/constants'
+import { PAYMENT_METHOD } from './payment.constants'
 import { objectIdSchema } from '~/common/utils'
 
 export const createPaymentSchema = createSchema({

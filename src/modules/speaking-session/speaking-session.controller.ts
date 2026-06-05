@@ -1,8 +1,8 @@
 import { singleton } from 'tsyringe'
 import { SpeakingSessionService } from './speaking-session.service'
 import { Response } from 'express'
-import { ResponseTransformer } from '~/common/utils'
-import { AuthenticatedRequest } from '~/common/interfaces/request.interface'
+import { ResponseTransformer } from '~/common/http'
+import { AuthenticatedRequest } from '~/common/types/request.type'
 
 @singleton()
 export class SpeakingSessionController {

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { env } from '~/common/config/env.config'
 import { ErrorCodes } from '../constants/error-codes'
-import { ResponseTransformer } from '../utils/response.util'
+import { ResponseTransformer } from '../http'
 import { ZodError } from 'zod'
 import { AppError } from '../errors'
 

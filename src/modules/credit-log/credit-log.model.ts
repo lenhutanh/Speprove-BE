@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { CREDIT_LOG_REF_TYPE } from '~/common/constants/constants'
+import { CREDIT_LOG_REF_TYPE } from './credit-log.constants'
 
 const creditLogSchema = new mongoose.Schema({
   userId: { type: mongoose.Types.ObjectId, ref: 'Account', required: true },

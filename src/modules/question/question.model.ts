@@ -1,6 +1,6 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base'
-import { PART2_CATEGORY, PART_KIND } from '~/common/constants/constants'
+import { PART2_CATEGORY, PART_KIND } from './question.constants'
 
 const questionSchema = new Schema(
   {

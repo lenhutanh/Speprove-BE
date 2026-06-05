@@ -1,6 +1,6 @@
 import { Job } from 'bullmq'
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { BaseConsumer } from '~/infrastructure/workers/consumers/base.consumer'
 import { WorkerFactory } from '~/infrastructure/workers/worker.factory'
 import { QUEUE_NAME, JOB_NAME } from '~/infrastructure/queues'

@@ -2,7 +2,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import streamifier from 'streamifier'
 import { singleton } from 'tsyringe'
 import { env } from '~/common/config'
-import { UPLOAD_PRESET_MAP, UploadConfig, UploadPreset } from '~/common/constants/constants'
+import { UPLOAD_PRESET_MAP, UploadConfig, UploadPreset } from './storage.constants'
 
 @singleton()
 export class CloudinaryStorageProvider {

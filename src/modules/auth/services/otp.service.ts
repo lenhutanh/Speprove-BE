@@ -1,6 +1,6 @@
-import { buildRedisKey } from '~/common/utils'
+import { buildRedisKey } from '~/infrastructure/redis/redis-key.util'
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { ICacheService } from '~/infrastructure/cache'
 import { CACHE_CONFIG } from '../auth.constants'
 

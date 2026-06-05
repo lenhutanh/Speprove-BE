@@ -1,9 +1,11 @@
 import { StatusCodes } from 'http-status-codes'
 import { Account, AccountType } from '~/modules/account/account.model'
-import { FREE_SIGNUP_BALANCE, GROUP_NAME, STATUS } from '~/common/constants/constants'
+import { STATUS } from '~/common/constants/status.constants'
+import { FREE_SIGNUP_BALANCE } from './account.constants'
+import { GROUP_NAME } from '../group/group.constants'
 import { inject, singleton } from 'tsyringe'
 import { GroupService } from '../group/group.service'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IAccountRepository } from './repositories/account.repository.interface'
 import { AppError } from '~/common/errors'
 import { VoiceService } from '../voice/voice.service'
@@ -124,3 +126,4 @@ export class AccountService {
     return defaultVoice.id
   }
 }
+

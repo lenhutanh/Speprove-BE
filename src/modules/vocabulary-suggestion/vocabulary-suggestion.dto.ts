@@ -3,7 +3,7 @@ import {
   VocabularySuggestionKind,
   VocabularySuggestionSource,
   VocabularySuggestionStatus
-} from '~/common/constants/constants'
+} from './vocabulary-suggestion.constants'
 
 export type VocabularySuggestionDto = {
   id: string

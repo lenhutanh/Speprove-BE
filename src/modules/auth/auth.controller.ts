@@ -1,11 +1,12 @@
 import { Request, Response } from 'express'
 import { env } from '~/common/config/env.config'
-import { ResponseTransformer, tokenLifeToMs } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 import { injectable } from 'tsyringe'
-import { AuthenticatedRequest } from '~/common/interfaces/request.interface'
+import { AuthenticatedRequest } from '~/common/types/request.type'
 import { AuthService } from './services'
 import { AppError } from '~/common/errors'
 import { ErrorCodes } from '~/common/constants/error-codes'
+import { tokenLifeToMs } from '~/infrastructure/security/token-duration.util'
 
 type AuthClientType = 'web' | 'mobile'
 type AuthTokens = { accessToken: string; refreshToken: string; refreshTokenExpiresAt: Date }

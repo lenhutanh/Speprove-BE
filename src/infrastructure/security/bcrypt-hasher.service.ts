@@ -1,6 +1,6 @@
 import { injectable } from 'tsyringe'
 import bcrypt from 'bcrypt'
-import { IHasher } from '~/common/interfaces/hasher.interface'
+import { IHasher } from '~/common/contracts/hasher.contract'
 
 @injectable()
 export class BcryptHasher implements IHasher {

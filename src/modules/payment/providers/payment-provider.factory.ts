@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe'
-import { PAYMENT_PROVIDER } from '~/common/constants/constants'
+import { PAYMENT_PROVIDER } from '../payment.constants'
 import { IPaymentProvider } from './base.provider'
 import { PayOSProvider } from './payos.provider'
 

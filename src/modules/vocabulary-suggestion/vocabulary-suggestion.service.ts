@@ -6,8 +6,8 @@ import {
   VocabularySuggestionStatus,
   VOCABULARY_SUGGESTION_SOURCE,
   VOCABULARY_SUGGESTION_STATUS
-} from '~/common/constants/constants'
-import { TOKENS } from '~/common/constants/tokens'
+} from './vocabulary-suggestion.constants'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { AppError } from '~/common/errors'
 import { toObjectId } from '~/common/utils'
 import { VocabularySuggestionType } from './vocabulary-suggestion.model'
@@ -177,3 +177,4 @@ export class VocabularySuggestionService {
     return text.trim().replace(/\s+/g, ' ')
   }
 }
+

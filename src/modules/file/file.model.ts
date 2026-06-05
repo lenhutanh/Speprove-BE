@@ -1,6 +1,7 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '../../common/base/base.model'
-import { FILE_KIND, STORAGE_PROVIDER } from '~/common/constants/constants'
+import { STORAGE_PROVIDER } from '~/infrastructure/providers/storage/storage.constants'
+import { FILE_KIND } from './file.constants'
 
 const fileSchema = new Schema(
   {

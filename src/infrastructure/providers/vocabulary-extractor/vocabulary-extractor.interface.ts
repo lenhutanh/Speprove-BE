@@ -1,4 +1,7 @@
-import { VocabularyBandLevel, VocabularySuggestionKind } from '~/common/constants/constants'
+import {
+  VocabularyBandLevel,
+  VocabularySuggestionKind
+} from '~/modules/vocabulary-suggestion/vocabulary-suggestion.constants'
 import { AssessmentIssue, AttemptScores } from '~/modules/attempt/attempt.model'
 
 export type VocabularyExtractionInput = {

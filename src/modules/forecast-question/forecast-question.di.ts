@@ -1,5 +1,5 @@
 import { container } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { ForecastQuestionRepository } from './forecast-question.repository'
 
 export const registerForecastQuestionModule = () => {

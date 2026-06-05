@@ -4,7 +4,7 @@ import {
   VOCABULARY_SUGGESTION_KIND,
   VOCABULARY_SUGGESTION_STATUS,
   VOCABULARY_SUGGESTION_SOURCE
-} from '~/common/constants/constants'
+} from './vocabulary-suggestion.constants'
 import { objectIdSchema, requiredString } from '~/common/utils'
 
 const vocabularyBandLevelSchema = z.coerce.number().pipe(z.union([z.literal(6), z.literal(7), z.literal(8)]))

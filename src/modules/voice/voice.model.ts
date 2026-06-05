@@ -1,6 +1,7 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
-import { GENDER_KIND, STATUS } from '~/common/constants/constants'
+import { STATUS } from '~/common/constants/status.constants'
 import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base/base.model'
+import { GENDER_KIND } from './voice.constants'
 
 const voiceSchema = new Schema(
   {

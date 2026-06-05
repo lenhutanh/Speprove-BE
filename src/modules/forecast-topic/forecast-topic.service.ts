@@ -1,5 +1,5 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IForecastTopicRepository } from './repositories/forecast-topic.repository.interface'
 import { toObjectId } from '~/common/utils'
 import { AppError } from '~/common/errors'

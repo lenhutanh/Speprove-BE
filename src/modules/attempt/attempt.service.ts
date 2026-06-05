@@ -1,5 +1,5 @@
 import { delay, inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { IAttemptRepository } from './attempt.repository.interface'
 import { IAttemptAnalysisRepository } from './attempt-analysis.repository.interface'
 import { AttemptQueryType, CreateAttemptBodyType, GetTopAttemptQueryType, GetWordAudioQueryType } from './attempt.type'
@@ -8,16 +8,11 @@ import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
 import { ForecastQuestionService } from '../forecast-question/forecast-question.service'
 import { FileService } from '../file/file.service'
-import { calculateCreditCost, toObjectId } from '~/common/utils'
+import { toObjectId } from '~/common/utils'
 import { AttemptMapper } from './attempt.mapper'
-import {
-  ANALYSIS_PROFILE,
-  AnalysisProfile,
-  ATTEMPT_STATUS,
-  CREDIT_LOG_REF_TYPE,
-  SESSION_STATUS,
-  SPEAKING_SESSION_MODE
-} from '~/common/constants/constants'
+import { ANALYSIS_PROFILE, AnalysisProfile, ATTEMPT_STATUS } from './attempt.constants'
+import { SESSION_STATUS, SPEAKING_SESSION_MODE } from '../speaking-session/speaking-session.constants'
+import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 import { AudioFileType } from '../file/file.model'
 import { ForecastQuestionResponseDto } from '../forecast-question/forecast-question.dto'
@@ -26,6 +21,7 @@ import { AttemptType } from './attempt.model'
 import { AccountService } from '../account/account.service'
 import { CreditLogService } from '../credit-log/credit-log.service'
 import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
+import { calculateCreditCost } from '../credit-log/credit.util'
 
 @singleton()
 export class AttemptService {

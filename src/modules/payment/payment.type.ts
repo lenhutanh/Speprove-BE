@@ -1,5 +1,5 @@
 import z from 'zod'
-import { PaymentStatusType } from '~/common/constants/constants'
+import { PaymentStatusType } from './payment.constants'
 import { createPaymentSchema } from './payment.validation'
 
 export type CreatePaymentLinkParams = {

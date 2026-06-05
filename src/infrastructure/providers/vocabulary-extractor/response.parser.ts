@@ -4,7 +4,7 @@ import {
   VocabularySuggestionKind,
   VOCABULARY_BAND_LEVEL,
   VOCABULARY_SUGGESTION_KIND
-} from '~/common/constants/constants'
+} from '~/modules/vocabulary-suggestion/vocabulary-suggestion.constants'
 import { ExtractedVocabularyItem } from './vocabulary-extractor.interface'
 
 @singleton()

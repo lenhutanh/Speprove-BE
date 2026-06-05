@@ -1,6 +1,7 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '../../common/base/base.model'
-import { ACCOUNT_KIND, STATUS } from '~/common/constants/constants'
+import { STATUS } from '~/common/constants/status.constants'
+import { ACCOUNT_KIND } from './account.constants'
 
 const accountSchema = new Schema(
   {

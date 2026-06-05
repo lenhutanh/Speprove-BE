@@ -1,5 +1,5 @@
 import { inject, singleton } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { ILLMProvider } from '../llm/llm.interface'
 import { AssessmentWord, Evaluation, SpeechAnalysis } from '~/modules/attempt/attempt.model'
 

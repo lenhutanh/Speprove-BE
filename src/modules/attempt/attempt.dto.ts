@@ -1,5 +1,5 @@
 import { AnalysisMeta, Evaluation, AttemptScores, FluencyMetrics } from './attempt.model'
-import { AnalysisProfile } from '~/common/constants/constants'
+import { AnalysisProfile } from './attempt.constants'
 
 export type AttemptResponseDto = {
   id: string

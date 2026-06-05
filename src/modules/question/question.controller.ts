@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { ResponseTransformer } from '~/common/utils'
+import { ResponseTransformer } from '~/common/http'
 import { QuestionService } from './question.service'
 import { injectable } from 'tsyringe'
 

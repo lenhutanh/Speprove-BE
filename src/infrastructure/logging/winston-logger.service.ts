@@ -1,8 +1,8 @@
 import { injectable } from 'tsyringe'
 import winston from 'winston'
-import { ILogger } from '~/common/interfaces/logger.interface'
 import { env } from '~/common/config/env.config'
 import DailyRotateFile from 'winston-daily-rotate-file'
+import { ILogger } from './logger.interface'
 
 @injectable()
 export class WinstonLogger implements ILogger {

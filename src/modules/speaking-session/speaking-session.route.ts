@@ -3,7 +3,7 @@ import { validateMiddleware } from '~/common/middlewares'
 import { createSpeakingSessionSchema, speakingSessionQuerySchema } from './speaking-session.validation'
 import { container } from 'tsyringe'
 import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
-import { bindHandler } from '~/common/utils'
+import { bindHandler } from '~/common/http'
 import { SpeakingSessionController } from './speaking-session.controller'
 import { idParamSchema } from '~/common/base'
 

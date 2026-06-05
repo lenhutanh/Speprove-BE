@@ -1,6 +1,6 @@
 import mongoose, { InferSchemaType, Types } from 'mongoose'
 import { Schema } from 'mongoose'
-import { INSTRUCTION_KEYS } from '~/common/constants/constants'
+import { INSTRUCTION_KEYS } from './instruction-audio.constants'
 
 const instructionAudioSchema = new mongoose.Schema({
   voiceId: { type: Types.ObjectId, ref: 'Voice', required: true },

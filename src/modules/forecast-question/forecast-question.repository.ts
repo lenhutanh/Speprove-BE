@@ -4,7 +4,8 @@ import { IForecastQuestionRepository } from './forecast-question.repository.inte
 import { singleton } from 'tsyringe'
 import { PipelineStage, Types } from 'mongoose'
 import { ForecastQuestionQueryType } from './forecast-question.type'
-import { PART_GROUP, PART_KIND } from '~/common/constants/constants'
+import { PART_KIND } from '../question/question.constants'
+import { PART_GROUP } from '../forecast/forecast.constants'
 
 @singleton()
 export class ForecastQuestionRepository

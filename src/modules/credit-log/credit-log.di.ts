@@ -1,5 +1,5 @@
 import { container } from 'tsyringe'
-import { TOKENS } from '~/common/constants/tokens'
+import { TOKENS } from '~/common/constants/di.tokens'
 import { CreditLogRepository } from './credit-log.repository'
 
 export const registerCreditLogModule = () => {

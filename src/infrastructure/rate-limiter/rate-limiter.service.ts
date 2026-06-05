@@ -1,20 +1,18 @@
 import Redis from 'ioredis'
 import { singleton } from 'tsyringe'
 import { createRedisClient } from '../redis/redis.factory'
-import { buildRedisKey } from '~/common/utils'
+import { buildRedisKey } from '~/infrastructure/redis/redis-key.util'
 import { RateLimitResult } from './rate-limiter.types'
 
-declare module 'ioredis' {
-  interface Redis {
-    rateLimitLog(key: string, seqKey: string, nowMs: number, windowMs: number, limit: number): Promise<[number, number]>
-    rateLimitCounter(
-      currKey: string,
-      prevKey: string,
-      windowMs: number,
-      limit: number,
-      nowMs: number
-    ): Promise<[number, number]>
-  }
+type RateLimitRedis = Redis & {
+  rateLimitLog(key: string, seqKey: string, nowMs: number, windowMs: number, limit: number): Promise<[number, number]>
+  rateLimitCounter(
+    currKey: string,
+    prevKey: string,
+    windowMs: number,
+    limit: number,
+    nowMs: number
+  ): Promise<[number, number]>
 }
 
 const RATE_LIMIT_CONFIG = {
@@ -24,7 +22,7 @@ const RATE_LIMIT_CONFIG = {
 
 @singleton()
 export class RateLimiterService {
-  private readonly redis: Redis
+  private readonly redis: RateLimitRedis
 
   private readonly LUA_LOG = `
     local key, seqKey = KEYS[1], KEYS[2]
@@ -53,7 +51,7 @@ export class RateLimiterService {
   `
 
   constructor() {
-    this.redis = createRedisClient('rate-limiter')
+    this.redis = createRedisClient('rate-limiter') as RateLimitRedis
     this.redis.defineCommand('rateLimitLog', { numberOfKeys: 2, lua: this.LUA_LOG })
     this.redis.defineCommand('rateLimitCounter', { numberOfKeys: 2, lua: this.LUA_COUNTER })
   }
