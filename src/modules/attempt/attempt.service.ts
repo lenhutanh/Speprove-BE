@@ -22,6 +22,7 @@ import { AccountService } from '../account/account.service'
 import { CreditLogService } from '../credit-log/credit-log.service'
 import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 import { calculateCreditCost } from '../credit-log/credit.util'
+import { VoiceService } from '../voice/voice.service'
 
 @singleton()
 export class AttemptService {
@@ -38,7 +39,8 @@ export class AttemptService {
     private readonly speakingProducer: SpeakingProducer,
     private readonly accountService: AccountService,
     private readonly creditLogService: CreditLogService,
-    private readonly generatedAudioService: GeneratedAudioService
+    private readonly generatedAudioService: GeneratedAudioService,
+    private readonly voiceService: VoiceService
   ) {}
 
   public async createNew(userId: string, data: CreateAttemptBodyType) {
@@ -281,22 +283,10 @@ export class AttemptService {
     const text = word.word?.trim()
     if (!text) throw new AppError('Word text is empty', StatusCodes.BAD_REQUEST)
 
-    const voiceId = await this.accountService.resolveSelectedVoiceId(userId)
-    const audio = await this.generatedAudioService.getOrCreate({ text, voiceId })
+    await this.voiceService.findActiveById(data.voiceId)
+    const audio = await this.generatedAudioService.getOrCreate({ text, voiceId: data.voiceId })
 
-    return {
-      audioUrl: audio.audioUrl,
-      fileId: audio.fileId,
-      cached: audio.cached,
-      word: {
-        wordIndex: word.wordIndex,
-        word: word.word,
-        accuracyScore: word.accuracyScore,
-        errorType: word.errorType,
-        expectedIpa: word.expectedIpa,
-        spokenIpa: word.spokenIpa
-      }
-    }
+    return { audioUrl: audio.audioUrl }
   }
 
   private _shouldGenerateWordAudio(word: any) {

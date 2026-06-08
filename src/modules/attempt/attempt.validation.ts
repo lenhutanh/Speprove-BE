@@ -36,5 +36,6 @@ export const shareAttemptSchema = updateSchema({
 })
 
 export const getWordAudioSchema = simpleQuerySchema({
-  wordIndex: z.coerce.number().int().min(0)
+  wordIndex: z.coerce.number().int().min(0),
+  voiceId: objectIdSchema
 }).merge(idParamSchema)

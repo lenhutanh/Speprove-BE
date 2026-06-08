@@ -214,4 +214,3 @@ export class VocabularyExtractionService {
       .replace(/\s+/g, ' ')
   }
 }
-

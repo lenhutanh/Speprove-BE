@@ -15,7 +15,6 @@ export class ForecastQuestionMapper extends BaseMapper<ForecastQuestionType, For
       content: q.content,
       part: q.part,
       order: entity.order,
-      audioUrl: entity.audioUrl,
       prev: entity.prev,
       next: entity.next
     }

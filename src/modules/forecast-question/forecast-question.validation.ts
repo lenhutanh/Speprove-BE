@@ -1,5 +1,5 @@
 import z from 'zod'
-import { createSchema, idParamSchema, querySchema, simpleQuerySchema } from '~/common/base'
+import { createSchema, querySchema } from '~/common/base'
 import { PART2_CATEGORY, PART_KIND } from '../question/question.constants'
 import { PART_GROUP } from '../forecast/forecast.constants'
 import { objectIdSchema } from '~/common/utils'
@@ -14,10 +14,6 @@ export const forecastQuestionQuerySchema = querySchema({
 export const getAttemptsOfQuestionSchema = querySchema({
   band: z.coerce.number().min(1).max(9)
 })
-
-export const getForecastQuestionDetailQuerySchema = simpleQuerySchema({
-  voiceId: objectIdSchema
-}).merge(idParamSchema)
 
 export const importQuestionsSchema = createSchema({
   forecastId: objectIdSchema,

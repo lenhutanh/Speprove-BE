@@ -21,4 +21,9 @@ export class QuestionController {
     const result = await this.questionService.getList(req.validated.query)
     return ResponseTransformer.success(res, result, 'Get question list successfully')
   }
+
+  public async getQuestionAudio(req: Request, res: Response) {
+    const result = await this.questionService.getQuestionAudio(req.validated.params.id, req.validated.query.voiceId)
+    return ResponseTransformer.success(res, result, 'Get question audio successfully')
+  }
 }
