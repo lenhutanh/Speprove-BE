@@ -1,6 +1,11 @@
 import express from 'express'
 import { validateMiddleware } from '~/common/middlewares'
-import { createQuestionSchema, getQuestionsSchema, updateQuestionSchema } from './question.validation'
+import {
+  createQuestionSchema,
+  getQuestionAudioSchema,
+  getQuestionsSchema,
+  updateQuestionSchema
+} from './question.validation'
 import { bindHandler } from '~/common/http'
 import { QuestionController } from './question.controller'
 import { container } from 'tsyringe'
@@ -22,6 +27,11 @@ Router.route('/')
     validateMiddleware(getQuestionsSchema),
     bindHandler(QuestionController, 'getList')
   )
+
+Router.route('/:id/audio').get(
+  validateMiddleware(getQuestionAudioSchema),
+  bindHandler(QuestionController, 'getQuestionAudio')
+)
 
 Router.route('/:id').put(
   authMiddleware.isAuthorized,

@@ -235,10 +235,7 @@ export class SpeakingSessionService {
 
     const currentContext = flatQuestions[index]
 
-    const questionDetails = await this.forecastQuestionService.getDetails(
-      currentContext.id,
-      speakingSession.voiceId.toString()
-    )
+    const questionDetails = await this.forecastQuestionService.getDetails(currentContext.id)
 
     let playTransitionKey: InstructionKey | null = null
     if (index === 0) {
@@ -273,9 +270,9 @@ export class SpeakingSessionService {
       totalQuestions: flatQuestions.length,
       question: {
         id: currentContext.id,
+        questionId: questionDetails.questionId,
         part: currentContext.part,
         content: questionDetails.content,
-        audioUrl: questionDetails.audioUrl,
         bulletPoints: questionDetails.bulletPoints || undefined
       }
     }
@@ -285,4 +282,3 @@ export class SpeakingSessionService {
     return this.speakingSessionRepository.updateOne(filter, updateData, options)
   }
 }
-

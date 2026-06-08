@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createUnionSchema, querySchema, updateSchema } from '~/common/base/base.validation'
+import { createUnionSchema, idParamSchema, querySchema, simpleQuerySchema, updateSchema } from '~/common/base/base.validation'
 import { PART2_CATEGORY, PART_KIND } from './question.constants'
 import { objectIdSchema } from '~/common/utils'
 
@@ -43,3 +43,7 @@ export const questionFilterSchema = z.object({
 })
 
 export const getQuestionsSchema = querySchema(questionFilterSchema.shape)
+
+export const getQuestionAudioSchema = simpleQuerySchema({
+  voiceId: objectIdSchema
+}).merge(idParamSchema)

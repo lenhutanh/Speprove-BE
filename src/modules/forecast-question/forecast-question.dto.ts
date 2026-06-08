@@ -16,7 +16,6 @@ export type ForecastQuestionResponseDto = {
   bulletPoints?: string[]
   category?: string
   parent?: ParentDto
-  audioUrl?: string
   prev?: NeighborDto | null
   next?: NeighborDto | null
   childPart3?: ForecastQuestionResponseDto[]
