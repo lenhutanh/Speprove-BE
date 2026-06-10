@@ -23,5 +23,10 @@ export const VOCABULARY_SUGGESTION_SOURCE = {
 export type VocabularySuggestionSource =
   (typeof VOCABULARY_SUGGESTION_SOURCE)[keyof typeof VOCABULARY_SUGGESTION_SOURCE]
 
-export const VOCABULARY_BAND_LEVEL = [6, 7, 8] as const
-export type VocabularyBandLevel = (typeof VOCABULARY_BAND_LEVEL)[number]
+export const VOCABULARY_SUGGESTION_LEVEL = {
+  BASIC: 'basic',
+  INTERMEDIATE: 'intermediate',
+  ADVANCED: 'advanced'
+} as const
+
+export type VocabularySuggestionLevel = (typeof VOCABULARY_SUGGESTION_LEVEL)[keyof typeof VOCABULARY_SUGGESTION_LEVEL]

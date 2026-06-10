@@ -1,5 +1,5 @@
 import {
-  VocabularyBandLevel,
+  VocabularySuggestionLevel,
   VocabularySuggestionKind
 } from '~/modules/vocabulary-suggestion/vocabulary-suggestion.constants'
 import { AssessmentIssue, AttemptScores } from '~/modules/attempt/attempt.model'
@@ -8,7 +8,7 @@ export type VocabularyExtractionInput = {
   question: string
   transcript: string
   scores?: Partial<AttemptScores>
-  targetBandLevels?: VocabularyBandLevel[]
+  targetLevels?: VocabularySuggestionLevel[]
   lexicalIssues?: AssessmentIssue[]
   grammarIssues?: AssessmentIssue[]
 }
@@ -18,7 +18,7 @@ export type ExtractedVocabularyItem = {
   type: VocabularySuggestionKind
   meaningVi: string
   example: string
-  bandLevel: VocabularyBandLevel
+  level: VocabularySuggestionLevel
   confidence?: number
   reason?: string
 }

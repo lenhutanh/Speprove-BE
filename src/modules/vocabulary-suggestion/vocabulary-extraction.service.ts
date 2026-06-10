@@ -1,9 +1,9 @@
 import { inject, singleton } from 'tsyringe'
 import { ATTEMPT_STATUS } from '../attempt/attempt.constants'
 import {
-  VOCABULARY_BAND_LEVEL,
+  VOCABULARY_SUGGESTION_LEVEL,
   VOCABULARY_SUGGESTION_STATUS,
-  VocabularyBandLevel
+  VocabularySuggestionLevel
 } from './vocabulary-suggestion.constants'
 import { TOKENS } from '~/common/constants/di.tokens'
 import { toObjectId } from '~/common/utils'
@@ -19,8 +19,8 @@ type ExtractVocabularyJobData = {
   attemptId: string
 }
 
-const MAX_APPROVED_SUGGESTIONS_PER_BAND = 10
-const MAX_PENDING_SUGGESTIONS_PER_BAND = 10
+const MAX_APPROVED_SUGGESTIONS_PER_LEVEL = 10
+const MAX_PENDING_SUGGESTIONS_PER_LEVEL = 10
 
 @singleton()
 export class VocabularyExtractionService {
@@ -65,22 +65,22 @@ export class VocabularyExtractionService {
     const question = (forecastQuestion as any)?.questionId
     if (!question?._id) return { skipped: true, count: 0 }
 
-    const availableBandLevels = await this.getAvailableBandLevels(
+    const availableLevels = await this.getAvailableLevels(
       question._id.toString(),
       this.getLexicalBand(attempt, evaluation)
     )
-    if (!availableBandLevels.length) return { skipped: true, count: 0 }
+    if (!availableLevels.length) return { skipped: true, count: 0 }
 
     const extractedItems = await this.vocabularyExtractor.extract({
       question: this.buildQuestionContent(question),
       transcript,
       scores: attempt.scores,
-      targetBandLevels: availableBandLevels,
+      targetLevels: availableLevels,
       lexicalIssues: evaluation.lexical?.issues ?? [],
       grammarIssues: evaluation.grammar?.issues ?? []
     })
 
-    const safeItems = this.filterExtractedItems(extractedItems, transcript, evaluation, availableBandLevels)
+    const safeItems = this.filterExtractedItems(extractedItems, transcript, evaluation, availableLevels)
 
     for (const item of safeItems) {
       await this.vocabularySuggestionService.upsertExtractedSuggestion({
@@ -89,7 +89,7 @@ export class VocabularyExtractionService {
         type: item.type,
         meaningVi: item.meaningVi,
         example: item.example,
-        bandLevel: item.bandLevel
+        level: item.level
       })
     }
 
@@ -109,7 +109,7 @@ export class VocabularyExtractionService {
     items: ExtractedVocabularyItem[],
     transcript: string,
     evaluation: Evaluation,
-    availableBandLevels: VocabularyBandLevel[]
+    availableLevels: VocabularySuggestionLevel[]
   ) {
     const issueSpans = [...(evaluation.lexical?.issues ?? []), ...(evaluation.grammar?.issues ?? [])]
       .map((issue: AssessmentIssue) => issue.spanText)
@@ -125,8 +125,8 @@ export class VocabularyExtractionService {
         if (seen.has(normalizedText)) return false
         if (confidence < 0.7) return false
         if (this.wordCount(item.text) > 8) return false
-        if (!this.isValidBandLevel(item.bandLevel)) return false
-        if (!availableBandLevels.includes(item.bandLevel)) return false
+        if (!this.isValidLevel(item.level)) return false
+        if (!availableLevels.includes(item.level)) return false
         if (this.overlapsIssue(normalizedText, issueSpans)) return false
 
         seen.add(normalizedText)
@@ -148,36 +148,36 @@ export class VocabularyExtractionService {
     return question.content
   }
 
-  private async getAvailableBandLevels(questionId: string, lexicalBand: number) {
-    const targetBandLevels = this.resolveTargetBandLevels(lexicalBand)
-    const availableBandLevels: VocabularyBandLevel[] = []
+  private async getAvailableLevels(questionId: string, lexicalBand: number) {
+    const targetLevels = this.resolveTargetLevels(lexicalBand)
+    const availableLevels: VocabularySuggestionLevel[] = []
 
-    for (const bandLevel of targetBandLevels) {
+    for (const level of targetLevels) {
       const [approvedCount, pendingCount] = await Promise.all([
         this.vocabularySuggestionRepository.count({
           questionId: toObjectId(questionId),
-          bandLevel,
+          level,
           status: VOCABULARY_SUGGESTION_STATUS.APPROVED
         }),
         this.vocabularySuggestionRepository.count({
           questionId: toObjectId(questionId),
-          bandLevel,
+          level,
           status: VOCABULARY_SUGGESTION_STATUS.PENDING
         })
       ])
 
-      if (approvedCount < MAX_APPROVED_SUGGESTIONS_PER_BAND && pendingCount < MAX_PENDING_SUGGESTIONS_PER_BAND) {
-        availableBandLevels.push(bandLevel)
+      if (approvedCount < MAX_APPROVED_SUGGESTIONS_PER_LEVEL && pendingCount < MAX_PENDING_SUGGESTIONS_PER_LEVEL) {
+        availableLevels.push(level)
       }
     }
 
-    return availableBandLevels
+    return availableLevels
   }
 
-  private resolveTargetBandLevels(lexicalBand: number): VocabularyBandLevel[] {
-    if (lexicalBand >= 8) return [8]
-    if (lexicalBand >= 7) return [7]
-    return [6]
+  private resolveTargetLevels(lexicalBand: number): VocabularySuggestionLevel[] {
+    if (lexicalBand >= 8) return [VOCABULARY_SUGGESTION_LEVEL.ADVANCED]
+    if (lexicalBand >= 7) return [VOCABULARY_SUGGESTION_LEVEL.INTERMEDIATE]
+    return [VOCABULARY_SUGGESTION_LEVEL.BASIC]
   }
 
   private getLexicalBand(attempt: AttemptType, evaluation: Evaluation) {
@@ -190,8 +190,8 @@ export class VocabularyExtractionService {
     return scores?.grammar ?? evaluation.grammar?.band ?? 0
   }
 
-  private isValidBandLevel(value: number): value is VocabularyBandLevel {
-    return VOCABULARY_BAND_LEVEL.includes(value as VocabularyBandLevel)
+  private isValidLevel(value: string): value is VocabularySuggestionLevel {
+    return Object.values(VOCABULARY_SUGGESTION_LEVEL).includes(value as VocabularySuggestionLevel)
   }
 
   private overlapsIssue(normalizedText: string, issueSpans: string[]) {

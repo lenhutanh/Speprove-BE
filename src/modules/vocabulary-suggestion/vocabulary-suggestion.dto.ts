@@ -1,5 +1,5 @@
 import {
-  VocabularyBandLevel,
+  VocabularySuggestionLevel,
   VocabularySuggestionKind,
   VocabularySuggestionSource,
   VocabularySuggestionStatus
@@ -14,7 +14,7 @@ export type VocabularySuggestionDto = {
   example: string
   status: VocabularySuggestionStatus
   source: VocabularySuggestionSource
-  bandLevel: VocabularyBandLevel
+  level: VocabularySuggestionLevel
   occurrenceCount: number
   lastOccurredAt?: Date
   createdAt?: Date
@@ -33,5 +33,5 @@ export type PublicVocabularySuggestionDto = {
   type: VocabularySuggestionKind
   meaning: string
   example: string
-  bandLevel: VocabularyBandLevel
+  level: VocabularySuggestionLevel
 }

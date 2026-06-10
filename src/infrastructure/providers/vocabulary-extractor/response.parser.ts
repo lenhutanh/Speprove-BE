@@ -1,8 +1,8 @@
 import { singleton } from 'tsyringe'
 import {
-  VocabularyBandLevel,
+  VocabularySuggestionLevel,
   VocabularySuggestionKind,
-  VOCABULARY_BAND_LEVEL,
+  VOCABULARY_SUGGESTION_LEVEL,
   VOCABULARY_SUGGESTION_KIND
 } from '~/modules/vocabulary-suggestion/vocabulary-suggestion.constants'
 import { ExtractedVocabularyItem } from './vocabulary-extractor.interface'
@@ -22,18 +22,18 @@ export class VocabularyExtractionResponseParser {
         const type = this.parseKind(record.type)
         const meaningVi = this.cleanString(record.meaningVi)
         const example = this.cleanString(record.example)
-        const bandLevel = this.parseBandLevel(record.bandLevel)
+        const level = this.parseLevel(record.level)
         const confidence = this.parseConfidence(record.confidence)
         const reason = this.cleanString(record.reason)
 
-        if (!text || !type || !meaningVi || !example || !bandLevel) return null
+        if (!text || !type || !meaningVi || !example || !level) return null
 
         return {
           text,
           type,
           meaningVi,
           example,
-          bandLevel,
+          level,
           confidence,
           reason
         }
@@ -67,10 +67,10 @@ export class VocabularyExtractionResponseParser {
       : null
   }
 
-  private parseBandLevel(value: unknown): VocabularyBandLevel | null {
-    const bandLevel = Number(value)
-    return VOCABULARY_BAND_LEVEL.includes(bandLevel as VocabularyBandLevel)
-      ? (bandLevel as VocabularyBandLevel)
+  private parseLevel(value: unknown): VocabularySuggestionLevel | null {
+    const level = typeof value === 'string' ? value.trim().toLowerCase() : ''
+    return Object.values(VOCABULARY_SUGGESTION_LEVEL).includes(level as VocabularySuggestionLevel)
+      ? (level as VocabularySuggestionLevel)
       : null
   }
 

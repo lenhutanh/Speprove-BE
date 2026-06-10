@@ -2,7 +2,7 @@ import { StatusCodes } from 'http-status-codes'
 import { inject, singleton } from 'tsyringe'
 import { QueryBuilder } from '~/common/base'
 import {
-  VocabularyBandLevel,
+  VocabularySuggestionLevel,
   VocabularySuggestionStatus,
   VOCABULARY_SUGGESTION_SOURCE,
   VOCABULARY_SUGGESTION_STATUS
@@ -21,7 +21,7 @@ import { VocabularySuggestionMapper } from './vocabulary-suggestion.mapper'
 
 type GetApprovedByQuestionOptions = {
   questionId: string
-  bandLevel?: VocabularyBandLevel
+  level?: VocabularySuggestionLevel
   limit?: number
 }
 
@@ -51,7 +51,7 @@ export class VocabularySuggestionService {
       type: data.type,
       meaningVi: data.meaningVi.trim(),
       example: data.example.trim(),
-      bandLevel: data.bandLevel,
+      level: data.level,
       status: data.status ?? VOCABULARY_SUGGESTION_STATUS.APPROVED,
       source: VOCABULARY_SUGGESTION_SOURCE.ADMIN,
       occurrenceCount: 0
@@ -65,7 +65,7 @@ export class VocabularySuggestionService {
 
     const qb = new QueryBuilder<VocabularySuggestionType>()
     const { filter, options } = qb
-      .applyFilters(filters, ['questionId', 'status', 'source', 'type', 'bandLevel'])
+      .applyFilters(filters, ['questionId', 'status', 'source', 'type', 'level'])
       .search(['text', 'normalizedText', 'meaningVi', 'example'], search ?? '')
       .sort(sortBy ?? 'createdAt', sortOrder ?? 'desc')
       .populate({ path: 'questionId', select: 'content part' })
@@ -85,20 +85,18 @@ export class VocabularySuggestionService {
       status: VOCABULARY_SUGGESTION_STATUS.APPROVED
     }
 
-    if (options.bandLevel) {
-      filter.bandLevel = options.bandLevel
+    if (options.level) {
+      filter.level = options.level
     }
 
     const result = await this.vocabularySuggestionRepository.findMany(filter as any, {
       limit,
       sort: {
         occurrenceCount: -1,
-        bandLevel: -1,
         lastOccurredAt: -1,
         createdAt: -1
       }
     })
-
     return this.vocabularySuggestionMapper.toPublicResponseList(result)
   }
 
@@ -121,7 +119,7 @@ export class VocabularySuggestionService {
           type: data.type,
           meaningVi: data.meaningVi.trim(),
           example: data.example.trim(),
-          bandLevel: data.bandLevel,
+          level: data.level,
           status: VOCABULARY_SUGGESTION_STATUS.PENDING,
           source: VOCABULARY_SUGGESTION_SOURCE.LLM
         },
@@ -177,4 +175,3 @@ export class VocabularySuggestionService {
     return text.trim().replace(/\s+/g, ' ')
   }
 }
-
