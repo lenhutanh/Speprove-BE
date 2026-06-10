@@ -10,7 +10,7 @@ export class VocabularySuggestionMapper extends BaseMapper<VocabularySuggestionT
 
     return {
       id: entity._id.toString(),
-      bandLevel: entity.bandLevel,
+      level: entity.level,
       example: entity.example,
       meaning: entity.meaningVi,
       questionId: question.id,
@@ -34,7 +34,7 @@ export class VocabularySuggestionMapper extends BaseMapper<VocabularySuggestionT
       type: entity.type,
       meaning: entity.meaningVi,
       example: entity.example,
-      bandLevel: entity.bandLevel
+      level: entity.level
     }
   }
 

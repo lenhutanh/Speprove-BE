@@ -23,10 +23,10 @@ Rules:
 - Do not extract fillers, generic fragments, awkward expressions, or low-value everyday wording.
 - Do not force items. Return [] if there is nothing worth learning.
 - Do not extract items that overlap lexicalIssues or grammarIssues.
-- Target band levels: ${this.formatTargetBandLevels(input.targetBandLevels)}.
-- Band 6 = useful topic vocabulary.
-- Band 7 = more precise/reusable than everyday wording.
-- Band 8 = idiomatic, nuanced, or highly flexible.
+- Target levels: ${this.formatTargetLevels(input.targetLevels)}.
+- basic = common words/phrases, safe for most learners.
+- intermediate = natural collocations and topic-specific phrases.
+- advanced = precise, nuanced, idiomatic, or less common expressions.
 
 Question:
 ${input.question}
@@ -54,7 +54,7 @@ Return JSON only:
       "type": "word|phrase|idiom",
       "meaningVi": "Vietnamese meaning",
       "example": "natural IELTS Speaking sentence",
-      "bandLevel": 6,
+      "level": "basic|intermediate|advanced",
       "confidence": 0.85
     }
   ]
@@ -72,7 +72,7 @@ Return JSON only:
     )
   }
 
-  private formatTargetBandLevels(bandLevels?: number[]) {
-    return bandLevels?.length ? bandLevels.join(', ') : '6, 7, 8'
+  private formatTargetLevels(levels?: string[]) {
+    return levels?.length ? levels.join(', ') : 'basic, intermediate, advanced'
   }
 }

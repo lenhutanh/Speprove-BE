@@ -1,8 +1,8 @@
 import mongoose from 'mongoose'
 import { BaseSchemaOptions } from '~/common/base'
 import {
-  VOCABULARY_BAND_LEVEL,
   VOCABULARY_SUGGESTION_KIND,
+  VOCABULARY_SUGGESTION_LEVEL,
   VOCABULARY_SUGGESTION_SOURCE,
   VOCABULARY_SUGGESTION_STATUS
 } from './vocabulary-suggestion.constants'
@@ -27,7 +27,7 @@ const vocabularySuggestionSchema = new mongoose.Schema(
       default: VOCABULARY_SUGGESTION_SOURCE.ADMIN,
       required: true
     },
-    bandLevel: { type: Number, enum: VOCABULARY_BAND_LEVEL, required: true },
+    level: { type: String, enum: Object.values(VOCABULARY_SUGGESTION_LEVEL), required: true },
     occurrenceCount: { type: Number, default: 0, min: 0 },
     lastOccurredAt: { type: Date, default: Date.now }
   },
@@ -36,7 +36,7 @@ const vocabularySuggestionSchema = new mongoose.Schema(
 
 vocabularySuggestionSchema.index({ questionId: 1, normalizedText: 1 }, { unique: true })
 
-vocabularySuggestionSchema.index({ questionId: 1, status: 1, bandLevel: 1, occurrenceCount: -1 })
+vocabularySuggestionSchema.index({ questionId: 1, status: 1, level: 1, occurrenceCount: -1 })
 
 export type VocabularySuggestionType = mongoose.InferSchemaType<typeof vocabularySuggestionSchema> & {
   _id: mongoose.Types.ObjectId
