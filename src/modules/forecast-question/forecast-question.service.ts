@@ -74,10 +74,21 @@ export class ForecastQuestionService {
 
   public async getDetails(id: string) {
     const current = await this.forecastQuestionRepository.findById(id, {
-      populate: {
-        path: 'questionId',
-        populate: { path: 'parentId' }
-      }
+      populate: [
+        {
+          path: 'questionId',
+          populate: { path: 'parentId' }
+        },
+        {
+          path: 'forecastId',
+          select: 'name slug'
+        },
+        {
+          path: 'forecastTopicId',
+          select: 'topicId',
+          populate: { path: 'topicId', select: 'name slug' }
+        }
+      ]
     })
 
     if (!current) {
@@ -128,12 +139,12 @@ export class ForecastQuestionService {
 
   private async buildNavigationFilter(current: any) {
     const filter: any = {
-      forecastId: current.forecastId,
+      forecastId: this.getRelationId(current.forecastId),
       part: current.part
     }
 
     if (current.part === PART_KIND.ONE) {
-      filter.forecastTopicId = current.forecastTopicId
+      filter.forecastTopicId = this.getRelationId(current.forecastTopicId)
       return filter
     }
 
@@ -145,13 +156,17 @@ export class ForecastQuestionService {
     }
 
     if (current.part === PART_KIND.THREE) {
-      const questionIds = await this.getPart3QuestionIdsByParent(current.questionId.parentId)
+      const questionIds = await this.getPart3QuestionIdsByParent(this.getRelationId(current.questionId.parentId))
 
       filter.questionId = { $in: questionIds }
       return filter
     }
 
     return filter
+  }
+
+  private getRelationId(value: any) {
+    return value?._id ?? value
   }
 
   private async getPart2QuestionIdsByCategory(category: string) {

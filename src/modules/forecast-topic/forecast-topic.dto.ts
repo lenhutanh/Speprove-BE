@@ -1,8 +1,11 @@
+import { ForecastSummaryDto } from '../forecast/forecast.dto'
+import { TopicSummaryDto } from '../topic/topic.dto'
+
 export type ForecastTopicResponseDto = {
   id: string
-  forecastId: string
+  forecast?: ForecastSummaryDto
   order: number
-  topicId: string
+  topic: TopicSummaryDto
   name: string
   slug: string
 }

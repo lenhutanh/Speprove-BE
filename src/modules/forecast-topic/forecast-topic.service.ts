@@ -57,7 +57,10 @@ export class ForecastTopicService {
 
   public async getDetails(id: string) {
     const forecastTopic = await this.forecastTopicRepository.findById(id, {
-      populate: 'topicId'
+      populate: [
+        { path: 'topicId', select: 'name slug' },
+        { path: 'forecastId', select: 'name slug' }
+      ]
     })
     if (!forecastTopic) throw new AppError('Forecast topic not found', StatusCodes.NOT_FOUND)
     return this.forecastTopicMapper.toResponse(forecastTopic)
