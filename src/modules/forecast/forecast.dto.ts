@@ -11,3 +11,9 @@ export type ForecastResponseDto = {
   // isActive: boolean
   createdAt: string
 }
+
+export type ForecastSummaryDto = {
+  id: string
+  name: string
+  slug: string
+}

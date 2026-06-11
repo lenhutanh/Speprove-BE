@@ -1,10 +1,10 @@
 export const PART2_CATEGORY = {
-  OBJECT: 'Object',
-  PERSON: 'Person',
-  EVENT: 'Event',
-  ACTIVITY: 'Activity',
-  PLACE: 'Place',
-  FAVOURITE: 'Favourite'
+  OBJECT: 'object',
+  PERSON: 'person',
+  EVENT: 'event',
+  ACTIVITY: 'activity',
+  PLACE: 'place',
+  FAVOURITE: 'favourite'
 } as const
 
 export type Part23CategoryValue = (typeof PART2_CATEGORY)[keyof typeof PART2_CATEGORY]
