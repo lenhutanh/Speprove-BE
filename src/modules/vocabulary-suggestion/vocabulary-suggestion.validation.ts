@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createSchema, querySchema, updateSchema } from '~/common/base'
+import { createSchema, idParamSchema, querySchema, simpleQuerySchema, updateSchema } from '~/common/base'
 import {
   VOCABULARY_SUGGESTION_KIND,
   VOCABULARY_SUGGESTION_LEVEL,
@@ -39,3 +39,7 @@ export const approvedVocabularySuggestionQuerySchema = querySchema({
   questionId: objectIdSchema,
   level: z.nativeEnum(VOCABULARY_SUGGESTION_LEVEL).optional()
 })
+
+export const getVocabularyQuerySchema = simpleQuerySchema({
+  voiceId: objectIdSchema
+}).merge(idParamSchema)

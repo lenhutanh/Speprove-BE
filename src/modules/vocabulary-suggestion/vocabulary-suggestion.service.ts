@@ -18,6 +18,7 @@ import {
   VocabularySuggestionQuery
 } from './vocabulary-suggestion.type'
 import { VocabularySuggestionMapper } from './vocabulary-suggestion.mapper'
+import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 
 type GetApprovedByQuestionOptions = {
   questionId: string
@@ -30,7 +31,8 @@ export class VocabularySuggestionService {
   constructor(
     @inject(TOKENS.IVocabularySuggestionRepository)
     private readonly vocabularySuggestionRepository: IVocabularySuggestionRepository,
-    private readonly vocabularySuggestionMapper: VocabularySuggestionMapper
+    private readonly vocabularySuggestionMapper: VocabularySuggestionMapper,
+    private readonly generatedAudioService: GeneratedAudioService
   ) {}
 
   public async createManual(data: CreateVocabularySuggestionData) {
@@ -173,5 +175,18 @@ export class VocabularySuggestionService {
 
   private cleanText(text: string) {
     return text.trim().replace(/\s+/g, ' ')
+  }
+
+  public async getVocabularyAudio(id: string, voiceId: string) {
+    const vocab = await this.vocabularySuggestionRepository.findOne({
+      _id: id,
+      status: VOCABULARY_SUGGESTION_STATUS.APPROVED
+    })
+
+    if (!vocab) throw new AppError('Vocabulary suggestion not found', StatusCodes.NOT_FOUND)
+
+    const audio = await this.generatedAudioService.getOrCreate({ text: vocab.text, voiceId })
+
+    return { audioUrl: audio.audioUrl }
   }
 }

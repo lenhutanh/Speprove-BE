@@ -7,6 +7,7 @@ import { VocabularySuggestionController } from './vocabulary-suggestion.controll
 import {
   approvedVocabularySuggestionQuerySchema,
   createVocabularySuggestionSchema,
+  getVocabularyQuerySchema,
   updateVocabularySuggestionSchema,
   vocabularySuggestionQuerySchema
 } from './vocabulary-suggestion.validation'
@@ -51,6 +52,10 @@ router
     validateMiddleware(idParamSchema),
     bindHandler(VocabularySuggestionController, 'hideVocab')
   )
+
+router
+  .route('/:id/audio')
+  .get(validateMiddleware(getVocabularyQuerySchema), bindHandler(VocabularySuggestionController, 'getVocabularyAudio'))
 
 router
   .route('/:id')

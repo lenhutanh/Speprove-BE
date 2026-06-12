@@ -39,4 +39,12 @@ export class VocabularySuggestionController {
     await this.vocabularySuggestionService.hide(req.validated.params.id)
     return ResponseTransformer.successNoData(res, 'Hide vocabulary suggestion successfully')
   }
+
+  public async getVocabularyAudio(req: Request, res: Response) {
+    const result = await this.vocabularySuggestionService.getVocabularyAudio(
+      req.validated.params.id,
+      req.validated.query.voiceId
+    )
+    return ResponseTransformer.success(res, result, 'Get vocabulary audio successfully')
+  }
 }

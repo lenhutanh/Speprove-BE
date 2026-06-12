@@ -11,15 +11,13 @@ import { toObjectId } from '~/common/utils'
 import { QuestionMapper } from './question.mapper'
 import { checkSpelling, getSuggestions } from './question-spelling.service'
 import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
-import { VoiceService } from '../voice/voice.service'
 
 @singleton()
 export class QuestionService {
   constructor(
     @inject(TOKENS.IQuestionRepository) private readonly questionRepository: IQuestionRepository,
     private readonly questionMapper: QuestionMapper,
-    private readonly generatedAudioService: GeneratedAudioService,
-    private readonly voiceService: VoiceService
+    private readonly generatedAudioService: GeneratedAudioService
   ) {}
 
   public async createNew(data: CreateQuestionBodyType) {
@@ -86,10 +84,7 @@ export class QuestionService {
   }
 
   public async getQuestionAudio(questionId: string, voiceId: string) {
-    const [question] = await Promise.all([
-      this.questionRepository.findById(questionId),
-      this.voiceService.findActiveById(voiceId)
-    ])
+    const question = await this.questionRepository.findById(questionId)
 
     if (!question) throw new AppError('Question not found', StatusCodes.NOT_FOUND)
 
