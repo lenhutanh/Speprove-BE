@@ -13,7 +13,7 @@ type AuthTokens = { accessToken: string; refreshToken: string; refreshTokenExpir
 
 @injectable()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   public async login(req: Request, res: Response) {
     const metadata = {
@@ -93,7 +93,7 @@ export class AuthController {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'none' : 'lax',
-      maxAge: tokenLifeToMs(env.ACCESS_TOKEN_LIFE, 'ACCESS_TOKEN_LIFE')
+      maxAge: tokenLifeToMs(env.ACCESS_TOKEN_COOKIE_LIFE, 'ACCESS_TOKEN_COOKIE_LIFE')
     })
 
     res.cookie('refreshToken', tokens.refreshToken, {
