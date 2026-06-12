@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
+import { StringValue } from 'ms'
 
 const envSchema = z.object({
   APP_NAME: z.string(),
@@ -16,9 +17,10 @@ const envSchema = z.object({
 
   // Auth
   ACCESS_TOKEN_SECRET_SIGNATURE: z.string().min(32),
-  ACCESS_TOKEN_LIFE: z.custom<jwt.SignOptions['expiresIn']>(),
+  ACCESS_TOKEN_LIFE: z.custom<StringValue>(),
   REFRESH_TOKEN_SECRET_SIGNATURE: z.string().min(32),
-  REFRESH_TOKEN_LIFE: z.custom<jwt.SignOptions['expiresIn']>(),
+  REFRESH_TOKEN_LIFE: z.custom<StringValue>(),
+  ACCESS_TOKEN_COOKIE_LIFE: z.custom<StringValue>(),
 
   // Redis
   REDIS_HOST: z.string().default('127.0.0.1'),
