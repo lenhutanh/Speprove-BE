@@ -5,4 +5,3 @@ import { SpeakingSessionRepository } from './speaking-session.repository'
 export const registerSpeakingSessionModule = () => {
   container.registerSingleton(TOKENS.ISpeakingSessionRepository, SpeakingSessionRepository)
 }
-

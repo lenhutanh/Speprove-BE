@@ -5,4 +5,3 @@ import { VocabularySuggestionRepository } from './vocabulary-suggestion.reposito
 export const registerVocabularySuggestionModule = () => {
   container.registerSingleton(TOKENS.IVocabularySuggestionRepository, VocabularySuggestionRepository)
 }
-

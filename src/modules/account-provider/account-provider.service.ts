@@ -18,4 +18,3 @@ export class AccountProviderService {
     return await this.accountProviderRepository.create(data, { session })
   }
 }
-

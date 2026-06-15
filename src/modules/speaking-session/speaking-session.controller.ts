@@ -32,4 +32,9 @@ export class SpeakingSessionController {
     const result = await this.speakingSessionService.getDetails(req.user._id, req.validated.params.id)
     return ResponseTransformer.success(res, result, 'Get speaking session details successfully')
   }
+
+  public async retrySession(req: AuthenticatedRequest, res: Response) {
+    const result = await this.speakingSessionService.retrySession(req.user._id, req.validated.params.id)
+    return ResponseTransformer.success(res, result, 'Retry speaking session successfully')
+  }
 }

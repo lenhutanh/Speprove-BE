@@ -5,4 +5,3 @@ import { TopicRepository } from './repositories/topic.repository'
 export const registerTopicModule = () => {
   container.registerSingleton(TOKENS.ITopicRepository, TopicRepository)
 }
-

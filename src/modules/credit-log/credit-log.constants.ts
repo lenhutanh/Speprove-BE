@@ -1,7 +1,8 @@
 export const CREDIT_LOG_REF_TYPE = {
   PAYMENT: 'payment',
   USAGE: 'usage',
-  MANUAL: 'manual'
+  MANUAL: 'manual',
+  REFUND: 'refund'
 } as const
 
 export type CreditLogRefType = (typeof CREDIT_LOG_REF_TYPE)[keyof typeof CREDIT_LOG_REF_TYPE]

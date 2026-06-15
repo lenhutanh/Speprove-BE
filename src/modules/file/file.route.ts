@@ -29,6 +29,6 @@ router
     validateMiddleware(uploadAudioSchema),
     validateFileContent.audio,
     bindHandler(FileController, 'uploadAudio')
-)
+  )
 
 export const fileRoutes = router

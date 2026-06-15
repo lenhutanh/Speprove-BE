@@ -7,4 +7,3 @@ export const registerFileModule = () => {
   // container.register(TOKENS.DomainEventHandler, { useClass: FileUploadedHandler })
   // container.registerSingleton(FileWorker, FileWorker)
 }
-
