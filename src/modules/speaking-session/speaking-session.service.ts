@@ -18,9 +18,11 @@ import { AttemptService } from '../attempt/attempt.service'
 import { InstructionAudioService } from '../instruction-audio/instruction-audio.service'
 import { INSTRUCTION_KEYS, InstructionKey } from '../instruction-audio/instruction-audio.constants'
 import { PART_KIND } from '../question/question.constants'
-import { SESSION_STATUS, SPEAKING_SESSION_TYPE } from './speaking-session.constants'
+import { SESSION_STATUS, SPEAKING_SESSION_TYPE, MAX_RETRY } from './speaking-session.constants'
 import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
 import { calculateCreditCost } from '../credit-log/credit.util'
+import { ATTEMPT_STATUS } from '../attempt/attempt.constants'
+import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 
 @singleton()
 export class SpeakingSessionService {
@@ -34,7 +36,8 @@ export class SpeakingSessionService {
     private readonly accountService: AccountService,
     private readonly creditLogService: CreditLogService,
     private readonly attemptService: AttemptService,
-    private readonly instructionAudioService: InstructionAudioService
+    private readonly instructionAudioService: InstructionAudioService,
+    private readonly speakingProducer: SpeakingProducer
   ) {}
 
   public async createNew(userId: string, data: CreateSpeakingSessionBodyType) {
@@ -178,7 +181,7 @@ export class SpeakingSessionService {
       throw new AppError('You do not own this session', StatusCodes.FORBIDDEN)
     }
 
-    if (speakingSession.status === SESSION_STATUS.COMPLETED) {
+    if (speakingSession.status === SESSION_STATUS.COMPLETED || speakingSession.status === SESSION_STATUS.PROCESSING) {
       const wellDoneAudioUrl = await this.instructionAudioService.getUrlByVoiceIdAndKey(
         speakingSession.voiceId.toString(),
         INSTRUCTION_KEYS.WELL_DONE
@@ -280,5 +283,132 @@ export class SpeakingSessionService {
 
   public async updateOne(filter: any, updateData: any, options?: { session?: any; [key: string]: any }) {
     return this.speakingSessionRepository.updateOne(filter, updateData, options)
+  }
+
+  public getSessionTotalQuestions(questions: any): number {
+    let count = 0
+    if (questions.part1) {
+      count += questions.part1.reduce((sum: number, topic: any) => sum + (topic.forecastQuestionIds?.length || 0), 0)
+    }
+    if (questions.part2) {
+      count += 1
+    }
+    if (questions.part3) {
+      count += questions.part3.length || 0
+    }
+    return count
+  }
+
+  public async refreshSessionStatus(sessionId: string) {
+    const session = await this.speakingSessionRepository.findById(sessionId)
+    if (!session) return
+
+    const attempts = await this.attemptService.findBySpeakingSessionId(sessionId)
+    const totalQuestions = this.getSessionTotalQuestions(session.questions)
+
+    if (attempts.length < totalQuestions) return
+
+    const hasFailed = attempts.some((a) => a.status === ATTEMPT_STATUS.FAILED)
+    if (hasFailed) {
+      if (session.status !== SESSION_STATUS.FAILED) {
+        await this.speakingSessionRepository.updateById(sessionId, { status: SESSION_STATUS.FAILED })
+      }
+      return
+    }
+
+    const allDone = attempts.every((a) => a.status === ATTEMPT_STATUS.DONE)
+    if (allDone) {
+      if (session.status !== SESSION_STATUS.COMPLETED && !session.scoringQueuedAt) {
+        const updated = await this.speakingSessionRepository.updateOne(
+          { _id: sessionId, scoringQueuedAt: null },
+          { $set: { scoringQueuedAt: new Date() } }
+        )
+        if (updated) {
+          await this.speakingProducer.scoreSession({ speakingSessionId: sessionId })
+        }
+      }
+      return
+    }
+
+    if (session.status !== SESSION_STATUS.PROCESSING) {
+      await this.speakingSessionRepository.updateById(sessionId, { status: SESSION_STATUS.PROCESSING })
+    }
+  }
+
+  public async checkAndRefund(sessionId: string): Promise<void> {
+    const session = await this.speakingSessionRepository.findById(sessionId)
+    if (!session) return
+
+    if (session.status === SESSION_STATUS.FAILED && session.retryCount >= MAX_RETRY && !session.refundedAt) {
+      await this.refundSession(session)
+    }
+  }
+
+  private async refundSession(session: SpeakingSessionType) {
+    const pointsToRefund = calculateCreditCost(session.type)
+
+    await this.speakingSessionRepository.withTransaction(async (dbSession) => {
+      const updated = await this.speakingSessionRepository.updateOne(
+        { _id: session._id, refundedAt: null },
+        { $set: { refundedAt: new Date() } },
+        { session: dbSession }
+      )
+
+      if (!updated) {
+        return
+      }
+
+      const account = await this.accountService.addBalance(session.userId.toString(), pointsToRefund, dbSession)
+
+      await this.creditLogService.create(
+        {
+          userId: session.userId.toString(),
+          amount: pointsToRefund,
+          reason: `Hoàn tiền thi thử (lỗi hệ thống)`,
+          refType: CREDIT_LOG_REF_TYPE.REFUND,
+          refId: session._id,
+          balanceBefore: account.balance - pointsToRefund,
+          balanceAfter: account.balance
+        },
+        dbSession
+      )
+    })
+  }
+
+  public async retrySession(userId: string, speakingSessionId: string) {
+    const session = await this.speakingSessionRepository.findById(speakingSessionId)
+    if (!session) throw new AppError('Speaking session not found', StatusCodes.NOT_FOUND)
+
+    if (session.userId.toString() !== userId) {
+      throw new AppError('You do not own this session', StatusCodes.FORBIDDEN)
+    }
+
+    if (session.status !== SESSION_STATUS.FAILED) {
+      throw new AppError('Only failed sessions can be retried', StatusCodes.BAD_REQUEST)
+    }
+
+    if (session.refundedAt) {
+      throw new AppError('Cannot retry a refunded session', StatusCodes.BAD_REQUEST)
+    }
+
+    const attempts = await this.attemptService.findBySpeakingSessionId(speakingSessionId)
+    const failedAttempts = attempts.filter((a) => a.status === ATTEMPT_STATUS.FAILED)
+
+    if (failedAttempts.length === 0) {
+      throw new AppError('No failed attempts found in this session', StatusCodes.BAD_REQUEST)
+    }
+
+    await this.speakingSessionRepository.updateById(speakingSessionId, {
+      status: SESSION_STATUS.PROCESSING,
+      $inc: { retryCount: 1 },
+      finishedAt: null,
+      scoringQueuedAt: null
+    })
+
+    for (const attempt of failedAttempts) {
+      await this.attemptService.retryAttempt(attempt)
+    }
+
+    return { success: true }
   }
 }

@@ -5,4 +5,3 @@ import { PermissionGroupRepository } from './repositories/permission-group.repos
 export const registerPermissionGroupModule = () => {
   container.registerSingleton(TOKENS.IPermissionGroupRepository, PermissionGroupRepository)
 }
-

@@ -13,7 +13,7 @@ type AuthTokens = { accessToken: string; refreshToken: string; refreshTokenExpir
 
 @injectable()
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   public async login(req: Request, res: Response) {
     const metadata = {

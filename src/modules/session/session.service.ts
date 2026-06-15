@@ -97,4 +97,3 @@ export class SessionService {
     return await this.sessionRepository.revokeByUserIdAndSid(userId, sid, reason)
   }
 }
-

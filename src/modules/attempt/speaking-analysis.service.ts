@@ -41,7 +41,7 @@ export class SpeakingAnalysisService {
     private readonly llmEvaluator: LLMEvaluator
   ) {}
 
-  public async transcribe(data: TranscribeJobData): Promise<void> {
+  public async transcribe(data: TranscribeJobData, jobAttempts = 1, jobMaxAttempts = 1): Promise<void> {
     const { attemptId, audioUrl, questionContent, part } = data
 
     await this.attemptRepository.updateById(attemptId, {
@@ -100,12 +100,14 @@ export class SpeakingAnalysisService {
         part
       })
     } catch (error) {
-      await this._markAttemptFailed(attemptId, 'transcribe', error)
+      if (jobAttempts + 1 >= jobMaxAttempts) {
+        await this._markAttemptFailed(attemptId, 'transcribe', error)
+      }
       throw error
     }
   }
 
-  public async assess(data: AssessJobData): Promise<void> {
+  public async assess(data: AssessJobData, jobAttempts = 1, jobMaxAttempts = 1): Promise<void> {
     const { attemptId, transcript, referenceTranscript, audioUrl, questionContent, part } = data
 
     await this.attemptRepository.updateById(attemptId, {
@@ -166,12 +168,14 @@ export class SpeakingAnalysisService {
         part
       })
     } catch (error) {
-      await this._markAttemptFailed(attemptId, 'assess', error)
+      if (jobAttempts + 1 >= jobMaxAttempts) {
+        await this._markAttemptFailed(attemptId, 'assess', error)
+      }
       throw error
     }
   }
 
-  async evaluate(data: EvaluateJobData): Promise<void> {
+  async evaluate(data: EvaluateJobData, jobAttempts = 1, jobMaxAttempts = 1): Promise<void> {
     const { attemptId, questionContent, speechAnalysis, transcript, part } = data
 
     await this.attemptRepository.updateById(attemptId, {
@@ -206,17 +210,6 @@ export class SpeakingAnalysisService {
           },
           { upsert: true }
         )
-
-        await this.attemptRepository.updateById(attemptId, {
-          $set: {
-            'analysisMeta.finishedAt': new Date(),
-            'analysisMeta.currentStage': 'evaluate',
-            'analysisMeta.failedStage': 'evaluate',
-            'analysisMeta.error': 'LLM evaluator output failed backend validation',
-            'analysisMeta.warnings': warnings,
-            status: ATTEMPT_STATUS.FAILED
-          }
-        })
 
         const validationError = new Error(`LLM evaluator output failed backend validation for attempt ${attemptId}`)
         validationError.name = 'EvaluatorValidationError'
@@ -271,29 +264,15 @@ export class SpeakingAnalysisService {
 
       if (updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
         const sessionId = updatedAttempt.speakingSessionId.toString()
-        const session = await this.speakingSessionService.findById(sessionId)
-
-        let totalQuestions = 0
-        if (session.questions.part1) {
-          totalQuestions += session.questions.part1.reduce((sum, topic) => sum + topic.forecastQuestionIds.length, 0)
-        }
-        if (session.questions.part2) totalQuestions += 1
-        if (session.questions.part3) totalQuestions += session.questions.part3.length
-
-        const doneCount = await this.attemptRepository.count({
-          speakingSessionId: sessionId,
-          status: ATTEMPT_STATUS.DONE
-        })
-        console.log(`[Session ${sessionId}] Progress: ${doneCount} / ${totalQuestions}`)
-
-        if (doneCount === totalQuestions) {
-          console.log(`Activate session score aggregation for session: ${sessionId}`)
-          await this.speakingProducer.scoreSession({ speakingSessionId: sessionId })
-        }
+        await this.speakingSessionService.refreshSessionStatus(sessionId)
       }
     } catch (error) {
-      if (!(error instanceof Error && error.name === 'EvaluatorValidationError')) {
-        await this._markAttemptFailed(attemptId, 'evaluate', error)
+      if (jobAttempts + 1 >= jobMaxAttempts) {
+        const errorMessage =
+          error instanceof Error && error.name === 'EvaluatorValidationError'
+            ? 'LLM evaluator output failed backend validation'
+            : error
+        await this._markAttemptFailed(attemptId, 'evaluate', errorMessage)
       }
       throw error
     }
@@ -357,7 +336,7 @@ export class SpeakingAnalysisService {
   }
 
   private async _markAttemptFailed(attemptId: string, stage: AnalysisStage, error: unknown): Promise<void> {
-    await this.attemptRepository.updateById(attemptId, {
+    const updatedAttempt = await this.attemptRepository.updateById(attemptId, {
       $set: {
         status: ATTEMPT_STATUS.FAILED,
         'analysisMeta.finishedAt': new Date(),
@@ -366,6 +345,12 @@ export class SpeakingAnalysisService {
         'analysisMeta.error': this._formatError(error)
       }
     })
+
+    if (updatedAttempt && updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
+      const sessionId = updatedAttempt.speakingSessionId.toString()
+      await this.speakingSessionService.refreshSessionStatus(sessionId)
+      await this.speakingSessionService.checkAndRefund(sessionId)
+    }
   }
 
   private _formatError(error: unknown): string {

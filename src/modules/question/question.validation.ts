@@ -1,5 +1,11 @@
 import { z } from 'zod'
-import { createUnionSchema, idParamSchema, querySchema, simpleQuerySchema, updateSchema } from '~/common/base/base.validation'
+import {
+  createUnionSchema,
+  idParamSchema,
+  querySchema,
+  simpleQuerySchema,
+  updateSchema
+} from '~/common/base/base.validation'
 import { PART2_CATEGORY, PART_KIND } from './question.constants'
 import { objectIdSchema } from '~/common/utils'
 

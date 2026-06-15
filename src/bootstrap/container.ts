@@ -70,4 +70,3 @@ export function setupContainer(): void {
 
   console.log('DI container ready\n')
 }
-

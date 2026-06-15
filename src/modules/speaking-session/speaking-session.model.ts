@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base'
-import { SPEAKING_SESSION_TYPE } from './speaking-session.constants'
+import { SESSION_STATUS, SPEAKING_SESSION_TYPE } from './speaking-session.constants'
 
 const sessionResultSchema = new mongoose.Schema(
   {
@@ -42,11 +42,14 @@ const speakingSessionSchema = new mongoose.Schema(
     },
     voiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Voice', required: true },
     questions: { type: sessionQuestionSchema, required: true },
-    status: { type: Number, enum: [0, 1, 2], default: 0 },
+    status: { type: Number, enum: Object.values(SESSION_STATUS), default: SESSION_STATUS.NOT_STARTED },
     currentQuestionIndex: { type: Number, default: 0 },
     result: { type: sessionResultSchema, default: null },
     startedAt: { type: Date, default: Date.now },
-    finishedAt: { type: Date, default: null }
+    finishedAt: { type: Date, default: null },
+    retryCount: { type: Number, default: 0 },
+    refundedAt: { type: Date, default: null },
+    scoringQueuedAt: { type: Date, default: null }
   },
   BaseSchemaOptions
 )

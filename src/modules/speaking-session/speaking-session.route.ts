@@ -37,6 +37,14 @@ router
   )
 
 router
+  .route('/:id/retry')
+  .post(
+    authMiddleware.isAuthorized,
+    validateMiddleware(idParamSchema),
+    bindHandler(SpeakingSessionController, 'retrySession')
+  )
+
+router
   .route('/:id')
   .get(
     authMiddleware.isAuthorized,

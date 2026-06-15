@@ -126,4 +126,3 @@ export class AccountService {
     return defaultVoice.id
   }
 }
-

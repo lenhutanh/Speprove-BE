@@ -18,19 +18,25 @@ export class SpeakingProducer extends BaseProducer {
   public async transcribe(data: TranscribeJobData) {
     console.log('Start transcribing at: ', Date.now())
     return this.addJob(JOB_NAME.SPEAKING.TRANSCRIBE, data, {
-      priority: 1
+      priority: 1,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 }
     })
   }
 
   public async assess(data: AssessJobData) {
     console.log('Start assessing at: ', Date.now())
-    return this.addJob(JOB_NAME.SPEAKING.ASSESS, data)
+    return this.addJob(JOB_NAME.SPEAKING.ASSESS, data, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 }
+    })
   }
 
   public async evaluate(data: EvaluateJobData) {
     console.log('Start evaluating at: ', Date.now())
     return this.addJob(JOB_NAME.SPEAKING.EVALUATE, data, {
-      attempts: 2
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 }
     })
   }
 

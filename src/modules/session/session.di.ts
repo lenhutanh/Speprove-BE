@@ -5,4 +5,3 @@ import { SessionRepository } from './repositories/session.repository'
 export const registerSessionModule = () => {
   container.registerSingleton(TOKENS.ISessionRepository, SessionRepository)
 }
-

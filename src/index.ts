@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser'
 import swaggerUi from 'swagger-ui-express'
 import { setupContainer } from './bootstrap/container'
 import { initQuestionSpelling } from './modules/question/question-spelling.service'
-(async () => {
+;(async () => {
   try {
     await initQuestionSpelling()
     setupContainer()

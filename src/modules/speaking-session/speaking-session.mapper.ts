@@ -23,7 +23,10 @@ export class SpeakingSessionMapper extends BaseMapper<SpeakingSessionType, Speak
           }
         : undefined,
       startedAt: entity.startedAt,
-      finishedAt: entity.finishedAt ?? undefined
+      finishedAt: entity.finishedAt ?? undefined,
+      refundedAt: entity.refundedAt ?? undefined,
+      scoringQueuedAt: entity.scoringQueuedAt ?? undefined,
+      retryCount: entity.retryCount ?? undefined
     }
   }
 }

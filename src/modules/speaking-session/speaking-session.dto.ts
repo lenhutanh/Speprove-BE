@@ -14,4 +14,7 @@ export type SpeakingSessionResponseDto = {
   }
   startedAt: Date
   finishedAt?: Date
+  refundedAt?: Date
+  scoringQueuedAt?: Date
+  retryCount?: number
 }

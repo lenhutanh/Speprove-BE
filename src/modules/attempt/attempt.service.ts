@@ -111,10 +111,18 @@ export class AttemptService {
         const newAttempt = await this.attemptRepository.create(attemptPayload, { session })
 
         if (data.mode === SPEAKING_SESSION_MODE.MOCK && speakingSession) {
+          const totalQuestions = this.speakingSessionService.getSessionTotalQuestions(speakingSession.questions)
+          const isLastQuestion = order === totalQuestions - 1
+
           const updateQuery: any = {
             $inc: { currentQuestionIndex: 1 }
           }
-          if (speakingSession.status === SESSION_STATUS.NOT_STARTED) {
+          if (isLastQuestion) {
+            updateQuery.$set = {
+              status: SESSION_STATUS.PROCESSING,
+              finishedAt: new Date()
+            }
+          } else if (speakingSession.status === SESSION_STATUS.NOT_STARTED) {
             updateQuery.$set = { status: SESSION_STATUS.IN_PROGRESS }
           }
 
@@ -292,5 +300,60 @@ export class AttemptService {
     const hasIpaMismatch = !!word.expectedIpa && !!word.spokenIpa && word.expectedIpa.trim() !== word.spokenIpa.trim()
 
     return hasErrorType || hasLowAccuracy || hasIpaMismatch
+  }
+
+  public async retryAttempt(attempt: AttemptType) {
+    const failedStage = attempt.analysisMeta?.failedStage || 'transcribe'
+
+    await this.attemptRepository.updateById(attempt._id, {
+      $set: {
+        status: ATTEMPT_STATUS.PROCESSING,
+        'analysisMeta.currentStage': failedStage
+      },
+      $unset: {
+        'analysisMeta.error': 1,
+        'analysisMeta.failedStage': 1,
+        'analysisMeta.finishedAt': 1
+      }
+    })
+
+    const questionDetails = await this.forecastQuestionService.getDetails(attempt.forecastQuestionId.toString())
+    const audioFile = (await this.fileService.findById(attempt.audioFileId?.toString() || '')) as any
+    const audioUrl = audioFile.aiAudioUrl ?? audioFile.url
+    const questionContent = this._getQuestionContent(questionDetails)
+
+    if (failedStage === 'transcribe') {
+      await this.speakingProducer.transcribe({
+        attemptId: attempt._id.toString(),
+        audioUrl,
+        questionContent,
+        part: attempt.part
+      })
+    } else if (failedStage === 'assess') {
+      const analysis = await this.attemptAnalysisRepository.findOne({ attemptId: attempt._id })
+      const sttTranscript = analysis?.transcription?.sttTranscript || ''
+      const normalizedReferenceText = analysis?.transcription?.normalizedReferenceText || sttTranscript
+
+      await this.speakingProducer.assess({
+        attemptId: attempt._id.toString(),
+        transcript: normalizedReferenceText,
+        referenceTranscript: sttTranscript,
+        audioUrl,
+        questionContent,
+        part: attempt.part
+      })
+    } else if (failedStage === 'evaluate') {
+      const analysis = await this.attemptAnalysisRepository.findOne({ attemptId: attempt._id })
+      const scoringTranscript = analysis?.transcription?.scoringTranscript || ''
+      const speechAnalysis = analysis?.speechAnalysis
+
+      await this.speakingProducer.evaluate({
+        attemptId: attempt._id.toString(),
+        transcript: scoringTranscript,
+        questionContent,
+        speechAnalysis: speechAnalysis as any,
+        part: attempt.part
+      })
+    }
   }
 }
