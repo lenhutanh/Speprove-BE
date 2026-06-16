@@ -75,9 +75,6 @@ export const TOKENS = {
   // Credit log
   ICreditLogRepository: Symbol('ICreditLogRepository'),
 
-  // Instruction audio
-  IInstructionAudioRepository: Symbol('IInstructionAudioRepository'),
-
   // Account provider
   IAccountProviderRepository: Symbol('IAccountProviderRepository'),
 

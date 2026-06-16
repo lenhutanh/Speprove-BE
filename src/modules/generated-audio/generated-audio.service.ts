@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { inject, singleton } from 'tsyringe'
+import { delay, inject, singleton } from 'tsyringe'
 import { STATUS } from '~/common/constants/status.constants'
 import { CLOUD_FOLDERS } from '~/infrastructure/providers/storage/storage.constants'
 import { TOKENS } from '~/common/constants/di.tokens'
@@ -16,6 +16,7 @@ export class GeneratedAudioService {
     @inject(TOKENS.IGeneratedAudioRepository)
     private readonly generatedAudioRepository: IGeneratedAudioRepository,
     private readonly fileService: FileService,
+    @inject(delay(() => VoiceService))
     private readonly voiceService: VoiceService
   ) {}
 

@@ -1,5 +1,4 @@
 export const QUEUE_NAME = {
-  FILE: 'file-queue',
   MAIL: 'mail-queue',
   SPEAKING: 'speaking-queue'
 } as const
@@ -19,8 +18,5 @@ export const JOB_NAME = {
     EVALUATE: 'speaking:evaluate',
     SCORE_SESSION: 'speaking:score-session',
     EXTRACT_VOCABULARY: 'speaking:extract-vocabulary'
-  },
-  INSTRUCTION_AUDIO: {
-    GENERATE: 'instruction-audio:generate'
   }
 } as const

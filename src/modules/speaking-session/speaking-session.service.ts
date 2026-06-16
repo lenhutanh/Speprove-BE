@@ -15,10 +15,16 @@ import { CreditLogService } from '../credit-log/credit-log.service'
 import { QueryBuilder } from '~/common/base'
 import { SpeakingSessionType } from './speaking-session.model'
 import { AttemptService } from '../attempt/attempt.service'
-import { InstructionAudioService } from '../instruction-audio/instruction-audio.service'
-import { INSTRUCTION_KEYS, InstructionKey } from '../instruction-audio/instruction-audio.constants'
+import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 import { PART_KIND } from '../question/question.constants'
-import { SESSION_STATUS, SPEAKING_SESSION_TYPE, MAX_RETRY } from './speaking-session.constants'
+import {
+  SESSION_STATUS,
+  SPEAKING_SESSION_TYPE,
+  MAX_RETRY,
+  INSTRUCTION_KEYS,
+  INSTRUCTION_SCRIPTS,
+  InstructionKey
+} from './speaking-session.constants'
 import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
 import { calculateCreditCost } from '../credit-log/credit.util'
 import { ATTEMPT_STATUS } from '../attempt/attempt.constants'
@@ -36,7 +42,7 @@ export class SpeakingSessionService {
     private readonly accountService: AccountService,
     private readonly creditLogService: CreditLogService,
     private readonly attemptService: AttemptService,
-    private readonly instructionAudioService: InstructionAudioService,
+    private readonly generatedAudioService: GeneratedAudioService,
     private readonly speakingProducer: SpeakingProducer
   ) {}
 
@@ -182,13 +188,13 @@ export class SpeakingSessionService {
     }
 
     if (speakingSession.status === SESSION_STATUS.COMPLETED || speakingSession.status === SESSION_STATUS.PROCESSING) {
-      const wellDoneAudioUrl = await this.instructionAudioService.getUrlByVoiceIdAndKey(
-        speakingSession.voiceId.toString(),
-        INSTRUCTION_KEYS.WELL_DONE
-      )
+      const wellDoneAudio = await this.generatedAudioService.getOrCreate({
+        text: INSTRUCTION_SCRIPTS.wellDone,
+        voiceId: speakingSession.voiceId.toString()
+      })
       return {
         isFinished: true,
-        instruction: wellDoneAudioUrl,
+        instruction: wellDoneAudio.audioUrl,
         question: null
       }
     }
@@ -225,13 +231,13 @@ export class SpeakingSessionService {
 
     const index = speakingSession.currentQuestionIndex
     if (index >= flatQuestions.length) {
-      const wellDoneAudioUrl = await this.instructionAudioService.getUrlByVoiceIdAndKey(
-        speakingSession.voiceId.toString(),
-        INSTRUCTION_KEYS.WELL_DONE
-      )
+      const wellDoneAudio = await this.generatedAudioService.getOrCreate({
+        text: INSTRUCTION_SCRIPTS.wellDone,
+        voiceId: speakingSession.voiceId.toString()
+      })
       return {
         isFinished: true,
-        instruction: wellDoneAudioUrl,
+        instruction: wellDoneAudio.audioUrl,
         question: null
       }
     }
@@ -259,11 +265,18 @@ export class SpeakingSessionService {
 
     let transitionAudioUrl = null
     if (playTransitionKey) {
-      transitionAudioUrl = await this.instructionAudioService.getUrlByVoiceIdAndKey(
-        speakingSession.voiceId.toString(),
-        playTransitionKey
-      )
+      const text = INSTRUCTION_SCRIPTS[playTransitionKey]
+      const transitionAudio = await this.generatedAudioService.getOrCreate({
+        text,
+        voiceId: speakingSession.voiceId.toString()
+      })
+      transitionAudioUrl = transitionAudio.audioUrl
     }
+
+    const questionAudio = await this.generatedAudioService.getOrCreate({
+      text: questionDetails.content,
+      voiceId: speakingSession.voiceId.toString()
+    })
 
     return {
       isFinished: false,
@@ -276,7 +289,8 @@ export class SpeakingSessionService {
         questionId: questionDetails.questionId,
         part: currentContext.part,
         content: questionDetails.content,
-        bulletPoints: questionDetails.bulletPoints || undefined
+        bulletPoints: questionDetails.bulletPoints || undefined,
+        audioUrl: questionAudio.audioUrl
       }
     }
   }

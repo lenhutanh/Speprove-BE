@@ -20,7 +20,6 @@ import { registerForecastTopicModule } from '~/modules/forecast-topic/forecast-t
 import { registerForecastModule } from '~/modules/forecast/forecast.di'
 import { registerGeneratedAudioModule } from '~/modules/generated-audio/generated-audio.di'
 import { registerGroupModule } from '~/modules/group/group.di'
-import { registerInstructionAudioModule } from '~/modules/instruction-audio/instruction-audio.di'
 import { registerMailModule } from '~/modules/mail/mail.di'
 import { registerPaymentModule } from '~/modules/payment/payment.di'
 import { registerPermissionGroupModule } from '~/modules/permission-group/permission-group.di'
@@ -63,7 +62,6 @@ export function setupContainer(): void {
   registerPaymentModule()
   registerCreditPackageModule()
   registerCreditLogModule()
-  registerInstructionAudioModule()
   registerAccountProviderModule()
   registerGeneratedAudioModule()
   registerVocabularySuggestionModule()
