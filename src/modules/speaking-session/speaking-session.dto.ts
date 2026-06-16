@@ -1,10 +1,12 @@
+import { SpeakingSessionStatus } from './speaking-session.constants'
+
 export type SpeakingSessionResponseDto = {
   id: string
   userId: string
   forecastId: string
   voiceId: string
   type: string
-  status: number
+  status: SpeakingSessionStatus
   result?: {
     fluency: number | null
     lexical: number | null

@@ -8,9 +8,8 @@ import { CreateVoiceBodyType, UpdateVoiceBodyType } from './types/voice.type'
 import { AppError } from '~/common/errors'
 import { FileService } from '../file/file.service'
 import { VoiceMapper } from './voice.mapper'
-import { FileProducer } from '~/infrastructure/queues/publishers/file.producer'
-import { JOB_NAME } from '~/infrastructure/queues'
-import { INSTRUCTION_SCRIPTS } from '../instruction-audio/instruction-audio.constants'
+import { INSTRUCTION_SCRIPTS } from '../speaking-session/speaking-session.constants'
+import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 import { VOICE_SAMPLE_TEXT } from './voice.constants'
 
 @singleton()
@@ -19,7 +18,7 @@ export class VoiceService {
     private readonly fileService: FileService,
     @inject(TOKENS.IVoiceRepository) private readonly voiceRepository: IVoiceRepository,
     private readonly voiceMapper: VoiceMapper,
-    private readonly fileProducer: FileProducer
+    private readonly generatedAudioService: GeneratedAudioService
   ) {}
   public async createNew(data: CreateVoiceBodyType) {
     const locale = data.voiceCode.split('-').slice(0, 2).join('-')
@@ -73,21 +72,14 @@ export class VoiceService {
       folder: CLOUD_FOLDERS.VOICE_SAMPLES
     })
 
-    const jobs = Object.entries(INSTRUCTION_SCRIPTS).map(([key, text]) => {
-      return {
-        name: JOB_NAME.INSTRUCTION_AUDIO.GENERATE,
-        data: {
-          voiceId: voice._id,
-          key,
-          text,
-          voiceCode: voice.voiceCode,
-          speed: voice.speed,
-          pitch: voice.pitch
-        }
-      }
-    })
-
-    await this.fileProducer.addBulk(jobs)
+    // Pre-warm the cache for instruction audios in the background
+    Promise.all(
+      Object.values(INSTRUCTION_SCRIPTS).map((text) =>
+        this.generatedAudioService.getOrCreate({ text, voiceId: voice._id.toString() }).catch((err) => {
+          console.error(`Failed to pre-warm audio for text: "${text}"`, err)
+        })
+      )
+    )
 
     return this.voiceRepository.updateById(id, {
       sampleAudioFileId: audioFile._id,
