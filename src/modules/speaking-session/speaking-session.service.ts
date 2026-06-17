@@ -163,7 +163,8 @@ export class SpeakingSessionService {
     if (session.userId.toString() !== userId) {
       throw new AppError('You do not own this session', StatusCodes.FORBIDDEN)
     }
-    return this.speakingSessionMapper.toResponse(session)
+    const attempts = await this.attemptService.getAttemptsBySessionId(speakingSessionId)
+    return this.speakingSessionMapper.toResponse(session, attempts)
   }
 
   public async getActiveSession(userId: string) {

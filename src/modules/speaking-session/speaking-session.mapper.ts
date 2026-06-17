@@ -2,10 +2,11 @@ import { BaseMapper } from '~/common/base'
 import { SpeakingSessionType } from './speaking-session.model'
 import { SpeakingSessionResponseDto } from './speaking-session.dto'
 import { singleton } from 'tsyringe'
+import { AttemptResponseDto } from '../attempt/attempt.dto'
 
 @singleton()
 export class SpeakingSessionMapper extends BaseMapper<SpeakingSessionType, SpeakingSessionResponseDto> {
-  toResponse(entity: SpeakingSessionType): SpeakingSessionResponseDto {
+  toResponse(entity: SpeakingSessionType, attempts?: AttemptResponseDto[]): SpeakingSessionResponseDto {
     return {
       id: entity._id.toString(),
       userId: entity.userId.toString(),
@@ -26,7 +27,8 @@ export class SpeakingSessionMapper extends BaseMapper<SpeakingSessionType, Speak
       finishedAt: entity.finishedAt ?? undefined,
       refundedAt: entity.refundedAt ?? undefined,
       scoringQueuedAt: entity.scoringQueuedAt ?? undefined,
-      retryCount: entity.retryCount ?? undefined
+      retryCount: entity.retryCount ?? undefined,
+      attempts
     }
   }
 }

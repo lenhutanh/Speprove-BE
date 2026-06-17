@@ -22,6 +22,7 @@ import { AccountService } from '../account/account.service'
 import { CreditLogService } from '../credit-log/credit-log.service'
 import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 import { calculateCreditCost } from '../credit-log/credit.util'
+import { AttemptResponseDto } from './attempt.dto'
 
 @singleton()
 export class AttemptService {
@@ -300,6 +301,29 @@ export class AttemptService {
     const hasIpaMismatch = !!word.expectedIpa && !!word.spokenIpa && word.expectedIpa.trim() !== word.spokenIpa.trim()
 
     return hasErrorType || hasLowAccuracy || hasIpaMismatch
+  }
+
+  public async getAttemptsBySessionId(speakingSessionId: string): Promise<AttemptResponseDto[]> {
+    const attempts = await this.attemptRepository.findMany(
+      { speakingSessionId: toObjectId(speakingSessionId) },
+      {
+        sort: { order: 1 },
+        populate: [
+          { path: 'audioFileId' },
+          {
+            path: 'forecastQuestionId',
+            populate: [
+              {
+                path: 'questionId',
+                populate: { path: 'parentId' }
+              }
+            ]
+          }
+        ]
+      }
+    )
+
+    return this.attemptMapper.toResponseList(attempts)
   }
 
   public async retryAttempt(attempt: AttemptType) {
