@@ -49,7 +49,7 @@ export class ForecastQuestionMapper extends BaseMapper<ForecastQuestionType, For
       }
     }
 
-    if (q.parentId) {
+    if (q.parentId && typeof q.parentId === 'object' && '_id' in q.parentId) {
       res.parent = {
         id: q.parentId._id.toString(),
         questionId: q.parentId._id.toString(),

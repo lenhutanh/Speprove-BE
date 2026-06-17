@@ -1,5 +1,6 @@
 import { AnalysisMeta, Evaluation, AttemptScores, FluencyMetrics } from './attempt.model'
 import { AnalysisProfile } from './attempt.constants'
+import { ForecastQuestionResponseDto } from '../forecast-question/forecast-question.dto'
 
 export type AttemptResponseDto = {
   id: string
@@ -17,6 +18,7 @@ export type AttemptResponseDto = {
   transcriptPreview?: string
   scores?: Partial<AttemptScores>
   analysisMeta?: Partial<AnalysisMeta>
+  question?: ForecastQuestionResponseDto
   createdAt: Date
   updatedAt: Date
 }

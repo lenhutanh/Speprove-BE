@@ -1,4 +1,5 @@
 import { SpeakingSessionStatus } from './speaking-session.constants'
+import { AttemptResponseDto } from '../attempt/attempt.dto'
 
 export type SpeakingSessionResponseDto = {
   id: string
@@ -19,4 +20,5 @@ export type SpeakingSessionResponseDto = {
   refundedAt?: Date
   scoringQueuedAt?: Date
   retryCount?: number
+  attempts?: AttemptResponseDto[]
 }

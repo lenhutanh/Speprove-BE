@@ -7,16 +7,25 @@ import {
   AttemptWordAssessmentDto
 } from './attempt.dto'
 import { singleton } from 'tsyringe'
+import { ForecastQuestionMapper } from '../forecast-question/forecast-question.mapper'
 
 @singleton()
 export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
+  constructor(private readonly forecastQuestionMapper: ForecastQuestionMapper) {
+    super()
+  }
+
   toResponse(entity: AttemptType): AttemptResponseDto {
     const hasData = (obj: any) => obj && Object.keys(obj).length > 0
-    return {
+    const forecastQuestionIdStr = entity.forecastQuestionId?._id
+      ? entity.forecastQuestionId._id.toString()
+      : entity.forecastQuestionId?.toString()
+
+    const res: AttemptResponseDto = {
       id: entity._id.toString(),
       speakingSessionId: entity?.speakingSessionId ? entity.speakingSessionId.toString() : undefined,
       mode: entity.mode,
-      forecastQuestionId: entity.forecastQuestionId.toString(),
+      forecastQuestionId: forecastQuestionIdStr,
       audioUrl: entity.audioFileId ? ((entity.audioFileId as any).url ?? undefined) : undefined,
       duration: entity.audioFileId ? ((entity.audioFileId as any).duration ?? undefined) : undefined,
       part: entity.part,
@@ -31,6 +40,16 @@ export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt
     }
+
+    if (
+      entity.forecastQuestionId &&
+      typeof entity.forecastQuestionId === 'object' &&
+      '_id' in entity.forecastQuestionId
+    ) {
+      res.question = this.forecastQuestionMapper.toResponse(entity.forecastQuestionId)
+    }
+
+    return res
   }
 
   toDetailResponse(entity: AttemptType, analysis?: AttemptAnalysisType | null): AttemptDetailResponseDto {
