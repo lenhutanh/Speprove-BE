@@ -9,14 +9,14 @@ export type CreditLogRefType = (typeof CREDIT_LOG_REF_TYPE)[keyof typeof CREDIT_
 
 export const CREDIT_COST = {
   PRACTICE: {
-    PART_1: 1,
-    PART_2: 2,
-    PART_3: 2
+    PART_1: 5,
+    PART_2: 20,
+    PART_3: 10
   },
   MOCK: {
-    PART_1: 3,
-    PART_2: 5,
-    PART_3: 5
+    PART_1: 40,
+    PART_2: 20,
+    PART_3: 50
   },
-  FULL_TEST: 10
+  FULL_TEST: 100
 } as const

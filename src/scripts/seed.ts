@@ -13,6 +13,7 @@ import { Session } from '~/modules/session/session.model'
 import { Topic } from '~/modules/topic/topic.model'
 import { Voice } from '~/modules/voice/voice.model'
 import { File } from '~/modules/file/file.model'
+import { CreditPackage } from '~/modules/credit-package/credit-package.model'
 
 export const seedData = async () => {
   try {
@@ -28,7 +29,8 @@ export const seedData = async () => {
       Session.deleteMany({}),
       Topic.deleteMany({}),
       Voice.deleteMany({}),
-      File.deleteMany({})
+      File.deleteMany({}),
+      CreditPackage.deleteMany({})
     ])
 
     const permissionGroupPerGroup = await PermissionGroup.create({
@@ -399,6 +401,13 @@ export const seedData = async () => {
       kind: ACCOUNT_KIND.USER,
       status: STATUS.ACTIVE
     })
+
+    await CreditPackage.insertMany([
+      { amount: 10000, points: 100, isActive: true },
+      { amount: 30000, points: 350, isActive: true },
+      { amount: 50000, points: 600, isActive: true },
+      { amount: 100000, points: 1250, isActive: true }
+    ])
 
     process.exit(0)
   } catch (error: any) {
