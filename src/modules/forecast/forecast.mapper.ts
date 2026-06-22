@@ -30,8 +30,8 @@ export class ForecastMapper extends BaseMapper<ForecastType, ForecastResponseDto
 }
 
 function getQuarterRange(quarter: number, year: number) {
-  const startMonth = (quarter - 1) * 3
+  const startMonth = (quarter - 1) * 4
   const validFrom = new Date(year, startMonth, 1)
-  const validTo = new Date(year, startMonth + 3, 0)
+  const validTo = new Date(year, startMonth + 4, 0)
   return { validFrom, validTo }
 }
