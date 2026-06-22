@@ -47,6 +47,10 @@ router
   )
 
 router
+  .route('/:id/retry')
+  .post(authMiddleware.isAuthorized, validateMiddleware(idParamSchema), bindHandler(AttemptController, 'retryAttempt'))
+
+router
   .route('/:id')
   .get(authMiddleware.isAuthorized, validateMiddleware(idParamSchema), bindHandler(AttemptController, 'getDetails'))
 

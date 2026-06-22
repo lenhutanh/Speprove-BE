@@ -40,4 +40,10 @@ export class AttemptController {
     const result = await this.attemptService.getWordAudio(req.user._id, req.validated.params.id, req.validated.query)
     return ResponseTransformer.success(res, result, 'Get word audio successfully')
   }
+
+  public async retryAttempt(req: AuthenticatedRequest, res: Response) {
+    const { id } = req.validated.params
+    const result = await this.attemptService.retryAttemptById(req.user._id, id)
+    return ResponseTransformer.success(res, result, 'Retry attempt successfully')
+  }
 }

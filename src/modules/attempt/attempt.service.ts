@@ -11,7 +11,7 @@ import { FileService } from '../file/file.service'
 import { toObjectId } from '~/common/utils'
 import { AttemptMapper } from './attempt.mapper'
 import { ANALYSIS_PROFILE, AnalysisProfile, ATTEMPT_STATUS } from './attempt.constants'
-import { SESSION_STATUS, SPEAKING_SESSION_MODE } from '../speaking-session/speaking-session.constants'
+import { SESSION_STATUS, SPEAKING_SESSION_MODE, MAX_RETRY } from '../speaking-session/speaking-session.constants'
 import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 import { AudioFileType } from '../file/file.model'
@@ -324,6 +324,30 @@ export class AttemptService {
     )
 
     return this.attemptMapper.toResponseList(attempts)
+  }
+
+  public async retryAttemptById(userId: string, attemptId: string) {
+    const attempt = await this.attemptRepository.findById(attemptId)
+    if (!attempt) throw new AppError('Attempt not found', StatusCodes.NOT_FOUND)
+    if (attempt.userId.toString() !== userId) {
+      throw new AppError('You do not own this attempt', StatusCodes.FORBIDDEN)
+    }
+    if (attempt.status !== ATTEMPT_STATUS.FAILED) {
+      throw new AppError('Only failed attempts can be retried', StatusCodes.BAD_REQUEST)
+    }
+    if (attempt.refundedAt) {
+      throw new AppError('Cannot retry a refunded attempt', StatusCodes.BAD_REQUEST)
+    }
+    if (attempt.retryCount != null && attempt.retryCount >= MAX_RETRY) {
+      throw new AppError('Max retry attempts reached for this attempt', StatusCodes.BAD_REQUEST)
+    }
+
+    const updatedAttempt = await this.attemptRepository.updateById(attemptId, {
+      $inc: { retryCount: 1 }
+    })
+
+    await this.retryAttempt(updatedAttempt!)
+    return this.attemptMapper.toResponse(updatedAttempt!)
   }
 
   public async retryAttempt(attempt: AttemptType) {
