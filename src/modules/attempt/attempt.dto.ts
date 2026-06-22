@@ -13,6 +13,8 @@ export type AttemptResponseDto = {
   order: number
   status: number
   isPublic: boolean
+  retryCount?: number
+  refundedAt?: Date
   analysisProfile?: AnalysisProfile
   analysisVersion?: string
   transcriptPreview?: string
