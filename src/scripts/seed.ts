@@ -14,6 +14,17 @@ import { Topic } from '~/modules/topic/topic.model'
 import { Voice } from '~/modules/voice/voice.model'
 import { File } from '~/modules/file/file.model'
 import { CreditPackage } from '~/modules/credit-package/credit-package.model'
+import { ForecastTopic } from '~/modules/forecast-topic/forecast-topic.model'
+import { ForecastQuestion } from '~/modules/forecast-question/forecast-question.model'
+import { Attempt } from '~/modules/attempt/attempt.model'
+import { AttemptAnalysis } from '~/modules/attempt/attempt-analysis.model'
+import { SpeakingSession } from '~/modules/speaking-session/speaking-session.model'
+import { VocabularySuggestion } from '~/modules/vocabulary-suggestion/vocabulary-suggestion.model'
+import { GeneratedAudio } from '~/modules/generated-audio/generated-audio.model'
+import { Payment } from '~/modules/payment/payment.model'
+import { CreditLog } from '~/modules/credit-log/credit-log.model'
+import { AccountProvider } from '~/modules/account-provider/account-provider.model'
+import { GENDER_KIND } from '~/modules/voice/voice.constants'
 
 export const seedData = async () => {
   try {
@@ -30,8 +41,20 @@ export const seedData = async () => {
       Topic.deleteMany({}),
       Voice.deleteMany({}),
       File.deleteMany({}),
-      CreditPackage.deleteMany({})
+      CreditPackage.deleteMany({}),
+      ForecastTopic.deleteMany({}),
+      ForecastQuestion.deleteMany({}),
+      Attempt.deleteMany({}),
+      AttemptAnalysis.deleteMany({}),
+      SpeakingSession.deleteMany({}),
+      VocabularySuggestion.deleteMany({}),
+      GeneratedAudio.deleteMany({}),
+      Payment.deleteMany({}),
+      CreditLog.deleteMany({}),
+      AccountProvider.deleteMany({})
     ])
+
+    console.log('✅ Đã xóa sạch các collection trong Database.')
 
     const permissionGroupPerGroup = await PermissionGroup.create({
       name: 'Quản lý nhóm quyền',
@@ -347,12 +370,6 @@ export const seedData = async () => {
         description: 'Get a specific forecast',
         permissionGroupId: forecastPerGroup._id
       }
-      // {
-      //   name: 'Kích hoạt Forecast',
-      //   pCode: 'FORECAST:ACTIVATE:PENDING',
-      //   description: 'Activate pending forecast',
-      //   permissionGroupId: forecastPerGroup._id
-      // }
     ])
 
     const permissionIds = [
@@ -409,6 +426,31 @@ export const seedData = async () => {
       { amount: 100000, points: 1250, isActive: true }
     ])
 
+    const seededVoices = await Voice.insertMany([
+      {
+        name: 'Aria',
+        voiceCode: 'en-US-AriaNeural',
+        gender: GENDER_KIND.FEMALE,
+        locale: 'en-US',
+        speed: 1.0,
+        pitch: 0,
+        status: STATUS.ACTIVE,
+        isDefault: true
+      },
+      {
+        name: 'Guy',
+        voiceCode: 'en-US-GuyNeural',
+        gender: GENDER_KIND.MALE,
+        locale: 'en-US',
+        speed: 0.95,
+        pitch: 0,
+        status: STATUS.ACTIVE,
+        isDefault: false
+      }
+    ])
+    console.log(`✅ Khởi tạo các Voice thành công: ${seededVoices.map((v) => v.name).join(', ')}`)
+
+    console.log('🎉 Quá trình seeding dữ liệu cơ bản đã hoàn tất thành công!')
     process.exit(0)
   } catch (error: any) {
     console.error('❌ Lỗi script seedData:', error)

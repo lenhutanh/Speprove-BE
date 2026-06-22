@@ -15,7 +15,9 @@ const ALLOWED_WORDS = new Set(
     'instagram',
     'chatgpt',
     'smartphone',
-    'tv'
+    'tv',
+    'storyline',
+    'ai'
   ].map((word) => word.toLowerCase())
 )
 
@@ -39,6 +41,12 @@ export async function initQuestionSpelling() {
 
     spellUS = nspell(dictUS)
     spellGB = nspell(dictGB)
+
+    console.log('US:', spellUS.correct('storyline'))
+    console.log('GB:', spellGB.correct('storyline'))
+
+    console.log('US suggestions:', spellUS.suggest('storyline'))
+    console.log('GB suggestions:', spellGB.suggest('storyline'))
 
     console.log('Spelling engine initialized')
   } catch (error) {

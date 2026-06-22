@@ -57,6 +57,66 @@ export class QuestionService {
     return this.questionMapper.toResponse(question)
   }
 
+  public async findOrCreate(data: CreateQuestionBodyType): Promise<QuestionType> {
+    let question: QuestionType | null = null
+
+    switch (data.part) {
+      case PART_KIND.ONE:
+        question = await this.questionRepository.findOne({
+          content: data.content.trim(),
+          part: PART_KIND.ONE,
+          topicId: toObjectId(data.topicId)
+        })
+        break
+
+      case PART_KIND.TWO:
+        question = await this.questionRepository.findOne({
+          content: data.content.trim(),
+          part: PART_KIND.TWO
+        })
+        break
+
+      case PART_KIND.THREE:
+        question = await this.questionRepository.findOne({
+          content: data.content.trim(),
+          part: PART_KIND.THREE,
+          parentId: toObjectId(data.parentId)
+        })
+        break
+    }
+
+    if (question) {
+      return question
+    }
+
+    let createdQuestion: QuestionType | null = null
+    switch (data.part) {
+      case PART_KIND.ONE:
+        createdQuestion = await this.questionRepository.createPart1Question({
+          ...data,
+          topicId: toObjectId(data.topicId)
+        })
+        break
+
+      case PART_KIND.TWO:
+        createdQuestion = await this.questionRepository.createPart2Question(data)
+        break
+
+      case PART_KIND.THREE:
+        createdQuestion = await this.questionRepository.createPart3Question({
+          ...data,
+          parentId: toObjectId(data.parentId)
+        })
+        break
+    }
+
+    if (!createdQuestion) {
+      throw new AppError('Failed to create question')
+    }
+
+    return createdQuestion
+  }
+
   public async update(id: string, data: UpdateQuestionBodyType) {
     const question = await this.questionRepository.updateById(id, data)
     if (!question) {
