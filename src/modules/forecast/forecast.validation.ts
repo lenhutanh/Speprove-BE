@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { createSchema, idParamSchema, querySchema, updateSchema } from '~/common/base/base.validation'
 import { FORECAST_STATUS } from './forecast.constants'
 import { objectIdSchema } from '~/common/utils'
+import { PART2_CATEGORY } from '~/modules/question/question.constants'
 
 export const createForecastSchema = createSchema({
   description: z.string().optional(),
@@ -34,3 +35,31 @@ export const getForecastsSchema = forecastQuerySchema
 export const importTopicsSchema = createSchema({
   topics: z.array(objectIdSchema).default([])
 }).merge(idParamSchema)
+
+export const importForecastSchema = createSchema({
+  quarter: z.number().int().min(1).max(3),
+  year: z
+    .number()
+    .int()
+    .min(2020)
+    .max(new Date().getFullYear() + 2),
+  isDefault: z.boolean().optional().default(false),
+  part1: z
+    .array(
+      z.object({
+        topicName: z.string().min(1),
+        questions: z.array(z.string().min(1))
+      })
+    )
+    .default([]),
+  part23: z
+    .array(
+      z.object({
+        cueCard: z.string().min(1),
+        category: z.nativeEnum(PART2_CATEGORY),
+        bullets: z.array(z.string()).default([]),
+        part3Questions: z.array(z.string()).default([])
+      })
+    )
+    .default([])
+})

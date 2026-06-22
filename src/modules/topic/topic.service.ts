@@ -27,6 +27,17 @@ export class TopicService {
     return this.topicMapper.toResponse(topic)
   }
 
+  public async findOrCreate(data: CreateTopicBodyType) {
+    const slug = generateSlug(data.name)
+
+    const existed = await this.topicRepository.findOne({ slug })
+    if (existed) {
+      return existed
+    }
+
+    return await this.topicRepository.create({ ...data, slug })
+  }
+
   public async update(id: string, data: UpdateTopicBodyType) {
     const topic = await this.topicRepository.updateById(id, data)
     if (!topic) {

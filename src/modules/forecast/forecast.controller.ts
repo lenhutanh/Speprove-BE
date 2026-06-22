@@ -36,4 +36,9 @@ export class ForecastController {
     await this.forecastTopicService.importTopics(req.validated.params.id, req.validated.body.topics)
     return ResponseTransformer.successNoData(res, 'Topics imported successfully')
   }
+
+  public async importForecast(req: Request, res: Response) {
+    const result = await this.forecastService.importForecast(req.validated.body)
+    return ResponseTransformer.success(res, result, 'Forecast imported successfully', StatusCodes.CREATED)
+  }
 }
