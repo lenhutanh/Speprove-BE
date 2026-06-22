@@ -17,6 +17,8 @@ type AlignmentResult = {
 type ParsedCriterion = {
   band: number | null
   issues: AssessmentIssue[]
+  strengths: string[]
+  limitations: string[]
   confidence?: number
 }
 
@@ -31,33 +33,26 @@ export class EvaluatorResponseParser {
 
     if (!root) warnings.push('LLM_EVALUATOR_INVALID_JSON')
 
-    const coherence = this._parseCriterion(root?.coherence, 3)
+    const fluency = this._parseCriterion(root?.fluency, 0)
     const lexical = this._parseCriterion(root?.lexical, 4)
     const grammar = this._parseCriterion(root?.grammar, 4)
 
-    if (coherence.band == null) warnings.push('LLM_EVALUATOR_MISSING_COHERENCE_BAND')
+    if (fluency.band == null) warnings.push('LLM_EVALUATOR_MISSING_FLUENCY_BAND')
     if (lexical.band == null) warnings.push('LLM_EVALUATOR_MISSING_LEXICAL_BAND')
     if (grammar.band == null) warnings.push('LLM_EVALUATOR_MISSING_GRAMMAR_BAND')
 
     const pronunciation = this.ruleBasedScorer.pronunciation(input)
-    const delivery = this.ruleBasedScorer.delivery(input)
     const pronunciationBand = pronunciation.band
-    const deliveryBand = delivery.band
-    const fluencyBand =
-      deliveryBand != null && coherence.band != null
-        ? this.ruleBasedScorer.combineFluency(deliveryBand, coherence.band)
-        : null
+    const fluencyBand = fluency.band
 
     if (pronunciationBand == null) warnings.push('RULE_BASED_PRONUNCIATION_BAND_UNAVAILABLE')
-    if (deliveryBand == null) warnings.push('RULE_BASED_DELIVERY_BAND_UNAVAILABLE')
 
     const evaluation: Evaluation = {
       fluency: {
         band: fluencyBand,
-        deliveryBand,
-        coherenceBand: coherence.band,
-        coherenceIssues: coherence.issues,
-        confidence: coherence.confidence
+        strengths: fluency.strengths,
+        limitations: fluency.limitations,
+        confidence: fluency.confidence
       },
       pronunciation: {
         band: pronunciationBand,
@@ -66,11 +61,15 @@ export class EvaluatorResponseParser {
       lexical: {
         band: lexical.band,
         issues: lexical.issues,
+        strengths: lexical.strengths,
+        limitations: lexical.limitations,
         confidence: lexical.confidence
       },
       grammar: {
         band: grammar.band,
         issues: grammar.issues,
+        strengths: grammar.strengths,
+        limitations: grammar.limitations,
         confidence: grammar.confidence
       }
     }
@@ -97,13 +96,25 @@ export class EvaluatorResponseParser {
 
   private _parseCriterion(value: unknown, maxIssues: number): ParsedCriterion {
     const record = this._asRecord(value)
-    if (!record) return { band: null, issues: [] }
+    if (!record) return { band: null, issues: [], strengths: [], limitations: [] }
 
     return {
       band: this._snapCriterionBand(record.band),
       issues: this._parseIssues(record.issues, maxIssues),
+      strengths: this._parseStringArray(record.strengths),
+      limitations: this._parseStringArray(record.limitations),
       confidence: this._confidence(record.confidence)
     }
+  }
+
+  private _parseStringArray(v: unknown): string[] {
+    if (Array.isArray(v)) {
+      return v.map((item) => String(item).trim()).filter(Boolean)
+    }
+    if (typeof v === 'string' && v.trim().length > 0) {
+      return [v.trim()]
+    }
+    return []
   }
 
   private _parseIssues(value: unknown, maxIssues: number): AssessmentIssue[] {
@@ -136,11 +147,9 @@ export class EvaluatorResponseParser {
     const warnings: string[] = []
     const alignmentConfidences: number[] = []
 
-    const issueGroups = [
-      evaluation.fluency?.coherenceIssues,
-      evaluation.lexical?.issues,
-      evaluation.grammar?.issues
-    ].filter((issues): issues is AssessmentIssue[] => Array.isArray(issues))
+    const issueGroups = [evaluation.lexical?.issues, evaluation.grammar?.issues].filter(
+      (issues): issues is AssessmentIssue[] => Array.isArray(issues)
+    )
 
     for (const issues of issueGroups) {
       for (const issue of issues) {

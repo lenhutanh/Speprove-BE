@@ -41,37 +41,37 @@ export const TRANSCRIPT_SCORING_GUIDANCE = `Transcript handling guidance:
 - Do not report hyphenation-only issues such as "floor to ceiling" versus "floor-to-ceiling"; that is written formatting, not speaking performance.
 - Repeated words are delivery evidence unless they make the message hard to follow; do not classify one-word repetition as grammar.`
 
-export const COHERENCE_RUBRIC = `Coherence band anchors, adapted from IELTS Speaking Fluency and Coherence descriptors for content and organization only:
-Band 9: Response is fully relevant, situationally appropriate, logically organized, and appropriately extended. Cohesive features are natural and fully acceptable.
-Band 8: Topic development is coherent, appropriate, and relevant. Ideas are clearly connected and sufficiently developed for the task.
-Band 7: Ideas are clear and mostly well connected. Spoken discourse markers, connectives, and cohesive features are used flexibly. Minor lapses do not affect coherence.
-Band 6: Response is generally relevant and can be followed, but coherence may be lost at times. Connectives and cohesive features are used, though not always appropriately.
-Band 5: Basic message is usually understandable, but development is limited, repetitive, or uneven. Discourse markers/connectives may be overused or mechanical.
-Band 4: Can link simple ideas, but links are often repetitive or unclear. Some coherence breakdowns occur and topic development is limited.
-Band 3: Limited ability to link simple ideas or go beyond simple responses. The basic message is often unclear.
-Band 2: Isolated words or memorised fragments have very little communicative significance.
-Band 1: Speech is totally incoherent or has no rateable content.`
+export const FLUENCY_COHERENCE_RUBRIC = `Fluency and Coherence (FC) band anchors, based on IELTS Speaking descriptors:
+Band 9: Speaks fluently with only rare repetition or self-correction; any hesitation is content-related rather than to find words or grammar. Speaks coherently with fully appropriate cohesive features. Develops topics fully and appropriately. Speech is situationally appropriate and cohesive features are fully acceptable.
+Band 8: Speaks fluently with only occasional repetition or self-correction; hesitation is usually content-related and only rarely to search for language. Develops topics coherently and appropriately. Hesitation may occasionally be used to find words or grammar, but most will be content related. Topic development is coherent, appropriate and relevant.
+Band 7: Speaks at length without noticeable effort or loss of coherence. Some hesitation, repetition and/or self-correction may occur, often mid-sentence and indicate problems with accessing appropriate language. However, these will not affect coherence. Uses a range of connectives and discourse markers with some flexibility. Progression of ideas is generally clear and logical.
+Band 6: Able to keep going and demonstrates a willingness to produce long turns, though may lose coherence at times due to occasional repetition, self-correction or hesitation. Uses a range of connectives and discourse markers but not always appropriately. Logical progression of ideas is generally present but may break down.
+Band 5: Usually maintains flow of speech but uses repetition, self-correction and/or slow speech to keep going. May over-use certain connectives and discourse markers. Produces simple speech fluently, but more complex communication causes fluency problems.
+Band 4: Cannot respond without noticeable pauses and may speak slowly with frequent repetition. Links basic sentences but with difficulty developing ideas and/or maintaining progression.
+Band 3: Speaks with long pauses and has limited ability to link simple sentences. Gives only simple responses and cannot convey basic message.
+Band 2: Pauses constantly and has very little communication.
+Band 1: No rateable language.`
 
 export const LEXICAL_RUBRIC = `Lexical Resource band anchors, based on IELTS Speaking descriptors:
-Band 9: Total flexibility and precise vocabulary in all contexts. Sustained accurate and idiomatic language.
-Band 8: Wide vocabulary, readily and flexibly used to discuss all topics and convey precise meaning. Skilful less-common/idiomatic items with only occasional word choice or collocation inaccuracies. Effective paraphrase.
-Band 7: Vocabulary is flexibly used across topics. Some less-common/idiomatic items and awareness of style/collocation, though inappropriacies occur. Effective paraphrase.
-Band 6: Vocabulary is sufficient to discuss topics at length. Some inappropriate word choice may occur but meaning is clear. Generally successful paraphrase.
+Band 9: Total flexibility and precise use in all contexts. Sustained use of accurate and idiomatic language.
+Band 8: Wide vocabulary, readily and flexibly used to discuss all topics and convey precise meaning. Skilful use of less common and idiomatic items despite occasional inaccuracies in word choice and collocation. Effective use of paraphrase as required.
+Band 7: Uses vocabulary resource flexibly to discuss a variety of topics. Uses some less common and idiomatic vocabulary and shows some awareness of style and collocation, with some inappropriate choices. Uses paraphrase effectively.
+Band 6: Has a wide enough vocabulary to discuss topics at length and make meaning clear in spite of inappropriacies. Generally paraphrases successfully.
 Band 5: Vocabulary covers familiar and unfamiliar topics but flexibility is limited. Attempts paraphrase with mixed success.
-Band 4: Vocabulary is enough for familiar topics, but only basic meaning on unfamiliar topics. Frequent word choice errors. Rare paraphrase.
+Band 4: Vocabulary is enough for familiar topics, but only basic meaning on unfamiliar topics. Frequent word choice errors. Rarely attempts paraphrase.
 Band 3: Simple vocabulary mainly for personal information. Inadequate for unfamiliar topics.
 Band 2: Very limited vocabulary; mostly isolated or memorised words.
 Band 1: No lexical resource beyond a few isolated words.
 Lexical issues should target word choice, collocation, word form, register, idiom, or imprecise vocabulary that is clearly unnatural or inaccurate in spoken English. Do not report spelling, capitalization, punctuation, or hyphenation-only issues.`
 
 export const GRAMMAR_RUBRIC = `Grammatical Range and Accuracy band anchors, based on IELTS Speaking descriptors:
-Band 9: Structures are precise and accurate except for native-speaker-like slips.
-Band 8: Wide range of structures used flexibly. Most sentences are error-free. Occasional non-systematic errors or inappropriacies.
-Band 7: A range of structures used flexibly. Error-free sentences are frequent. Simple and complex sentences are effective despite some errors.
+Band 9: Uses a full range of structures naturally and appropriately. Produces consistently accurate structures apart from 'slips' characteristic of native speaker speech.
+Band 8: Uses a wide range of structures flexibly. Most sentences are error-free. Occasional non-systematic errors or inappropriacies.
+Band 7: Uses a range of complex structures with some flexibility. Frequently produces error-free sentences, though some grammatical errors persist.
 Band 6: Mix of short and complex sentence forms with variety but limited flexibility. Errors occur frequently in complex structures but rarely impede communication.
-Band 5: Basic sentence forms are fairly well controlled. Complex structures are limited, usually contain errors, and may require reformulation.
-Band 4: Basic sentence forms and some short error-free utterances. Subordinate clauses are rare; turns are short, repetitive, and error-prone.
-Band 3: Basic sentence forms are attempted but grammatical errors are numerous except in memorised utterances.
+Band 5: Basic sentence forms are fairly well controlled for accuracy. Complex structures are attempted but these are limited in range, nearly always contain errors and may lead to the need for reformulation.
+Band 4: Can produce basic sentence forms and some short utterances are error-free. Subordinate clauses are rare and, overall, turns are short, structures are repetitive and errors are frequent.
+Band 3: Basic sentence forms are attempted but grammatical errors are numerous except in apparently memorised utterances.
 Band 2: No evidence of basic sentence forms.
 Band 1: No rateable grammar unless memorised.
 Grammar issues should target spoken structure: tense, agreement, articles, prepositions, word order, clause structure, and missing required sentence elements. Do not report errors that depend only on written sentence boundaries or punctuation.`
