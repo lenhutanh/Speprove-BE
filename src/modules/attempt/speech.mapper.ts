@@ -2,8 +2,7 @@ import { singleton } from 'tsyringe'
 import { PronunciationAssessmentResult } from '~/infrastructure/providers/speech-assessment/assessment.interface'
 import { SpeechAnalysis } from './attempt.model'
 
-const FILLERS = new Set(['uh', 'um', 'er', 'ah', 'hmm'])
-const LONG_PAUSE_THRESHOLD = 0.5
+const LONG_PAUSE_THRESHOLD = 1.0
 const LOW_WORD_SCORE_THRESHOLD = 75
 const LOW_PHONEME_SCORE_THRESHOLD = 70
 
@@ -14,22 +13,6 @@ type LongPause = {
   end: number
   duration: number
   afterWordIndex: number
-}
-
-type EnrichedWord = {
-  wordIndex: number
-  word: string
-  sentenceIndex: number
-  punctuationAfter: string
-  isFiller: boolean
-  isRepetition: boolean
-  isScoreable: boolean
-  errorType: string
-  score: number
-  offset: number
-  duration: number
-  phonemes: { sound: string; score: number }[]
-  spokenIpa: string
 }
 
 type DisplayTranscript = {
@@ -70,9 +53,7 @@ export class SpeechMapper {
     _questionContent?: string,
     _part?: number
   ): SpeechAnalysis {
-    const enrichedWords = this._enrichWords(result.words, result.transcript)
-    const scoreableWords = enrichedWords.filter((w) => w.isScoreable)
-    const wordCount = scoreableWords.length
+    const wordCount = result.words.length
 
     const pauses = this._extractPauses(result.words)
     const longPauses = pauses.filter((p) => p.duration >= LONG_PAUSE_THRESHOLD)
@@ -81,9 +62,6 @@ export class SpeechMapper {
     const speechRate = speechDuration > 0 ? this._round1(wordCount / (speechDuration / 60)) : 0
     const articulationDuration = Math.max(0, speechDuration - totalPauseDuration)
     const articulationRate = articulationDuration > 0 ? this._round1(wordCount / (articulationDuration / 60)) : 0
-
-    const fillerWords = enrichedWords.filter((w) => w.isFiller).map((w) => cleanWord(w.word))
-    const repetitions = this._detectRepetitions(enrichedWords)
 
     const fluencyMetrics = {
       duration: result.audioDuration,
@@ -95,18 +73,13 @@ export class SpeechMapper {
       longPauseCount: longPauses.length,
       totalPauseDuration: this._round2(totalPauseDuration),
       pauseRatio: speechDuration > 0 ? this._round2(totalPauseDuration / speechDuration) : 0,
-      meanLengthOfRun: this._round1(this._meanLengthOfRun(enrichedWords, longPauses)),
+      meanLengthOfRun: this._round1(this._meanLengthOfRun(result.words, longPauses)),
       pauses: pauses.map((pause) => ({
         startTime: this._round2(pause.start),
         endTime: this._round2(pause.end),
         duration: this._round2(pause.duration),
         afterWordIndex: pause.afterWordIndex
-      })),
-      fillerCount: fillerWords.length,
-      fillers: [...new Set(fillerWords)],
-      repetitionCount: repetitions.length,
-      repetitions: [...new Set(repetitions)],
-      selfCorrectionCandidates: this._detectSelfCorrectionCandidates(result.transcript)
+      }))
     }
 
     const lowScoreWords = result.words
@@ -173,94 +146,6 @@ export class SpeechMapper {
     }
   }
 
-  private _enrichWords(words: PronunciationAssessmentResult['words'], transcript: string): EnrichedWord[] {
-    // Bước 1: Tính Sentence Boundaries bằng Regex
-    const sentenceBoundaries: { start: number; end: number }[] = []
-    const sentenceRegex = /[^.!?]+[.!?]*/g
-    let match
-    while ((match = sentenceRegex.exec(transcript)) !== null) {
-      sentenceBoundaries.push({
-        start: match.index,
-        end: match.index + match[0].length
-      })
-    }
-    // Fallback nếu chuỗi không có dấu câu
-    if (sentenceBoundaries.length === 0) {
-      sentenceBoundaries.push({ start: 0, end: transcript.length })
-    }
-
-    // Bước 2: Quét tuần tự 2-Pointer tìm vị trí chính xác
-    let charCursor = 0
-    const wordPositions: { charStart: number; punctuationAfter: string }[] = []
-
-    for (const w of words) {
-      // Dọn dẹp khoảng trắng và dấu câu dư thừa trước từ hiện tại
-      while (charCursor < transcript.length && /[\s,.?!;:"'-]/.test(transcript[charCursor])) {
-        charCursor++
-      }
-
-      // Fuzzy match trong window nhỏ (±5 chars) để chống cascade lỗi
-      const wordLower = w.word.toLowerCase()
-      const transcriptSlice = transcript.slice(charCursor, charCursor + wordLower.length + 5)
-      const localIdx = transcriptSlice.toLowerCase().indexOf(wordLower)
-
-      const charStart = localIdx !== -1 ? charCursor + localIdx : charCursor
-
-      // Đẩy cursor đi qua từ vừa quét
-      charCursor = charStart + w.word.length
-
-      // Quét dấu câu ngay sau từ
-      const afterMatch = transcript.slice(charCursor).match(/^([,.?!;:"'-]*)/)
-      const punctuationAfter = afterMatch?.[1] ?? ''
-
-      // Đẩy cursor đi qua dấu câu
-      charCursor += punctuationAfter.length
-
-      wordPositions.push({ charStart, punctuationAfter })
-    }
-
-    // Bước 3: Map sang Domain Model (Word)
-    return words.map((w, wordIndex) => {
-      const { charStart, punctuationAfter } = wordPositions[wordIndex]
-      const clean = cleanWord(w.word)
-
-      // Tìm câu chứa ký tự bắt đầu của từ
-      const sentenceIndex = sentenceBoundaries.findIndex((b) => charStart >= b.start && charStart < b.end)
-
-      const isFiller = FILLERS.has(clean)
-      const isRepetition = wordIndex > 0 && cleanWord(words[wordIndex - 1].word) === clean && !isFiller
-      const isOmission = w.errorType === 'Omission'
-
-      // Xử lý Phonemes & nối chuỗi IPA
-      let spokenIpa = ''
-      const mappedPhonemes = (w.phonemes ?? []).map((p) => {
-        const ipa = p.expectedIpa ?? p.phoneme ?? ''
-        const spokenSound = this._selectSpokenPhoneme(p)
-        spokenIpa += spokenSound
-        return {
-          sound: ipa,
-          score: Math.round(p.accuracyScore)
-        }
-      })
-
-      return {
-        wordIndex,
-        word: w.word,
-        sentenceIndex: sentenceIndex === -1 ? 0 : sentenceIndex,
-        punctuationAfter,
-        isFiller,
-        isRepetition,
-        isScoreable: !isFiller && !isRepetition && !isOmission,
-        errorType: w.errorType,
-        score: Math.round(w.accuracyScore),
-        offset: w.offset,
-        duration: w.duration,
-        phonemes: mappedPhonemes,
-        spokenIpa
-      }
-    })
-  }
-
   private _extractPauses(words: PronunciationAssessmentResult['words']): LongPause[] {
     const pauses: LongPause[] = []
 
@@ -283,31 +168,16 @@ export class SpeechMapper {
     return pauses
   }
 
-  private _detectRepetitions(words: EnrichedWord[]): string[] {
-    const repetitions: string[] = []
-
-    for (let i = 1; i < words.length; i++) {
-      const cur = cleanWord(words[i].word)
-      const prev = cleanWord(words[i - 1].word)
-      if (cur === prev && !FILLERS.has(cur) && cur.length > 0) {
-        repetitions.push(cur)
-      }
-    }
-
-    return repetitions
-  }
-
-  private _meanLengthOfRun(words: EnrichedWord[], longPauses: LongPause[]): number {
-    const scoreableWords = words.filter((w) => w.isScoreable)
-    if (scoreableWords.length === 0) return 0
-    if (longPauses.length === 0) return scoreableWords.length
+  private _meanLengthOfRun(words: PronunciationAssessmentResult['words'], longPauses: LongPause[]): number {
+    if (words.length === 0) return 0
+    if (longPauses.length === 0) return words.length
 
     const pauseIndexes = new Set(longPauses.map((p) => p.afterWordIndex))
     const runLengths: number[] = []
     let currentRun = 0
 
     for (const word of words) {
-      if (word.isScoreable) currentRun++
+      currentRun++
       if (pauseIndexes.has(word.wordIndex)) {
         if (currentRun > 0) runLengths.push(currentRun)
         currentRun = 0
@@ -316,12 +186,6 @@ export class SpeechMapper {
 
     if (currentRun > 0) runLengths.push(currentRun)
     return runLengths.length > 0 ? runLengths.reduce((sum, len) => sum + len, 0) / runLengths.length : 0
-  }
-
-  private _detectSelfCorrectionCandidates(transcript: string): string[] {
-    const patterns = [/\bi mean\b/gi, /\bi mean to say\b/gi, /\bor rather\b/gi, /\bsorry\b/gi, /\bactually\b/gi]
-
-    return patterns.flatMap((pattern) => transcript.match(pattern) ?? []).map((match) => match.toLowerCase())
   }
 
   private _hasBreakIssue(breakAfter: number | undefined, prosodyFeedback: unknown): boolean {

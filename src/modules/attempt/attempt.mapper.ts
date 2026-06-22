@@ -32,6 +32,8 @@ export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
       order: entity.order,
       status: entity.status,
       isPublic: entity.isPublic,
+      retryCount: entity.retryCount ?? undefined,
+      refundedAt: entity.refundedAt ?? undefined,
       analysisProfile: entity.analysisProfile,
       analysisVersion: entity.analysisVersion,
       transcriptPreview: entity.transcriptPreview ?? undefined,
@@ -64,11 +66,7 @@ export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
       'totalPauseDuration',
       'pauseRatio',
       'meanLengthOfRun',
-      'pauses',
-      'fillerCount',
-      'fillers',
-      'repetitionCount',
-      'repetitions'
+      'pauses'
     ]) as Partial<FluencyMetrics> | undefined
 
     return {
@@ -167,12 +165,7 @@ export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
 
     return {
       ...evaluation,
-      fluency: evaluation?.fluency
-        ? {
-            ...evaluation.fluency,
-            coherenceIssues: this._normalizeIssues(evaluation.fluency.coherenceIssues)
-          }
-        : evaluation?.fluency,
+      fluency: evaluation?.fluency,
       lexical: evaluation?.lexical
         ? {
             ...evaluation.lexical,

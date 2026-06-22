@@ -14,7 +14,7 @@ export class GroqLLMProvider implements ILLMProvider {
     const completion = await this.client.chat.completions.create({
       model: this.model,
       temperature: 0.1,
-      max_tokens: 1800,
+      max_tokens: 2500,
       response_format: { type: 'json_object' },
       messages: [{ role: 'user', content: prompt }]
     })

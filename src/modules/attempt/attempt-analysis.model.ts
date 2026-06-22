@@ -143,20 +143,11 @@ const assessmentIssueSchema = new mongoose.Schema(
   { _id: false }
 )
 
-const fluencyEvaluationSchema = new mongoose.Schema(
-  {
-    band: { type: Number, default: null },
-    deliveryBand: { type: Number, default: null },
-    coherenceBand: { type: Number, default: null },
-    coherenceIssues: { type: [assessmentIssueSchema], default: [] },
-    confidence: { type: Number }
-  },
-  { _id: false }
-)
-
 const simpleCriterionEvaluationSchema = new mongoose.Schema(
   {
     band: { type: Number, default: null },
+    strengths: { type: [String], default: [] },
+    limitations: { type: [String], default: [] },
     confidence: { type: Number }
   },
   { _id: false }
@@ -166,6 +157,8 @@ const issueCriterionEvaluationSchema = new mongoose.Schema(
   {
     band: { type: Number, default: null },
     issues: { type: [assessmentIssueSchema], default: [] },
+    strengths: { type: [String], default: [] },
+    limitations: { type: [String], default: [] },
     confidence: { type: Number }
   },
   { _id: false }
@@ -173,7 +166,7 @@ const issueCriterionEvaluationSchema = new mongoose.Schema(
 
 const evaluationSchema = new mongoose.Schema(
   {
-    fluency: { type: fluencyEvaluationSchema, default: null },
+    fluency: { type: simpleCriterionEvaluationSchema, default: null },
     pronunciation: { type: simpleCriterionEvaluationSchema, default: null },
     lexical: { type: issueCriterionEvaluationSchema, default: null },
     grammar: { type: issueCriterionEvaluationSchema, default: null },
@@ -320,11 +313,6 @@ export type FluencyMetrics = {
   pauseRatio?: number
   meanLengthOfRun?: number
   pauses?: FluencyPause[]
-  fillerCount?: number
-  fillers?: string[]
-  repetitionCount?: number
-  repetitions?: string[]
-  selfCorrectionCandidates?: string[]
 }
 
 export type SpeechAnalysis = {
@@ -344,27 +332,23 @@ export type AssessmentIssue = {
   alignmentConfidence?: number
 }
 
-export type FluencyEvaluation = {
-  band: number | null
-  deliveryBand?: number | null
-  coherenceBand?: number | null
-  coherenceIssues: AssessmentIssue[]
-  confidence?: number
-}
-
 export type SimpleCriterionEvaluation = {
   band: number | null
+  strengths?: string[] | null
+  limitations?: string[] | null
   confidence?: number
 }
 
 export type IssueCriterionEvaluation = {
   band: number | null
   issues: AssessmentIssue[]
+  strengths?: string[] | null
+  limitations?: string[] | null
   confidence?: number
 }
 
 export type Evaluation = {
-  fluency?: FluencyEvaluation | null
+  fluency?: SimpleCriterionEvaluation | null
   pronunciation?: SimpleCriterionEvaluation | null
   lexical?: IssueCriterionEvaluation | null
   grammar?: IssueCriterionEvaluation | null

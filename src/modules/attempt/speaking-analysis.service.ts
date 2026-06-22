@@ -2,7 +2,7 @@ import { inject, singleton } from 'tsyringe'
 import { TOKENS } from '~/common/constants/di.tokens'
 import { ATTEMPT_STATUS } from './attempt.constants'
 import { PART_KIND } from '../question/question.constants'
-import { SESSION_STATUS, SPEAKING_SESSION_MODE } from '../speaking-session/speaking-session.constants'
+import { SESSION_STATUS, SPEAKING_SESSION_MODE, MAX_RETRY } from '../speaking-session/speaking-session.constants'
 import { AzurePronunciationAssessmentProvider } from '~/infrastructure/providers/speech-assessment/azure.assessment'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 import {
@@ -20,6 +20,11 @@ import { toObjectId } from '~/common/utils'
 import { LLMEvaluator } from '~/infrastructure/providers/evaluator/llm-evaluator'
 import { SpeakingSessionService } from '../speaking-session/speaking-session.service'
 import { normalizeForAssessment } from './speaking-analysis.util'
+import { AccountService } from '../account/account.service'
+import { CreditLogService } from '../credit-log/credit-log.service'
+import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
+import { calculateCreditCost } from '../credit-log/credit.util'
+import { AttemptType } from './attempt.model'
 
 type AnalysisStage = 'transcribe' | 'assess' | 'evaluate' | 'score_session'
 
@@ -38,7 +43,9 @@ export class SpeakingAnalysisService {
     @inject(TOKENS.ISpeakingSessionRepository)
     private readonly speakingSessionRepository: ISpeakingSessionRepository,
     private readonly speakingSessionService: SpeakingSessionService,
-    private readonly llmEvaluator: LLMEvaluator
+    private readonly llmEvaluator: LLMEvaluator,
+    private readonly accountService: AccountService,
+    private readonly creditLogService: CreditLogService
   ) {}
 
   public async transcribe(data: TranscribeJobData, jobAttempts = 1, jobMaxAttempts = 1): Promise<void> {
@@ -346,11 +353,52 @@ export class SpeakingAnalysisService {
       }
     })
 
-    if (updatedAttempt && updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
-      const sessionId = updatedAttempt.speakingSessionId.toString()
-      await this.speakingSessionService.refreshSessionStatus(sessionId)
-      await this.speakingSessionService.checkAndRefund(sessionId)
+    if (updatedAttempt) {
+      if (updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
+        const sessionId = updatedAttempt.speakingSessionId.toString()
+        await this.speakingSessionService.refreshSessionStatus(sessionId)
+        await this.speakingSessionService.checkAndRefund(sessionId)
+      } else if (updatedAttempt.mode === SPEAKING_SESSION_MODE.PRACTICE) {
+        await this.checkAndRefundAttempt(updatedAttempt)
+      }
     }
+  }
+
+  private async checkAndRefundAttempt(attempt: AttemptType): Promise<void> {
+    if (attempt.retryCount != null && attempt.retryCount >= MAX_RETRY && !attempt.refundedAt) {
+      await this.refundAttempt(attempt)
+    }
+  }
+
+  private async refundAttempt(attempt: AttemptType) {
+    const pointsToRefund = calculateCreditCost(attempt.mode, attempt.part)
+
+    await this.attemptRepository.withTransaction(async (dbSession) => {
+      const updated = await this.attemptRepository.updateOne(
+        { _id: attempt._id, refundedAt: null },
+        { $set: { refundedAt: new Date() } },
+        { session: dbSession }
+      )
+
+      if (!updated) {
+        return
+      }
+
+      const account = await this.accountService.addBalance(attempt.userId.toString(), pointsToRefund, dbSession)
+
+      await this.creditLogService.create(
+        {
+          userId: attempt.userId.toString(),
+          amount: pointsToRefund,
+          reason: `Hoàn tiền luyện tập Part ${attempt.part} (lỗi hệ thống)`,
+          refType: CREDIT_LOG_REF_TYPE.REFUND,
+          refId: attempt._id,
+          balanceBefore: account.balance - pointsToRefund,
+          balanceAfter: account.balance
+        },
+        dbSession
+      )
+    })
   }
 
   private _formatError(error: unknown): string {

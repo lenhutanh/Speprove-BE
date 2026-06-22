@@ -16,7 +16,6 @@ export {
   Evaluation,
   FluencyMetrics,
   FluencyPause,
-  FluencyEvaluation,
   IssueCriterionEvaluation,
   NBestPhoneme,
   PronunciationAssessmentAnalysis,
@@ -71,7 +70,7 @@ const attemptSchema = new mongoose.Schema(
     audioFileId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File',
-      default: null
+      required: true
     },
     part: { type: Number, enum: [1, 2, 3], required: true },
     order: { type: Number, required: true },
@@ -81,6 +80,8 @@ const attemptSchema = new mongoose.Schema(
       default: 0,
       index: true
     },
+    retryCount: { type: Number, default: 0 },
+    refundedAt: { type: Date, default: null },
     isPublic: {
       type: Boolean,
       default: false,
