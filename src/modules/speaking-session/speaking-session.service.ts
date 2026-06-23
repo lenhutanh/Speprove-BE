@@ -25,7 +25,7 @@ import {
   INSTRUCTION_SCRIPTS,
   InstructionKey
 } from './speaking-session.constants'
-import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
+import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from '../credit-log/credit-log.constants'
 import { calculateCreditCost } from '../credit-log/credit.util'
 import { ATTEMPT_STATUS } from '../attempt/attempt.constants'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
@@ -120,8 +120,13 @@ export class SpeakingSessionService {
       await this.creditLogService.create(
         {
           userId,
-          amount: -pointsToDeduct,
-          reason: `Thi thử`,
+          type: CREDIT_LOG_TYPE.MINUS,
+          amount: pointsToDeduct,
+          description: `Thi thử Speaking: ${data.type.replace(/_/g, ' ').toUpperCase()}`,
+          descriptionKey: 'credit_log.session_deduct',
+          descriptionMetadata: {
+            type: data.type
+          },
           refType: CREDIT_LOG_REF_TYPE.USAGE,
           refId: createdSession._id,
           balanceBefore: account.balance + pointsToDeduct,
@@ -378,8 +383,14 @@ export class SpeakingSessionService {
       await this.creditLogService.create(
         {
           userId: session.userId.toString(),
+          type: CREDIT_LOG_TYPE.PLUS,
           amount: pointsToRefund,
-          reason: `Hoàn tiền thi thử (lỗi hệ thống)`,
+          description: `Hoàn tiền thi thử Speaking: ${session.type.replace(/_/g, ' ').toUpperCase()} (lỗi hệ thống)`,
+          descriptionKey: 'credit_log.session_refund',
+          descriptionMetadata: {
+            sessionId: session._id.toString(),
+            type: session.type
+          },
           refType: CREDIT_LOG_REF_TYPE.REFUND,
           refId: session._id,
           balanceBefore: account.balance - pointsToRefund,

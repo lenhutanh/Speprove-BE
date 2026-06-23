@@ -12,7 +12,7 @@ import {
   PAYMENT_STATUS,
   PaymentProviderType
 } from './payment.constants'
-import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
+import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from '../credit-log/credit-log.constants'
 import { PaymentProviderFactory } from './providers/payment-provider.factory'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
@@ -118,8 +118,15 @@ export class PaymentService {
           await this.creditLogService.create(
             {
               userId: payment.userId,
+              type: CREDIT_LOG_TYPE.PLUS,
               amount: payment.points,
-              reason: `Nạp ${payment.points} điểm`,
+              description: `Nạp ${payment.points} điểm`,
+              descriptionKey: 'credit_log.payment_success',
+              descriptionMetadata: {
+                points: payment.points,
+                amount: payment.amount,
+                method: payment.method
+              },
               refType: CREDIT_LOG_REF_TYPE.PAYMENT,
               refId: payment._id,
               balanceBefore: account.balance - payment.points,

@@ -12,7 +12,7 @@ import { toObjectId } from '~/common/utils'
 import { AttemptMapper } from './attempt.mapper'
 import { ANALYSIS_PROFILE, AnalysisProfile, ATTEMPT_STATUS } from './attempt.constants'
 import { SESSION_STATUS, SPEAKING_SESSION_MODE, MAX_RETRY } from '../speaking-session/speaking-session.constants'
-import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
+import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from '../credit-log/credit-log.constants'
 import { SpeakingProducer } from '~/infrastructure/queues/publishers/speaking.producer'
 import { AudioFileType } from '../file/file.model'
 import { ForecastQuestionResponseDto } from '../forecast-question/forecast-question.dto'
@@ -82,8 +82,14 @@ export class AttemptService {
           await this.creditLogService.create(
             {
               userId: toObjectId(userId),
-              amount: -pointsToDeduct,
-              reason: `Luyện tập Part ${forecastQuestion.part}: ${forecastQuestion.content}`,
+              type: CREDIT_LOG_TYPE.MINUS,
+              amount: pointsToDeduct,
+              description: `Luyện tập Speaking Part ${forecastQuestion.part}`,
+              descriptionKey: 'credit_log.practice_deduct',
+              descriptionMetadata: {
+                part: forecastQuestion.part,
+                questionId: forecastQuestion.id
+              },
               refType: CREDIT_LOG_REF_TYPE.USAGE,
               refId: forecastQuestion.id,
               balanceBefore: account.balance + pointsToDeduct,
