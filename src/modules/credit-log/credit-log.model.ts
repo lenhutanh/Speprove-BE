@@ -1,10 +1,13 @@
 import mongoose from 'mongoose'
-import { CREDIT_LOG_REF_TYPE } from './credit-log.constants'
+import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from './credit-log.constants'
 
 const creditLogSchema = new mongoose.Schema({
   userId: { type: mongoose.Types.ObjectId, ref: 'Account', required: true },
+  type: { type: String, enum: Object.values(CREDIT_LOG_TYPE), required: true },
   amount: { type: Number, required: true },
-  reason: { type: String, required: true },
+  description: { type: String, required: true },
+  descriptionKey: { type: String },
+  descriptionMetadata: { type: mongoose.Schema.Types.Map, of: mongoose.Schema.Types.Mixed },
 
   refType: { type: String, enum: Object.values(CREDIT_LOG_REF_TYPE) },
   refId: { type: mongoose.Schema.Types.ObjectId },

@@ -7,6 +7,14 @@ export const CREDIT_LOG_REF_TYPE = {
 
 export type CreditLogRefType = (typeof CREDIT_LOG_REF_TYPE)[keyof typeof CREDIT_LOG_REF_TYPE]
 
+export const CREDIT_LOG_TYPE = {
+  PLUS: 'plus',
+  MINUS: 'minus'
+} as const
+
+export type CreditLogTypeType = (typeof CREDIT_LOG_TYPE)[keyof typeof CREDIT_LOG_TYPE]
+
+
 export const CREDIT_COST = {
   PRACTICE: {
     PART_1: 5,

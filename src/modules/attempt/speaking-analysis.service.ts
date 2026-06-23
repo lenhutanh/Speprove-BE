@@ -22,7 +22,7 @@ import { SpeakingSessionService } from '../speaking-session/speaking-session.ser
 import { normalizeForAssessment } from './speaking-analysis.util'
 import { AccountService } from '../account/account.service'
 import { CreditLogService } from '../credit-log/credit-log.service'
-import { CREDIT_LOG_REF_TYPE } from '../credit-log/credit-log.constants'
+import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from '../credit-log/credit-log.constants'
 import { calculateCreditCost } from '../credit-log/credit.util'
 import { AttemptType } from './attempt.model'
 
@@ -389,8 +389,14 @@ export class SpeakingAnalysisService {
       await this.creditLogService.create(
         {
           userId: attempt.userId.toString(),
+          type: CREDIT_LOG_TYPE.PLUS,
           amount: pointsToRefund,
-          reason: `Hoàn tiền luyện tập Part ${attempt.part} (lỗi hệ thống)`,
+          description: `Hoàn tiền luyện tập Speaking Part ${attempt.part} (lỗi hệ thống)`,
+          descriptionKey: 'credit_log.practice_refund',
+          descriptionMetadata: {
+            attemptId: attempt._id.toString(),
+            part: attempt.part
+          },
           refType: CREDIT_LOG_REF_TYPE.REFUND,
           refId: attempt._id,
           balanceBefore: account.balance - pointsToRefund,
