@@ -13,6 +13,8 @@ import { ErrorCodes } from '~/common/constants/error-codes'
 import { AccountMapper } from './account.mapper'
 import { UpdateProfileBodyType } from '../auth/types/auth.type'
 import { UpdateSelectedVoiceBodyType } from './account.type'
+import { CreditLogService } from '~/modules/credit-log/credit-log.service'
+import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from '~/modules/credit-log/credit-log.constants'
 
 @singleton()
 export class AccountService {
@@ -20,7 +22,8 @@ export class AccountService {
     private readonly groupService: GroupService,
     @inject(TOKENS.IAccountRepository) private readonly accountRepository: IAccountRepository,
     private readonly voiceService: VoiceService,
-    private readonly accountMapper: AccountMapper
+    private readonly accountMapper: AccountMapper,
+    private readonly creditLogService: CreditLogService
   ) {}
 
   public async getById(id: string): Promise<AccountType> {
@@ -58,7 +61,25 @@ export class AccountService {
       selectedVoiceId: defaultVoice.id,
       balance: FREE_SIGNUP_BALANCE
     }
-    return await this.accountRepository.create(newData, { session })
+    const user = await this.accountRepository.create(newData, { session })
+
+    if (FREE_SIGNUP_BALANCE > 0) {
+      await this.creditLogService.create(
+        {
+          userId: user._id,
+          type: CREDIT_LOG_TYPE.PLUS,
+          amount: FREE_SIGNUP_BALANCE,
+          description: 'Quà tặng thành viên mới',
+          descriptionKey: 'credit_log.signup_gift',
+          refType: CREDIT_LOG_REF_TYPE.MANUAL,
+          balanceBefore: 0,
+          balanceAfter: FREE_SIGNUP_BALANCE
+        },
+        session
+      )
+    }
+
+    return user
   }
 
   public async getList() {

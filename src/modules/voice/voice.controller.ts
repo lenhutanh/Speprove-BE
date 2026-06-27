@@ -32,4 +32,9 @@ export class VoiceController {
     const voices = await this.voiceService.getList()
     return ResponseTransformer.success(res, voices, 'Get voice list successfully')
   }
+
+  public async getSampleAudio(req: Request, res: Response) {
+    const result = await this.voiceService.getSampleAudio(req.validated.params.id)
+    return ResponseTransformer.success(res, result, 'Get voice sample audio successfully')
+  }
 }

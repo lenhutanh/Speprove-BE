@@ -239,7 +239,12 @@ export class AttemptService {
       .sort('createdAt', 'desc')
       .limit(10)
       .populate('audioFileId')
-      .populate({ path: 'userId', select: 'fullName avatar' })
+      .populate({
+        path: 'userId',
+        populate: {
+          path: 'avatarId'
+        }
+      })
       .build()
 
     const result = await this.attemptRepository.findMany(filter, options)

@@ -3,4 +3,4 @@ export const ACCOUNT_KIND = {
   USER: 2
 } as const
 
-export const FREE_SIGNUP_BALANCE = 3
+export const FREE_SIGNUP_BALANCE = 50

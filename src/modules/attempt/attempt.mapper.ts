@@ -82,12 +82,19 @@ export class AttemptMapper extends BaseMapper<AttemptType, AttemptResponseDto> {
   }
 
   toLeaderboardResponse(entity: AttemptType): AttemptLeaderboardDto {
+    const avatarUrl =
+      entity.userId && typeof entity.userId !== 'string' && (entity.userId as any).avatarId
+        ? typeof (entity.userId as any).avatarId === 'object' && 'url' in (entity.userId as any).avatarId
+          ? (entity.userId as any).avatarId.url
+          : undefined
+        : undefined
+
     const userInfo =
       entity.userId && typeof entity.userId !== 'string'
         ? {
             id: (entity.userId as any)._id.toString(),
             fullName: (entity.userId as any).fullName || 'Anonymous',
-            avatar: (entity.userId as any).avatar
+            avatar: avatarUrl
           }
         : null
 

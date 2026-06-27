@@ -28,7 +28,7 @@ export class CreditLogService {
     const { filter, options } = qb
       .applyFilters({ userId, ...filters })
       .search(['description'], search || '')
-      .sort(sortBy, sortOrder)
+      .sort(sortBy, 'desc')
       .build()
 
     const { data, pagination } = await this.creditLogRepository.paginate(filter, page, limit, options)
