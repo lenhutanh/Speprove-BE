@@ -36,4 +36,6 @@ router
 
 router.route('/default').get(bindHandler(VoiceController, 'getDefault'))
 
+router.route('/:id/sample-audio').get(validateMiddleware(idParamSchema), bindHandler(VoiceController, 'getSampleAudio'))
+
 export const voiceRoutes = router

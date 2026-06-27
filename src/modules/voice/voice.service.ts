@@ -110,6 +110,39 @@ export class VoiceService {
     return voice
   }
 
+  public async getSampleAudio(id: string) {
+    const voice = await this.voiceRepository.findById(id)
+    if (!voice) {
+      throw new AppError('Voice not found', StatusCodes.NOT_FOUND)
+    }
+
+    if (voice.status !== STATUS.ACTIVE) {
+      throw new AppError('Voice is not active', StatusCodes.BAD_REQUEST)
+    }
+
+    if (voice.sampleAudioFileId) {
+      const populatedVoice = await this.voiceRepository.findById(id, { populate: 'sampleAudioFileId' })
+      const fileNode = populatedVoice?.sampleAudioFileId as any
+      if (fileNode?.url) {
+        return { audioUrl: fileNode.url }
+      }
+    }
+
+    const audioFile = await this.fileService.generateAndSaveAudio({
+      text: VOICE_SAMPLE_TEXT,
+      voiceCode: voice.voiceCode,
+      speed: voice.speed,
+      pitch: voice.pitch ?? 0,
+      folder: CLOUD_FOLDERS.VOICE_SAMPLES
+    })
+
+    await this.voiceRepository.updateById(id, {
+      sampleAudioFileId: audioFile._id
+    })
+
+    return { audioUrl: audioFile.url }
+  }
+
   public async findActiveById(id: string) {
     const voice = await this.voiceRepository.findOne({ _id: id, status: STATUS.ACTIVE })
     if (!voice) throw new AppError('Active voice not found', StatusCodes.NOT_FOUND)
