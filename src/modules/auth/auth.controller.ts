@@ -171,4 +171,9 @@ export class AuthController {
     await this.authService.setPassword(req.user._id, req.validated.body)
     return ResponseTransformer.successNoData(res, 'Set password successfully')
   }
+
+  public async generateSocketTicket(req: AuthenticatedRequest, res: Response) {
+    const result = await this.authService.generateSocketTicket(req.user._id)
+    return ResponseTransformer.success(res, result, 'Get socket ticket successfully')
+  }
 }

@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser'
 import swaggerUi from 'swagger-ui-express'
 import { setupContainer } from './bootstrap/container'
 import { initQuestionSpelling } from './modules/question/question-spelling.service'
+import { SocketService } from './infrastructure/socket/socket.service'
 ;(async () => {
   try {
     await initQuestionSpelling()
@@ -59,6 +60,10 @@ import { initQuestionSpelling } from './modules/question/question-spelling.servi
       console.log(`6. Server running at http://${env.APP_HOST}:${env.APP_PORT}/\n`)
     })
 
+    // Socket
+    const socketService = container.resolve(SocketService)
+    socketService.init(server, corsOptions)
+
     // 8. Graceful shutdown
     const shutdown = async () => {
       console.log('\n🛑 Shutting down gracefully...')
@@ -66,6 +71,7 @@ import { initQuestionSpelling } from './modules/question/question-spelling.servi
         await shutdownWorkers() // worker trước
         await queueFactory.shutdown() // queue sau
         await closeDB()
+        socketService.close()
         console.log('✅ Shutdown complete')
         process.exit(0)
       })

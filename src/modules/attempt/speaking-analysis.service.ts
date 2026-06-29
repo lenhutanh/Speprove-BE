@@ -25,6 +25,8 @@ import { CreditLogService } from '../credit-log/credit-log.service'
 import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from '../credit-log/credit-log.constants'
 import { calculateCreditCost } from '../credit-log/credit.util'
 import { AttemptType } from './attempt.model'
+import { SocketService } from '~/infrastructure/socket/socket.service'
+import { SOCKET_EVENTS } from '~/infrastructure/socket/socket.constants'
 
 type AnalysisStage = 'transcribe' | 'assess' | 'evaluate' | 'score_session'
 
@@ -45,13 +47,14 @@ export class SpeakingAnalysisService {
     private readonly speakingSessionService: SpeakingSessionService,
     private readonly llmEvaluator: LLMEvaluator,
     private readonly accountService: AccountService,
-    private readonly creditLogService: CreditLogService
+    private readonly creditLogService: CreditLogService,
+    private readonly socketService: SocketService
   ) {}
 
   public async transcribe(data: TranscribeJobData, jobAttempts = 1, jobMaxAttempts = 1): Promise<void> {
     const { attemptId, audioUrl, questionContent, part } = data
 
-    await this.attemptRepository.updateById(attemptId, {
+    const updatedAttempt = await this.attemptRepository.updateById(attemptId, {
       $set: {
         status: ATTEMPT_STATUS.PROCESSING,
         'analysisMeta.startedAt': new Date(),
@@ -62,6 +65,15 @@ export class SpeakingAnalysisService {
         'analysisMeta.failedStage': 1
       }
     })
+
+    if (updatedAttempt && updatedAttempt.mode === SPEAKING_SESSION_MODE.PRACTICE) {
+      this.socketService.emit(updatedAttempt.userId.toString(), SOCKET_EVENTS.ATTEMPT_UPDATED, {
+        attemptId,
+        forecastQuestionId: updatedAttempt.forecastQuestionId.toString(),
+        status: updatedAttempt.status,
+        currentStage: updatedAttempt.analysisMeta?.currentStage
+      })
+    }
 
     try {
       const sttResult = await this.sttProvider.transcribe(audioUrl, questionContent)
@@ -117,11 +129,20 @@ export class SpeakingAnalysisService {
   public async assess(data: AssessJobData, jobAttempts = 1, jobMaxAttempts = 1): Promise<void> {
     const { attemptId, transcript, referenceTranscript, audioUrl, questionContent, part } = data
 
-    await this.attemptRepository.updateById(attemptId, {
+    const updatedAttempt = await this.attemptRepository.updateById(attemptId, {
       $set: {
         'analysisMeta.currentStage': 'assess'
       }
     })
+
+    if (updatedAttempt && updatedAttempt.mode === SPEAKING_SESSION_MODE.PRACTICE) {
+      this.socketService.emit(updatedAttempt.userId.toString(), SOCKET_EVENTS.ATTEMPT_UPDATED, {
+        attemptId,
+        forecastQuestionId: updatedAttempt.forecastQuestionId.toString(),
+        status: updatedAttempt.status,
+        currentStage: updatedAttempt.analysisMeta?.currentStage
+      })
+    }
 
     try {
       const result = await this.assessmentProvider.assess(audioUrl, transcript)
@@ -185,11 +206,20 @@ export class SpeakingAnalysisService {
   async evaluate(data: EvaluateJobData, jobAttempts = 1, jobMaxAttempts = 1): Promise<void> {
     const { attemptId, questionContent, speechAnalysis, transcript, part } = data
 
-    await this.attemptRepository.updateById(attemptId, {
+    const updatedAttemptStage = await this.attemptRepository.updateById(attemptId, {
       $set: {
         'analysisMeta.currentStage': 'evaluate'
       }
     })
+
+    if (updatedAttemptStage && updatedAttemptStage.mode === SPEAKING_SESSION_MODE.PRACTICE) {
+      this.socketService.emit(updatedAttemptStage.userId.toString(), SOCKET_EVENTS.ATTEMPT_UPDATED, {
+        attemptId,
+        forecastQuestionId: updatedAttemptStage.forecastQuestionId.toString(),
+        status: updatedAttemptStage.status,
+        currentStage: updatedAttemptStage.analysisMeta?.currentStage
+      })
+    }
 
     try {
       const analysis = await this.attemptAnalysisRepository.findOne(
@@ -261,6 +291,14 @@ export class SpeakingAnalysisService {
 
       if (!updatedAttempt) throw new Error(`Attempt not found: ${attemptId}`)
 
+      if (updatedAttempt.mode === SPEAKING_SESSION_MODE.PRACTICE) {
+        this.socketService.emit(updatedAttempt.userId.toString(), SOCKET_EVENTS.ATTEMPT_UPDATED, {
+          attemptId,
+          forecastQuestionId: updatedAttempt.forecastQuestionId.toString(),
+          status: updatedAttempt.status
+        })
+      }
+
       console.log(`Finish evaluating attempt ${attemptId} at: `, Date.now())
 
       try {
@@ -321,7 +359,7 @@ export class SpeakingAnalysisService {
     const finalAverage = sumOfCriteria / 4
     const overallBand = this._roundToHalf(finalAverage)
 
-    await this.speakingSessionRepository.updateById(speakingSessionId, {
+    const updatedSpeakingSession = await this.speakingSessionRepository.updateById(speakingSessionId, {
       result: {
         overall: overallBand,
         fluency: this._roundToHalf(sessionCriteriaScores.fluency),
@@ -332,6 +370,13 @@ export class SpeakingAnalysisService {
       status: SESSION_STATUS.COMPLETED,
       finishedAt: new Date()
     })
+
+    if (updatedSpeakingSession) {
+      this.socketService.emit(attempts[0].userId.toString(), SOCKET_EVENTS.MOCK_TEST_UPDATED, {
+        speakingSessionId: updatedSpeakingSession._id,
+        status: updatedSpeakingSession.status
+      })
+    }
 
     console.log(
       `Session ${speakingSessionId} completed. Overall: ${overallBand} | FC: ${sessionCriteriaScores.fluency.toFixed(1)}, PR: ${sessionCriteriaScores.pronunciation.toFixed(1)}, LR: ${sessionCriteriaScores.lexical.toFixed(1)}, GRA: ${sessionCriteriaScores.grammar.toFixed(1)}`
@@ -354,10 +399,23 @@ export class SpeakingAnalysisService {
     })
 
     if (updatedAttempt) {
+      if (updatedAttempt.mode === SPEAKING_SESSION_MODE.PRACTICE) {
+        this.socketService.emit(updatedAttempt.userId.toString(), SOCKET_EVENTS.ATTEMPT_UPDATED, {
+          attemptId,
+          forecastQuestionId: updatedAttempt.forecastQuestionId.toString(),
+          status: updatedAttempt.status
+        })
+      }
+
       if (updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
         const sessionId = updatedAttempt.speakingSessionId.toString()
         await this.speakingSessionService.refreshSessionStatus(sessionId)
         await this.speakingSessionService.checkAndRefund(sessionId)
+
+        this.socketService.emit(updatedAttempt.userId.toString(), SOCKET_EVENTS.MOCK_TEST_UPDATED, {
+          speakingSessionId: sessionId,
+          status: SESSION_STATUS.FAILED
+        })
       } else if (updatedAttempt.mode === SPEAKING_SESSION_MODE.PRACTICE) {
         await this.checkAndRefundAttempt(updatedAttempt)
       }

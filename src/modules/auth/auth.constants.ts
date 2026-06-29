@@ -20,5 +20,9 @@ export const CACHE_CONFIG = {
   GOOGLE_OAUTH_STATE: {
     PREFIX: 'google-oauth-state',
     TTL: 300
+  },
+  SOCKET_TICKET: {
+    PREFIX: 'socket-ticket',
+    TTL: 30
   }
 }
