@@ -491,4 +491,14 @@ export class AuthService {
 
     await this.accountService.updatePassword(account.email, hashedPassword)
   }
+
+  public async generateSocketTicket(userId: string) {
+    const ticket = generateSecureToken()
+    await this.cacheService.set(
+      buildRedisKey(CACHE_CONFIG.SOCKET_TICKET, ticket),
+      userId,
+      CACHE_CONFIG.SOCKET_TICKET.TTL
+    )
+    return { ticket }
+  }
 }

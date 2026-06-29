@@ -56,4 +56,6 @@ router.put(
   bindHandler(AuthController, 'setPassword')
 )
 
+router.post('/socket-ticket', authMiddleware.isAuthorized, bindHandler(AuthController, 'generateSocketTicket'))
+
 export const authRoutes = router
