@@ -6,19 +6,13 @@ import { socketAuthMiddleware } from '~/common/middlewares/socket.middleware'
 export class SocketService {
   private io: Server | null = null
 
-  public init(server: any, corsOptions: any) {
+  public init(server: any, corsOptions: any): Server {
     this.io = new Server(server, {
       cors: corsOptions
     })
     this.io.use(socketAuthMiddleware)
 
-    this.io.on('connection', (socket) => {
-      const userId = socket.data.user?.id
-      if (userId) {
-        socket.join(`user:${userId}`)
-        console.log(`User ${userId} connected to socket`)
-      }
-    })
+    return this.io
   }
 
   public close() {
@@ -30,5 +24,15 @@ export class SocketService {
   public emit(userId: string, event: string, data: any) {
     if (!this.io) return
     this.io.to(`user:${userId}`).emit(event, data)
+  }
+
+  public toRoom(room: string, event: string, data: any) {
+    if (!this.io) return
+    this.io.to(room).emit(event, data)
+  }
+
+  public joinUserToRoom(userId: string, room: string) {
+    if (!this.io) return
+    this.io.in(`user:${userId}`).socketsJoin(room)
   }
 }

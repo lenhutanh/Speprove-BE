@@ -25,27 +25,8 @@ Output format (strict):
 - Return one JSON object only. No markdown code fences, no preamble, no text before "{" or after the final "}".
 - All Vietnamese text must use Vietnamese only. Specific English words, phrases, and suggestions stay in English.
 
-Part guidance:
-${PART_GUIDANCE[input.part]}
-
 Transcript scoring guidance:
 ${TRANSCRIPT_SCORING_GUIDANCE}
-
-Question / cue card:
-${input.question}
-
-Evaluation transcript:
-This transcript is built from Azure word-level assessment and uses punctuation aligned from the STT display transcript for readability. It is the only transcript source for scoring. See "Transcript scoring guidance" above for how to treat punctuation and spoken-text artifacts.
-${input.transcript}
-
-Audio Delivery Evidence:
-- Speech Rate: ${speechRate} WPM
-- Pause Ratio: ${Math.round(pauseRatio * 100)}%
-- Mean Length of Run: ${meanLengthOfRun} words
-- Long Pauses: ${longPauseCount}
-- Duration: ${duration} seconds
-- Word Count: ${wordCount}
-These numbers are context only. Interpret them qualitatively (e.g. a high pause ratio may suggest hesitation) rather than against fixed thresholds, and never let them override what the transcript itself shows.
 
 IELTS rubric reference for criteria you must score:
 ${FLUENCY_COHERENCE_RUBRIC}
@@ -145,12 +126,13 @@ Output schema — return exactly this shape, with no extra top-level keys and no
 
 Diagnostics rules (strengths and limitations, all criteria):
 - Return 0-3 strengths and 0-3 limitations per criterion. Strongly prefer an empty limitations array [] when no clear, evidence-based weakness exists for that criterion. Never invent a limitation merely to balance strengths. If a response is extremely brief or there is insufficient evidence to make a meaningful observation for a criterion, return [] for the corresponding strengths or limitations. Do not hallucinate or force generic observations.
+- Score-based Constraints for Strengths: If the assigned band score for a criterion (fluency, lexical, or grammar) is 5.0 or below (<= 5.0), the strengths array for that criterion MUST be empty []. Do not praise or invent strengths for low-performing criteria.
 - Each item must be a concise observation (roughly 15-20 words) that is highly specific to this response, referencing specific words, phrases, or grammatical structures used by the candidate.
 - Strictly ban generic/boilerplate observations that could apply to any speaker (e.g. "Vốn từ vựng còn hạn chế", "Thiếu sự đa dạng cấu trúc", "Ý tưởng chưa phát triển sâu") unless they are accompanied by a specific example from the transcript explaining why (e.g. "Hạn chế vốn từ khi lặp lại từ '...' nhiều lần thay vì dùng từ đồng nghĩa").
-- Strictly avoid self-contradictory feedback within a criterion: Do not praise a linguistic feature as a strength and then criticize the same feature as a limitation. For example, if you praise the candidate's natural pacing or lack of hesitation, do not list minor pauses or slow speech as a limitation. If you praise vocabulary range or advanced words (e.g. 'catching up', 'enjoying each other's company'), do not list "limited or simple vocabulary" as a limitation. If the response is short but uses good vocabulary/grammar, simply return an empty array [] for limitations instead of fabricating contradictions.
+- Strictly avoid self-contradictory feedback within a criterion: Do not praise a linguistic feature as a strength and then criticize the same feature as a limitation. For example, if you list any limitation regarding hesitation, repetition, or pausing (e.g., "Lặp từ gây ngập ngừng nhẹ"), you MUST NOT list any strength praising fluency, pacing, or lack of hesitation (such as "ít ngập ngừng" or "nói trôi chảy"). Conversely, if you praise fluency/pacing, you must not list hesitation/pauses as a limitation. If the response is short but uses good vocabulary/grammar, simply return an empty array [] for limitations instead of fabricating contradictions.
 - Describe observations concretely: Avoid abstract or vague terms like "Dòng chảy tự nhiên", "Cách nói hay", or "Từ vựng chung chung". Use concrete descriptors instead (e.g., "Tốc độ nói ổn định", "Nói trôi chảy, ít ngập ngừng", "Sử dụng từ vựng ở mức độ cơ bản").
 - Categorization Strictness: Strictly enforce boundaries between criteria. Do not place grammatical/sentence structure observations (e.g. "thiếu đa dạng cấu trúc câu", "chỉ có một câu dài") under Fluency & Coherence. Keep discourse markers (e.g. 'you know', 'like') under Fluency & Coherence; never analyze them under Lexical Resource.
-- Fluency Feedback Style: If the pacing and flow are good, keep the strengths extremely concise and direct (e.g., "Nói trôi chảy, tốc độ nói vừa phải, ít ngập ngừng"). Do not use awkward phrases like "sử dụng lưu loát". If there are limitations, specify the exact cause: speed (tốc độ nói quá nhanh/chậm) or pausing/hesitation (ngập ngừng do lặp từ hoặc có nhiều khoảng nghỉ/pause). For Part 1, do not create a fluency/coherence limitation solely because the answer is concise or not deeply developed if it directly answers the question and provides at least one supporting idea or detail.
+- Fluency Feedback Style: If the pacing and flow are good (Band 7 or above), keep the strengths concise and direct (e.g., "Duy trì nhịp độ nói ổn định"). Do not use awkward phrases like "sử dụng lưu loát". If there are limitations, specify the exact cause: speed (tốc độ nói quá nhanh/chậm) or pausing/hesitation (ngập ngừng do lặp từ hoặc có nhiều khoảng nghỉ/pause). Do not praise "lack of hesitation" or "little hesitation" (ít ngập ngừng) if the score is Band 6.0 or below. For Part 1, do not create a fluency/coherence limitation solely because the answer is concise or not deeply developed if it directly answers the question and provides at least one supporting idea or detail.
 - Grammar Diagnostics: Never mention punctuation, commas, periods, capitalization, or written sentence boundaries in grammar diagnostics. Spoken speech does not have punctuation; focus strictly on spoken grammatical structures and clause linking. Do not treat natural spoken fragments, backchannel responses, discourse responses, or elliptical answers (e.g. "Absolutely", "Of course", "Definitely") as grammar limitations when they are natural and grammatically acceptable in spoken conversation.
 - Distinguish Idioms vs. Phrases: Only classify standard, well-established English idioms (e.g. 'life of the party', 'in a bind') as idioms. Do not call basic words or combinations (e.g. 'super pleasures') idioms. Label them as collocations or phrases instead.
 - Surgical & Concise: lead directly with the observation and evidence, no setup sentence.
@@ -181,6 +163,29 @@ Example of an issue:
   "severity": "major"
 }
 
-Before returning, verify silently: the response is one JSON object starting with "{" and ending with "}", every severity value is exactly "minor" or "major", every spanText is copied verbatim from the transcript above, and confidence is present as a number on fluency, lexical, and grammar.`
+Before returning, verify silently: the response is one JSON object starting with "{" and ending with "}", every severity value is exactly "minor" or "major", every spanText is copied verbatim from the transcript above, and confidence is present as a number on fluency, lexical, and grammar.
+
+--------------------------------------------------
+EVALUATION DATA:
+Use the following response details to perform the evaluation and scoring, based strictly on the guidelines above:
+
+Part guidance:
+${PART_GUIDANCE[input.part]}
+
+Question / cue card:
+${input.question}
+
+Audio Delivery Evidence:
+- Speech Rate: ${speechRate} WPM
+- Pause Ratio: ${Math.round(pauseRatio * 100)}%
+- Mean Length of Run: ${meanLengthOfRun} words
+- Long Pauses: ${longPauseCount}
+- Duration: ${duration} seconds
+- Word Count: ${wordCount}
+These numbers are context only. Interpret them qualitatively (e.g. a high pause ratio may suggest hesitation) rather than against fixed thresholds, and never let them override what the transcript itself shows.
+
+Evaluation transcript:
+This transcript is built from Azure word-level assessment and uses punctuation aligned from the STT display transcript for readability. It is the only transcript source for scoring.
+${input.transcript}`
   }
 }

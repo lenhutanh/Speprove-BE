@@ -18,7 +18,7 @@ export class CreditPackageService {
   }
 
   public async getAll() {
-    const result = await this.creditPackageRepository.findMany({ isActive: true })
+    const result = await this.creditPackageRepository.findMany({ isActive: true }, { sort: { amount: 1 } })
     return result
   }
 
