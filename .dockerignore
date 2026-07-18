@@ -1,0 +1,14 @@
+node_modules
+dist
+logs
+.git
+.env
+.env.example
+npm-debug.log
+pnpm-debug.log
+yarn-debug.log
+.prettierignore
+.prettierrc
+eslint.config.mts
+nodemon.json
+
