@@ -1,0 +1,20 @@
+services:
+  api:
+    container_name: speprove-api-dev
+
+    image: speprove-be-dev:latest
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    environment:
+      NODE_ENV: development
+
+    env_file:
+      - .env
+
+    ports:
+      - "8017:8017"
+
+    restart: unless-stopped
