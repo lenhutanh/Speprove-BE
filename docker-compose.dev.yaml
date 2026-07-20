@@ -18,3 +18,10 @@ services:
       - "8017:8017"
 
     restart: unless-stopped
+
+    networks:
+      - speprove-net
+
+networks:
+  speprove-net:
+    name: speprove-net
