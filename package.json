@@ -81,7 +81,7 @@
     "msedge-tts": "^2.0.4",
     "multer": "^2.0.2",
     "music-metadata": "^11.12.1",
-    "node-edge-tts": "^1.2.10",
+    "node-edge-tts": "^1.2.11",
     "nspell": "^2.1.5",
     "redis": "^5.10.0",
     "reflect-metadata": "^0.2.2",
