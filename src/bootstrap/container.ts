@@ -30,6 +30,7 @@ import { registerSpeakingSessionModule } from '~/modules/speaking-session/speaki
 import { registerTopicModule } from '~/modules/topic/topic.di'
 import { registerVocabularySuggestionModule } from '~/modules/vocabulary-suggestion/vocabulary-suggestion.di'
 import { registerVoiceModule } from '~/modules/voice/voice.di'
+import { registerVoiceRoomModule } from '~/modules/voice-room/voice-room.di'
 
 export function setupContainer(): void {
   console.log('Setting up DI container...')
@@ -65,6 +66,7 @@ export function setupContainer(): void {
   registerAccountProviderModule()
   registerGeneratedAudioModule()
   registerVocabularySuggestionModule()
+  registerVoiceRoomModule()
 
   console.log('DI container ready\n')
 }

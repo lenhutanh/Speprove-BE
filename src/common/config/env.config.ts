@@ -56,7 +56,12 @@ const envSchema = z.object({
   // Google
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
-  GOOGLE_REDIRECT_URI: z.string()
+  GOOGLE_REDIRECT_URI: z.string(),
+
+  // LiveKit
+  LIVEKIT_URL: z.string().optional(),
+  LIVEKIT_API_KEY: z.string().optional(),
+  LIVEKIT_API_SECRET: z.string().optional()
 })
 
 const parsed = envSchema.safeParse(process.env)
@@ -83,5 +88,10 @@ export const env = {
     BREVO_API_KEY: parsed.data.BREVO_API_KEY,
     SENDER_EMAIL: parsed.data.SENDER_EMAIL,
     SENDER_NAME: parsed.data.SENDER_NAME
+  },
+  LIVEKIT: {
+    URL: parsed.data.LIVEKIT_URL || '',
+    API_KEY: parsed.data.LIVEKIT_API_KEY || '',
+    API_SECRET: parsed.data.LIVEKIT_API_SECRET || ''
   }
 }

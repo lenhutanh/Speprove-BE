@@ -17,6 +17,7 @@ import { paymentRoutes } from '~/modules/payment/payment.route'
 import { creditPackageRoutes } from '~/modules/credit-package/credit-package.route'
 import { vocabularySuggestionRoutes } from '~/modules/vocabulary-suggestion/vocabulary-suggestion.route'
 import { creditLogRoutes } from '~/modules/credit-log/credit-log.route'
+import { voiceRoomRoutes } from '~/modules/voice-room/voice-room.route'
 
 const router = express.Router()
 
@@ -38,5 +39,6 @@ router.use('/payment', paymentRoutes)
 router.use('/credit-package', creditPackageRoutes)
 router.use('/vocabulary-suggestion', vocabularySuggestionRoutes)
 router.use('/credit-log', creditLogRoutes)
+router.use('/voice-room', voiceRoomRoutes)
 
 export const APIs_V1 = router
