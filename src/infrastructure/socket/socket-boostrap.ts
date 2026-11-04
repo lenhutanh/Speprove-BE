@@ -1,10 +1,9 @@
 import { container } from 'tsyringe'
+import { VOICE_ROOM_SOCKET_EVENTS } from '~/modules/voice-room/voice-room.constants'
 import { SocketService } from './socket.service'
-// import { ChatSocketHandler } from '~/modules/chat/handlers/chat-socket.handler'
 
 export function initSocket(server: any, corsOptions: any) {
   const socketService = container.resolve(SocketService)
-  // const chatSocketHandler = container.resolve(ChatSocketHandler)
 
   const io = socketService.init(server, corsOptions)
 
@@ -18,11 +17,25 @@ export function initSocket(server: any, corsOptions: any) {
     socket.join(`user:${userId}`)
     console.log(`User ${userId} connected to socket`)
 
-    // try {
-    //   await chatSocketHandler.handleConnection(socket, userId)
-    // } catch (err) {
-    //   console.error('Error running chat socket handler:', err)
-    // }
+    socket.on(VOICE_ROOM_SOCKET_EVENTS.LOBBY_JOIN, () => {
+      socket.join('lobby')
+    })
+
+    socket.on(VOICE_ROOM_SOCKET_EVENTS.LOBBY_LEAVE, () => {
+      socket.leave('lobby')
+    })
+
+    socket.on(VOICE_ROOM_SOCKET_EVENTS.ROOM_JOIN, (roomId: string) => {
+      if (roomId) {
+        socket.join(`voice-room:${roomId}`)
+      }
+    })
+
+    socket.on(VOICE_ROOM_SOCKET_EVENTS.ROOM_LEAVE, (roomId: string) => {
+      if (roomId) {
+        socket.leave(`voice-room:${roomId}`)
+      }
+    })
   })
 
   return io

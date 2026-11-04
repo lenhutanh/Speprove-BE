@@ -79,5 +79,8 @@ export const TOKENS = {
   IAccountProviderRepository: Symbol('IAccountProviderRepository'),
 
   // Vocabulary suggestion
-  IVocabularySuggestionRepository: Symbol('IVocabularySuggestionRepository')
+  IVocabularySuggestionRepository: Symbol('IVocabularySuggestionRepository'),
+
+  // Voice room
+  IVoiceRoomRepository: Symbol('IVoiceRoomRepository')
 }
