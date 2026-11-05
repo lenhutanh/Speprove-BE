@@ -37,3 +37,10 @@ export const VOICE_ROOM_SOCKET_EVENTS = {
   MEMBER_LEFT: 'voice-room:member-left',
   DETAILS_UPDATED: 'voice-room:details-updated'
 } as const
+
+export const VOICE_ROOM_CHAT_CONFIG = {
+  MAX_MESSAGE_LENGTH: 500
+} as const
+
+export const getVoiceRoomSocketRoom = (roomId: string) => `voice-room:${roomId}`
+
