@@ -1,5 +1,5 @@
 import { container } from 'tsyringe'
-import { VOICE_ROOM_SOCKET_EVENTS } from '~/modules/voice-room/voice-room.constants'
+import { registerVoiceRoomSocket } from '~/modules/voice-room/voice-room.socket'
 import { SocketService } from './socket.service'
 
 export function initSocket(server: any, corsOptions: any) {
@@ -17,25 +17,7 @@ export function initSocket(server: any, corsOptions: any) {
     socket.join(`user:${userId}`)
     console.log(`User ${userId} connected to socket`)
 
-    socket.on(VOICE_ROOM_SOCKET_EVENTS.LOBBY_JOIN, () => {
-      socket.join('lobby')
-    })
-
-    socket.on(VOICE_ROOM_SOCKET_EVENTS.LOBBY_LEAVE, () => {
-      socket.leave('lobby')
-    })
-
-    socket.on(VOICE_ROOM_SOCKET_EVENTS.ROOM_JOIN, (roomId: string) => {
-      if (roomId) {
-        socket.join(`voice-room:${roomId}`)
-      }
-    })
-
-    socket.on(VOICE_ROOM_SOCKET_EVENTS.ROOM_LEAVE, (roomId: string) => {
-      if (roomId) {
-        socket.leave(`voice-room:${roomId}`)
-      }
-    })
+    registerVoiceRoomSocket(socket, userId)
   })
 
   return io
