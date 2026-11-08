@@ -25,6 +25,20 @@ export class VoiceRoomMapper extends BaseMapper<VoiceRoomType, VoiceRoomResponse
       avatar: hostAvatar
     }
 
+    const pinnedDoc = (entity as any).pinnedQuestionId
+    let pinnedQuestion = null
+    if (pinnedDoc && typeof pinnedDoc === 'object' && '_id' in pinnedDoc) {
+      pinnedQuestion = {
+        questionId: pinnedDoc._id.toString(),
+        content: pinnedDoc.content,
+        part: pinnedDoc.part,
+        category: pinnedDoc.category || null,
+        topicName: pinnedDoc.topicId?.name || null,
+        bulletPoints: pinnedDoc.bulletPoints || [],
+        parentContent: pinnedDoc.parentId?.content || null
+      }
+    }
+
     const response: VoiceRoomResponseDto = {
       id: entity._id.toString(),
       title: entity.title,
@@ -36,6 +50,8 @@ export class VoiceRoomMapper extends BaseMapper<VoiceRoomType, VoiceRoomResponse
       status: entity.status,
       currentParticipants,
       members,
+      allowMemberPin: !!(entity as any).allowMemberPin,
+      pinnedQuestion,
       createdAt: (entity as any).createdAt || new Date()
     }
 

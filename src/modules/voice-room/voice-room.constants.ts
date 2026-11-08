@@ -35,7 +35,9 @@ export const VOICE_ROOM_SOCKET_EVENTS = {
   CHAT_MESSAGE: 'voice-room:chat:message',
   MEMBER_JOINED: 'voice-room:member-joined',
   MEMBER_LEFT: 'voice-room:member-left',
-  DETAILS_UPDATED: 'voice-room:details-updated'
+  DETAILS_UPDATED: 'voice-room:details-updated',
+  QUESTION_PINNED: 'voice-room:question:pinned',
+  QUESTION_UNPINNED: 'voice-room:question:unpinned'
 } as const
 
 export const VOICE_ROOM_CHAT_CONFIG = {
