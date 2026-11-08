@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { idParamSchema, querySchema } from '~/common/base/base.validation'
-import { requiredString } from '~/common/utils/validators.util'
+import { objectIdSchema, requiredString } from '~/common/utils/validators.util'
 import { VOICE_ROOM_LEVEL, VOICE_ROOM_TOPIC_TYPE } from './voice-room.constants'
 
 export const createVoiceRoomSchema = z.object({
@@ -48,7 +48,8 @@ export const updateVoiceRoomSchema = z.object({
       level: z.enum(Object.values(VOICE_ROOM_LEVEL) as [string, ...string[]]).optional(),
       maxParticipants: z.coerce.number().int().min(2).max(10).optional(),
       isPrivate: z.boolean().optional(),
-      pinCode: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits').optional().nullable()
+      pinCode: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits').optional().nullable(),
+      allowMemberPin: z.boolean().optional()
     })
     .refine((data) => data.isPrivate === undefined || !data.isPrivate || (data.isPrivate && !!data.pinCode), {
       message: 'PIN code is required when room is private',
@@ -56,3 +57,12 @@ export const updateVoiceRoomSchema = z.object({
     })
     .strip()
 })
+
+export const pinQuestionSchema = z.object({
+  params: idParamSchema.shape.params,
+  body: z.object({
+    questionId: objectIdSchema
+  })
+})
+
+export const unpinQuestionSchema = idParamSchema

@@ -15,11 +15,13 @@ import {
   GetActiveVoiceRoomsQuery,
   JoinVoiceRoomBody,
   PaginatedVoiceRoomsResponse,
+  PinnedQuestionDto,
   UpdateVoiceRoomBody,
   VoiceRoomMemberDto,
   VoiceRoomResponseDto
 } from './types/voice-room.type'
 import { VOICE_ROOM_SOCKET_EVENTS, VOICE_ROOM_STATUS } from './voice-room.constants'
+import { Question } from '~/modules/question/question.model'
 
 @singleton()
 export class VoiceRoomService {
@@ -152,11 +154,20 @@ export class VoiceRoomService {
 
   public async getRoomById(id: string, userId?: string): Promise<VoiceRoomResponseDto> {
     const room = await this.voiceRoomRepository.findById(id, {
-      populate: {
-        path: 'hostId',
-        select: 'fullName username avatarId',
-        populate: { path: 'avatarId', select: 'url' }
-      }
+      populate: [
+        {
+          path: 'hostId',
+          select: 'fullName username avatarId',
+          populate: { path: 'avatarId', select: 'url' }
+        },
+        {
+          path: 'pinnedQuestionId',
+          populate: [
+            { path: 'topicId', select: 'name' },
+            { path: 'parentId', select: 'content' }
+          ]
+        }
+      ]
     })
     if (!room || room.status !== VOICE_ROOM_STATUS.ACTIVE) {
       throw new AppError('Voice room not found or has ended', StatusCodes.NOT_FOUND)
@@ -319,18 +330,89 @@ export class VoiceRoomService {
     } else if (body.pinCode !== undefined) {
       updateData.pinCode = body.pinCode
     }
+    if (body.allowMemberPin !== undefined) {
+      updateData.allowMemberPin = body.allowMemberPin
+    }
 
     const updatedRoom = await this.voiceRoomRepository.updateById(roomId, updateData)
     if (!updatedRoom) {
       throw new AppError('Failed to update voice room', StatusCodes.INTERNAL_SERVER_ERROR)
     }
 
-    const responseDto = this.voiceRoomMapper.toResponse(updatedRoom, currentCount, [], true)
+    const responseDtoForLobby = this.voiceRoomMapper.toResponse(updatedRoom, currentCount, [], false)
+    const responseDtoForRoom = this.voiceRoomMapper.toResponse(updatedRoom, currentCount, [], true)
 
-    this.socketService.toRoom('lobby', VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, responseDto)
-    this.socketService.toRoom(`voice-room:${roomId}`, VOICE_ROOM_SOCKET_EVENTS.DETAILS_UPDATED, responseDto)
+    this.socketService.toRoom('lobby', VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, responseDtoForLobby)
+    this.socketService.toRoom(`voice-room:${roomId}`, VOICE_ROOM_SOCKET_EVENTS.DETAILS_UPDATED, responseDtoForRoom)
 
-    return responseDto
+    return responseDtoForRoom
+  }
+
+  public async pinQuestion(roomId: string, userId: string, questionId: string): Promise<PinnedQuestionDto> {
+    const room = await this.voiceRoomRepository.findById(roomId)
+    if (!room) {
+      throw new AppError('Voice room not found', StatusCodes.NOT_FOUND)
+    }
+
+    if (room.status !== VOICE_ROOM_STATUS.ACTIVE) {
+      throw new AppError('Voice room has already ended', StatusCodes.BAD_REQUEST)
+    }
+
+    const isHost = this.checkIsHost(room, userId)
+    if (!isHost && !room.allowMemberPin) {
+      throw new AppError('Only the host can pin questions in this room', StatusCodes.FORBIDDEN)
+    }
+
+    const questionDoc = await Question.findById(questionId)
+      .populate('topicId', 'name')
+      .populate('parentId', 'content')
+
+    if (!questionDoc) {
+      throw new AppError('Question not found', StatusCodes.NOT_FOUND)
+    }
+
+    const q = questionDoc as any
+    const pinnedQuestionDto: PinnedQuestionDto = {
+      questionId: q._id.toString(),
+      content: q.content,
+      part: q.part,
+      category: q.category || null,
+      topicName: q.topicId?.name || null,
+      bulletPoints: q.bulletPoints || [],
+      parentContent: q.parentId?.content || null,
+      pinnedBy: userId,
+      pinnedAt: new Date()
+    }
+
+    await this.voiceRoomRepository.updateById(roomId, {
+      pinnedQuestionId: q._id
+    })
+
+    this.socketService.toRoom(`voice-room:${roomId}`, VOICE_ROOM_SOCKET_EVENTS.QUESTION_PINNED, pinnedQuestionDto)
+
+    return pinnedQuestionDto
+  }
+
+  public async unpinQuestion(roomId: string, userId: string): Promise<void> {
+    const room = await this.voiceRoomRepository.findById(roomId)
+    if (!room) {
+      throw new AppError('Voice room not found', StatusCodes.NOT_FOUND)
+    }
+
+    if (room.status !== VOICE_ROOM_STATUS.ACTIVE) {
+      throw new AppError('Voice room has already ended', StatusCodes.BAD_REQUEST)
+    }
+
+    const isHost = this.checkIsHost(room, userId)
+    if (!isHost && !room.allowMemberPin) {
+      throw new AppError('Only the host can unpin questions in this room', StatusCodes.FORBIDDEN)
+    }
+
+    await this.voiceRoomRepository.updateById(roomId, {
+      pinnedQuestionId: null
+    })
+
+    this.socketService.toRoom(`voice-room:${roomId}`, VOICE_ROOM_SOCKET_EVENTS.QUESTION_UNPINNED, { roomId })
   }
 
   public async handleWebhookEvent(event: any) {

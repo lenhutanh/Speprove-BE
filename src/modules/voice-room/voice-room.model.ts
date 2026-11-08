@@ -61,6 +61,15 @@ const voiceRoomSchema = new Schema(
     endedAt: {
       type: Date,
       default: null
+    },
+    allowMemberPin: {
+      type: Boolean,
+      default: false
+    },
+    pinnedQuestionId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Question',
+      default: null
     }
   },
   BaseSchemaOptions

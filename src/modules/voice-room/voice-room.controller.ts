@@ -52,6 +52,22 @@ export class VoiceRoomController {
     return ResponseTransformer.success(res, result, 'Update voice room successfully')
   }
 
+  public async pinQuestion(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user._id.toString()
+    const result = await this.voiceRoomService.pinQuestion(
+      req.validated.params.id,
+      userId,
+      req.validated.body.questionId
+    )
+    return ResponseTransformer.success(res, result, 'Pin question successfully')
+  }
+
+  public async unpinQuestion(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user._id.toString()
+    await this.voiceRoomService.unpinQuestion(req.validated.params.id, userId)
+    return ResponseTransformer.successNoData(res, 'Unpin question successfully')
+  }
+
   public async handleWebhook(req: Request, res: Response) {
     if (env.LIVEKIT.API_KEY && env.LIVEKIT.API_SECRET) {
       const receiver = new WebhookReceiver(env.LIVEKIT.API_KEY, env.LIVEKIT.API_SECRET)

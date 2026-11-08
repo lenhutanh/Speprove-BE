@@ -10,6 +10,8 @@ import {
   getVoiceRoomByIdSchema,
   joinVoiceRoomSchema,
   leaveVoiceRoomSchema,
+  pinQuestionSchema,
+  unpinQuestionSchema,
   updateVoiceRoomSchema
 } from './voice-room.validation'
 
@@ -63,6 +65,19 @@ router
     authMiddleware.isAuthorized,
     validateMiddleware(leaveVoiceRoomSchema),
     bindHandler(VoiceRoomController, 'leaveRoom')
+  )
+
+router
+  .route('/:id/pin-question')
+  .put(
+    authMiddleware.isAuthorized,
+    validateMiddleware(pinQuestionSchema),
+    bindHandler(VoiceRoomController, 'pinQuestion')
+  )
+  .delete(
+    authMiddleware.isAuthorized,
+    validateMiddleware(unpinQuestionSchema),
+    bindHandler(VoiceRoomController, 'unpinQuestion')
   )
 
 export const voiceRoomRoutes = router

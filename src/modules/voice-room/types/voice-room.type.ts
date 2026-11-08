@@ -17,6 +17,23 @@ export interface UpdateVoiceRoomBody {
   maxParticipants?: number
   isPrivate?: boolean
   pinCode?: string | null
+  allowMemberPin?: boolean
+}
+
+export interface PinQuestionBody {
+  questionId: string
+}
+
+export interface PinnedQuestionDto {
+  questionId: string
+  content: string
+  part: number
+  category?: string | null
+  topicName?: string | null
+  bulletPoints?: string[]
+  parentContent?: string | null
+  pinnedBy?: string | null
+  pinnedAt?: Date | string | null
 }
 
 export interface JoinVoiceRoomBody {
@@ -58,6 +75,8 @@ export interface VoiceRoomResponseDto {
   status: string
   currentParticipants: number
   members: VoiceRoomMemberDto[]
+  allowMemberPin?: boolean
+  pinnedQuestion?: PinnedQuestionDto | null
   createdAt: Date
 }
 
