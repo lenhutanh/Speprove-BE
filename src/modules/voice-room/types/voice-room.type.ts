@@ -1,5 +1,5 @@
 import { PaginatedResult } from '~/common/base/base.repository.interface'
-import { VoiceRoomLevelType, VoiceRoomTopicType } from '../voice-room.constants'
+import { VoiceRoomLevelType, VoiceRoomPolicyType, VoiceRoomTopicType } from '../voice-room.constants'
 
 export interface CreateVoiceRoomBody {
   title: string
@@ -17,7 +17,9 @@ export interface UpdateVoiceRoomBody {
   maxParticipants?: number
   isPrivate?: boolean
   pinCode?: string | null
-  allowMemberPin?: boolean
+  speakingPolicy?: VoiceRoomPolicyType
+  questionPinPolicy?: VoiceRoomPolicyType
+  welcomeMessage?: string | null
 }
 
 export interface PinQuestionBody {
@@ -75,7 +77,9 @@ export interface VoiceRoomResponseDto {
   status: string
   currentParticipants: number
   members: VoiceRoomMemberDto[]
-  allowMemberPin?: boolean
+  speakingPolicy: VoiceRoomPolicyType
+  questionPinPolicy: VoiceRoomPolicyType
+  welcomeMessage: string | null
   pinnedQuestion?: PinnedQuestionDto | null
   createdAt: Date
 }

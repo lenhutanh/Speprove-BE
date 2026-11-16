@@ -1,10 +1,13 @@
 import mongoose, { Schema } from 'mongoose'
 import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base/base.model'
 import {
+  VOICE_ROOM_CONFIG,
   VOICE_ROOM_LEVEL,
+  VOICE_ROOM_POLICY,
   VOICE_ROOM_STATUS,
   VOICE_ROOM_TOPIC_TYPE,
   VoiceRoomLevelType,
+  VoiceRoomPolicyType,
   VoiceRoomStatusType,
   VoiceRoomTopicType
 } from './voice-room.constants'
@@ -62,9 +65,21 @@ const voiceRoomSchema = new Schema(
       type: Date,
       default: null
     },
-    allowMemberPin: {
-      type: Boolean,
-      default: false
+    speakingPolicy: {
+      type: String,
+      enum: Object.values(VOICE_ROOM_POLICY),
+      default: VOICE_ROOM_POLICY.ALL
+    },
+    questionPinPolicy: {
+      type: String,
+      enum: Object.values(VOICE_ROOM_POLICY),
+      default: VOICE_ROOM_POLICY.HOST_ONLY
+    },
+    welcomeMessage: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: VOICE_ROOM_CONFIG.MAX_WELCOME_MESSAGE_LENGTH
     },
     pinnedQuestionId: {
       type: Schema.Types.ObjectId,
@@ -83,6 +98,8 @@ export type VoiceRoomType = mongoose.InferSchemaType<typeof voiceRoomSchema> & {
   topicType: VoiceRoomTopicType
   level: VoiceRoomLevelType
   status: VoiceRoomStatusType
+  speakingPolicy: VoiceRoomPolicyType
+  questionPinPolicy: VoiceRoomPolicyType
 }
 
 export const VoiceRoom = mongoose.models.VoiceRoom || mongoose.model<VoiceRoomType>('VoiceRoom', voiceRoomSchema)

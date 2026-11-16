@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { idParamSchema, querySchema } from '~/common/base/base.validation'
 import { objectIdSchema, requiredString } from '~/common/utils/validators.util'
-import { VOICE_ROOM_LEVEL, VOICE_ROOM_TOPIC_TYPE } from './voice-room.constants'
+import { VOICE_ROOM_CONFIG, VOICE_ROOM_LEVEL, VOICE_ROOM_POLICY, VOICE_ROOM_TOPIC_TYPE } from './voice-room.constants'
 
 export const createVoiceRoomSchema = z.object({
   body: z
@@ -11,7 +11,11 @@ export const createVoiceRoomSchema = z.object({
       level: z.enum(Object.values(VOICE_ROOM_LEVEL) as [string, ...string[]]).optional(),
       maxParticipants: z.coerce.number().int().min(2).max(10).default(2),
       isPrivate: z.boolean().optional().default(false),
-      pinCode: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits').optional().nullable()
+      pinCode: z
+        .string()
+        .regex(/^\d{6}$/, 'PIN code must be exactly 6 digits')
+        .optional()
+        .nullable()
     })
     .refine((data) => !data.isPrivate || (data.isPrivate && !!data.pinCode), {
       message: 'PIN code is required for private rooms',
@@ -32,7 +36,10 @@ export const joinVoiceRoomSchema = z.object({
   params: idParamSchema.shape.params,
   body: z
     .object({
-      pinCode: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits').optional()
+      pinCode: z
+        .string()
+        .regex(/^\d{6}$/, 'PIN code must be exactly 6 digits')
+        .optional()
     })
     .strip()
 })
@@ -48,12 +55,27 @@ export const updateVoiceRoomSchema = z.object({
       level: z.enum(Object.values(VOICE_ROOM_LEVEL) as [string, ...string[]]).optional(),
       maxParticipants: z.coerce.number().int().min(2).max(10).optional(),
       isPrivate: z.boolean().optional(),
-      pinCode: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits').optional().nullable(),
-      allowMemberPin: z.boolean().optional()
+      pinCode: z
+        .string()
+        .regex(/^\d{6}$/, 'PIN code must be exactly 6 digits')
+        .optional()
+        .nullable(),
+      speakingPolicy: z.enum(Object.values(VOICE_ROOM_POLICY) as [string, ...string[]]).optional(),
+      questionPinPolicy: z.enum(Object.values(VOICE_ROOM_POLICY) as [string, ...string[]]).optional(),
+      welcomeMessage: z.string().trim().max(VOICE_ROOM_CONFIG.MAX_WELCOME_MESSAGE_LENGTH).optional().nullable()
     })
     .refine((data) => data.isPrivate === undefined || !data.isPrivate || (data.isPrivate && !!data.pinCode), {
       message: 'PIN code is required when room is private',
       path: ['pinCode']
+    })
+    .strip()
+})
+
+export const participantActionSchema = z.object({
+  params: idParamSchema.shape.params,
+  body: z
+    .object({
+      targetUserId: objectIdSchema
     })
     .strip()
 })

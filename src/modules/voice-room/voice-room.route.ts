@@ -10,6 +10,7 @@ import {
   getVoiceRoomByIdSchema,
   joinVoiceRoomSchema,
   leaveVoiceRoomSchema,
+  participantActionSchema,
   pinQuestionSchema,
   unpinQuestionSchema,
   updateVoiceRoomSchema
@@ -78,6 +79,38 @@ router
     authMiddleware.isAuthorized,
     validateMiddleware(unpinQuestionSchema),
     bindHandler(VoiceRoomController, 'unpinQuestion')
+  )
+
+router
+  .route('/:id/transfer-host')
+  .post(
+    authMiddleware.isAuthorized,
+    validateMiddleware(participantActionSchema),
+    bindHandler(VoiceRoomController, 'transferHost')
+  )
+
+router
+  .route('/:id/mute-participant')
+  .post(
+    authMiddleware.isAuthorized,
+    validateMiddleware(participantActionSchema),
+    bindHandler(VoiceRoomController, 'muteParticipant')
+  )
+
+router
+  .route('/:id/unmute-participant')
+  .post(
+    authMiddleware.isAuthorized,
+    validateMiddleware(participantActionSchema),
+    bindHandler(VoiceRoomController, 'unmuteParticipant')
+  )
+
+router
+  .route('/:id/kick-participant')
+  .post(
+    authMiddleware.isAuthorized,
+    validateMiddleware(participantActionSchema),
+    bindHandler(VoiceRoomController, 'kickParticipant')
   )
 
 export const voiceRoomRoutes = router
