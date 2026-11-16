@@ -20,7 +20,16 @@ import {
   VoiceRoomMemberDto,
   VoiceRoomResponseDto
 } from './types/voice-room.type'
-import { VOICE_ROOM_SOCKET_EVENTS, VOICE_ROOM_STATUS } from './voice-room.constants'
+import { WebhookEvent } from 'livekit-server-sdk'
+import {
+  getVoiceRoomSocketRoom,
+  LIVEKIT_WEBHOOK_EVENTS,
+  SYSTEM_CHAT_SENDER,
+  VOICE_ROOM_POLICY,
+  VOICE_ROOM_SOCKET_EVENTS,
+  VOICE_ROOM_SOCKET_ROOMS,
+  VOICE_ROOM_STATUS
+} from './voice-room.constants'
 import { Question } from '~/modules/question/question.model'
 
 @singleton()
@@ -256,12 +265,12 @@ export class VoiceRoomService {
 
     const remainingCount = await this.liveKitService.getParticipantCount(roomId)
 
-    this.socketService.toRoom('lobby', VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, {
+    this.socketService.toRoom(VOICE_ROOM_SOCKET_ROOMS.LOBBY, VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, {
       id: roomId,
       currentParticipants: remainingCount
     })
 
-    this.socketService.toRoom(`voice-room:${roomId}`, VOICE_ROOM_SOCKET_EVENTS.MEMBER_LEFT, {
+    this.socketService.toRoom(getVoiceRoomSocketRoom(roomId), VOICE_ROOM_SOCKET_EVENTS.MEMBER_LEFT, {
       userId
     })
   }
@@ -287,7 +296,7 @@ export class VoiceRoomService {
 
     await this.liveKitService.deleteRoom(roomId)
 
-    this.socketService.toRoom('lobby', VOICE_ROOM_SOCKET_EVENTS.ROOM_CLOSED, { id: roomId })
+    this.socketService.toRoom(VOICE_ROOM_SOCKET_ROOMS.LOBBY, VOICE_ROOM_SOCKET_EVENTS.ROOM_CLOSED, { id: roomId })
   }
 
   public async updateRoom(roomId: string, userId: string, body: UpdateVoiceRoomBody): Promise<VoiceRoomResponseDto> {
@@ -330,11 +339,32 @@ export class VoiceRoomService {
     } else if (body.pinCode !== undefined) {
       updateData.pinCode = body.pinCode
     }
-    if (body.allowMemberPin !== undefined) {
-      updateData.allowMemberPin = body.allowMemberPin
+    if (body.speakingPolicy !== undefined) {
+      updateData.speakingPolicy = body.speakingPolicy
+    }
+    if (body.questionPinPolicy !== undefined) {
+      updateData.questionPinPolicy = body.questionPinPolicy
+    }
+    if (body.welcomeMessage !== undefined) {
+      updateData.welcomeMessage = body.welcomeMessage
     }
 
-    const updatedRoom = await this.voiceRoomRepository.updateById(roomId, updateData)
+    const updatedRoom = await this.voiceRoomRepository.updateById(roomId, updateData, {
+      populate: [
+        {
+          path: 'hostId',
+          select: 'fullName username avatarId',
+          populate: { path: 'avatarId', select: 'url' }
+        },
+        {
+          path: 'pinnedQuestionId',
+          populate: [
+            { path: 'topicId', select: 'name' },
+            { path: 'parentId', select: 'content' }
+          ]
+        }
+      ]
+    })
     if (!updatedRoom) {
       throw new AppError('Failed to update voice room', StatusCodes.INTERNAL_SERVER_ERROR)
     }
@@ -342,8 +372,12 @@ export class VoiceRoomService {
     const responseDtoForLobby = this.voiceRoomMapper.toResponse(updatedRoom, currentCount, [], false)
     const responseDtoForRoom = this.voiceRoomMapper.toResponse(updatedRoom, currentCount, [], true)
 
-    this.socketService.toRoom('lobby', VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, responseDtoForLobby)
-    this.socketService.toRoom(`voice-room:${roomId}`, VOICE_ROOM_SOCKET_EVENTS.DETAILS_UPDATED, responseDtoForRoom)
+    this.socketService.toRoom(VOICE_ROOM_SOCKET_ROOMS.LOBBY, VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, responseDtoForLobby)
+    this.socketService.toRoom(
+      getVoiceRoomSocketRoom(roomId),
+      VOICE_ROOM_SOCKET_EVENTS.DETAILS_UPDATED,
+      responseDtoForRoom
+    )
 
     return responseDtoForRoom
   }
@@ -359,13 +393,12 @@ export class VoiceRoomService {
     }
 
     const isHost = this.checkIsHost(room, userId)
-    if (!isHost && !room.allowMemberPin) {
+    const canPin = isHost || room.questionPinPolicy === VOICE_ROOM_POLICY.ALL
+    if (!canPin) {
       throw new AppError('Only the host can pin questions in this room', StatusCodes.FORBIDDEN)
     }
 
-    const questionDoc = await Question.findById(questionId)
-      .populate('topicId', 'name')
-      .populate('parentId', 'content')
+    const questionDoc = await Question.findById(questionId).populate('topicId', 'name').populate('parentId', 'content')
 
     if (!questionDoc) {
       throw new AppError('Question not found', StatusCodes.NOT_FOUND)
@@ -388,7 +421,11 @@ export class VoiceRoomService {
       pinnedQuestionId: q._id
     })
 
-    this.socketService.toRoom(`voice-room:${roomId}`, VOICE_ROOM_SOCKET_EVENTS.QUESTION_PINNED, pinnedQuestionDto)
+    this.socketService.toRoom(
+      getVoiceRoomSocketRoom(roomId),
+      VOICE_ROOM_SOCKET_EVENTS.QUESTION_PINNED,
+      pinnedQuestionDto
+    )
 
     return pinnedQuestionDto
   }
@@ -404,7 +441,8 @@ export class VoiceRoomService {
     }
 
     const isHost = this.checkIsHost(room, userId)
-    if (!isHost && !room.allowMemberPin) {
+    const canPin = isHost || room.questionPinPolicy === VOICE_ROOM_POLICY.ALL
+    if (!canPin) {
       throw new AppError('Only the host can unpin questions in this room', StatusCodes.FORBIDDEN)
     }
 
@@ -412,48 +450,238 @@ export class VoiceRoomService {
       pinnedQuestionId: null
     })
 
-    this.socketService.toRoom(`voice-room:${roomId}`, VOICE_ROOM_SOCKET_EVENTS.QUESTION_UNPINNED, { roomId })
+    this.socketService.toRoom(getVoiceRoomSocketRoom(roomId), VOICE_ROOM_SOCKET_EVENTS.QUESTION_UNPINNED, { roomId })
   }
 
-  public async handleWebhookEvent(event: any) {
-    if (!event || !event.event) return
-
-    const roomName = event.room?.name
+  public async handleWebhookEvent(event: WebhookEvent): Promise<void> {
+    const roomName = event?.room?.name
     if (!roomName) return
 
-    if (event.event === 'room_finished') {
-      await this.voiceRoomRepository.updateById(roomName, {
-        status: VOICE_ROOM_STATUS.CLOSED,
-        endedAt: new Date()
-      })
-      this.socketService.toRoom('lobby', VOICE_ROOM_SOCKET_EVENTS.ROOM_CLOSED, { id: roomName })
-    } else if (event.event === 'participant_joined' || event.event === 'participant_left') {
-      const currentParticipants = event.room?.numParticipants || 0
-
-      this.socketService.toRoom('lobby', VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, {
-        id: roomName,
-        currentParticipants
-      })
-
-      if (event.event === 'participant_left' && event.participant?.identity) {
-        this.socketService.toRoom(`voice-room:${roomName}`, VOICE_ROOM_SOCKET_EVENTS.MEMBER_LEFT, {
-          userId: event.participant.identity
-        })
-      } else if (event.event === 'participant_joined' && event.participant) {
-        let avatar: string | null = null
-        try {
-          const parsed = JSON.parse(event.participant.metadata || '{}')
-          avatar = parsed.avatar || null
-        } catch {
-          avatar = null
-        }
-        this.socketService.toRoom(`voice-room:${roomName}`, VOICE_ROOM_SOCKET_EVENTS.MEMBER_JOINED, {
-          id: event.participant.identity,
-          name: event.participant.name,
-          avatar
-        })
-      }
+    switch (event.event) {
+      case LIVEKIT_WEBHOOK_EVENTS.PARTICIPANT_JOINED:
+        await this.handleParticipantJoined(roomName, event)
+        break
+      case LIVEKIT_WEBHOOK_EVENTS.PARTICIPANT_LEFT:
+        this.handleParticipantLeft(roomName, event)
+        break
+      case LIVEKIT_WEBHOOK_EVENTS.ROOM_FINISHED:
+        await this.handleRoomFinished(roomName)
+        break
     }
+  }
+
+  private async handleParticipantJoined(roomId: string, event: WebhookEvent): Promise<void> {
+    this.broadcastLobbyParticipantCount(roomId, event.room?.numParticipants || 0)
+
+    if (!event.participant) return
+
+    const avatar = this.parseParticipantAvatar(event.participant.metadata)
+    const roomKey = getVoiceRoomSocketRoom(roomId)
+
+    this.socketService.toRoom(roomKey, VOICE_ROOM_SOCKET_EVENTS.MEMBER_JOINED, {
+      id: event.participant.identity,
+      name: event.participant.name,
+      avatar
+    })
+
+    if (event.participant.name) {
+      await this.sendWelcomeMessage(roomId, event.participant.name)
+    }
+  }
+
+  private handleParticipantLeft(roomId: string, event: WebhookEvent): void {
+    this.broadcastLobbyParticipantCount(roomId, event.room?.numParticipants || 0)
+
+    if (event.participant?.identity) {
+      const roomKey = getVoiceRoomSocketRoom(roomId)
+      this.socketService.toRoom(roomKey, VOICE_ROOM_SOCKET_EVENTS.MEMBER_LEFT, {
+        userId: event.participant.identity
+      })
+    }
+  }
+
+  private async handleRoomFinished(roomId: string): Promise<void> {
+    await this.voiceRoomRepository.updateById(roomId, {
+      status: VOICE_ROOM_STATUS.CLOSED,
+      endedAt: new Date()
+    })
+    this.socketService.toRoom(VOICE_ROOM_SOCKET_ROOMS.LOBBY, VOICE_ROOM_SOCKET_EVENTS.ROOM_CLOSED, { id: roomId })
+  }
+
+  private async sendWelcomeMessage(roomId: string, participantName: string): Promise<void> {
+    const roomDoc = await this.voiceRoomRepository.findById(roomId)
+    if (!roomDoc?.welcomeMessage) {
+      return
+    }
+
+    const processedMessage = roomDoc.welcomeMessage.replace(/\[username\]/gi, participantName)
+    const roomKey = getVoiceRoomSocketRoom(roomId)
+
+    this.socketService.toRoom(roomKey, VOICE_ROOM_SOCKET_EVENTS.CHAT_MESSAGE, {
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      senderId: SYSTEM_CHAT_SENDER.ID,
+      senderName: SYSTEM_CHAT_SENDER.NAME,
+      senderAvatar: null,
+      text: processedMessage,
+      timestamp: Date.now()
+    })
+  }
+
+  private broadcastLobbyParticipantCount(roomId: string, currentParticipants: number): void {
+    this.socketService.toRoom(VOICE_ROOM_SOCKET_ROOMS.LOBBY, VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, {
+      id: roomId,
+      currentParticipants
+    })
+  }
+
+  private parseParticipantAvatar(metadata?: string): string | null {
+    if (!metadata) return null
+    try {
+      const parsed = JSON.parse(metadata)
+      return parsed.avatar || null
+    } catch {
+      return null
+    }
+  }
+
+  public async transferHost(
+    roomId: string,
+    currentHostId: string,
+    targetUserId: string
+  ): Promise<VoiceRoomResponseDto> {
+    const room = await this.voiceRoomRepository.findById(roomId, {
+      populate: {
+        path: 'hostId',
+        select: 'fullName username avatarId',
+        populate: { path: 'avatarId', select: 'url' }
+      }
+    })
+    if (!room) {
+      throw new AppError('Voice room not found', StatusCodes.NOT_FOUND)
+    }
+
+    if (room.status !== VOICE_ROOM_STATUS.ACTIVE) {
+      throw new AppError('Voice room has already ended', StatusCodes.BAD_REQUEST)
+    }
+
+    if (!this.checkIsHost(room, currentHostId)) {
+      throw new AppError('Only the current host can transfer host permissions', StatusCodes.FORBIDDEN)
+    }
+
+    if (currentHostId === targetUserId) {
+      throw new AppError('You are already the host of this room', StatusCodes.BAD_REQUEST)
+    }
+
+    const participants = await this.liveKitService.listParticipants(roomId)
+    const isTargetInRoom = participants.some((p) => p.identity === targetUserId)
+    if (!isTargetInRoom) {
+      throw new AppError('Target user is not currently in this voice room', StatusCodes.BAD_REQUEST)
+    }
+
+    const updatedRoom = await this.voiceRoomRepository.updateById(
+      roomId,
+      { hostId: new Types.ObjectId(targetUserId) as any },
+      {
+        populate: [
+          {
+            path: 'hostId',
+            select: 'fullName username avatarId',
+            populate: { path: 'avatarId', select: 'url' }
+          },
+          {
+            path: 'pinnedQuestionId',
+            populate: [
+              { path: 'topicId', select: 'name' },
+              { path: 'parentId', select: 'content' }
+            ]
+          }
+        ]
+      }
+    )
+
+    if (!updatedRoom) {
+      throw new AppError('Failed to transfer host', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+
+    const currentCount = participants.length
+    const responseDtoForLobby = this.voiceRoomMapper.toResponse(updatedRoom, currentCount, [], false)
+    const responseDtoForRoom = this.voiceRoomMapper.toResponse(updatedRoom, currentCount, [], false)
+
+    this.socketService.toRoom(VOICE_ROOM_SOCKET_ROOMS.LOBBY, VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, responseDtoForLobby)
+    this.socketService.toRoom(
+      getVoiceRoomSocketRoom(roomId),
+      VOICE_ROOM_SOCKET_EVENTS.HOST_TRANSFERRED,
+      responseDtoForRoom
+    )
+
+    return responseDtoForRoom
+  }
+
+  public async muteParticipant(roomId: string, currentHostId: string, targetUserId: string): Promise<void> {
+    return this.setParticipantSpeakingPermission(roomId, currentHostId, targetUserId, false)
+  }
+
+  public async unmuteParticipant(roomId: string, currentHostId: string, targetUserId: string): Promise<void> {
+    return this.setParticipantSpeakingPermission(roomId, currentHostId, targetUserId, true)
+  }
+
+  private async setParticipantSpeakingPermission(
+    roomId: string,
+    currentHostId: string,
+    targetUserId: string,
+    canPublish: boolean
+  ): Promise<void> {
+    const room = await this.voiceRoomRepository.findById(roomId)
+    if (!room) {
+      throw new AppError('Voice room not found', StatusCodes.NOT_FOUND)
+    }
+
+    if (room.status !== VOICE_ROOM_STATUS.ACTIVE) {
+      throw new AppError('Voice room has already ended', StatusCodes.BAD_REQUEST)
+    }
+
+    if (!this.checkIsHost(room, currentHostId)) {
+      throw new AppError('Only the host can modify speaking permissions', StatusCodes.FORBIDDEN)
+    }
+
+    if (currentHostId === targetUserId) {
+      throw new AppError(
+        'Host cannot modify their own speaking permission through this action',
+        StatusCodes.BAD_REQUEST
+      )
+    }
+
+    await this.liveKitService.setParticipantSpeakingPermission(roomId, targetUserId, canPublish)
+
+    this.socketService.toRoom(getVoiceRoomSocketRoom(roomId), VOICE_ROOM_SOCKET_EVENTS.MEMBER_MUTED, {
+      targetUserId,
+      canPublish
+    })
+  }
+
+  public async kickParticipant(roomId: string, currentHostId: string, targetUserId: string): Promise<void> {
+    const room = await this.voiceRoomRepository.findById(roomId)
+    if (!room) {
+      throw new AppError('Voice room not found', StatusCodes.NOT_FOUND)
+    }
+
+    if (room.status !== VOICE_ROOM_STATUS.ACTIVE) {
+      throw new AppError('Voice room has already ended', StatusCodes.BAD_REQUEST)
+    }
+
+    if (!this.checkIsHost(room, currentHostId)) {
+      throw new AppError('Only the host can kick participants', StatusCodes.FORBIDDEN)
+    }
+
+    if (currentHostId === targetUserId) {
+      throw new AppError('Host cannot kick themselves', StatusCodes.BAD_REQUEST)
+    }
+
+    await this.liveKitService.removeParticipant(roomId, targetUserId)
+
+    this.socketService.toRoom(getVoiceRoomSocketRoom(roomId), VOICE_ROOM_SOCKET_EVENTS.MEMBER_KICKED, {
+      targetUserId
+    })
   }
 
   private checkIsHost(room: VoiceRoomType, userId?: string): boolean {

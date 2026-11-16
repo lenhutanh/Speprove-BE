@@ -1,4 +1,4 @@
-import { AccessToken, RoomServiceClient, VideoGrant } from 'livekit-server-sdk'
+import { AccessToken, RoomServiceClient, TrackSource, TrackType, VideoGrant } from 'livekit-server-sdk'
 import { singleton } from 'tsyringe'
 import { env } from '~/common/config/env.config'
 
@@ -98,6 +98,42 @@ export class LiveKitService {
       await this.roomService.removeParticipant(roomId, identity)
     } catch (err: any) {
       console.warn('LiveKit removeParticipant warning/error:', err?.message || err)
+    }
+  }
+
+  public async muteParticipantAudio(roomId: string, identity: string) {
+    if (!this.roomService) return
+    try {
+      const participant = await this.roomService.getParticipant(roomId, identity)
+      if (!participant?.tracks) return
+
+      for (const track of participant.tracks) {
+        if (track.type === TrackType.AUDIO || track.source === TrackSource.MICROPHONE) {
+          if (!track.muted) {
+            await this.roomService.mutePublishedTrack(roomId, identity, track.sid, true)
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn('LiveKit muteParticipantAudio warning/error:', err?.message || err)
+    }
+  }
+
+  public async setParticipantSpeakingPermission(roomId: string, identity: string, canPublish: boolean) {
+    if (!this.roomService) return
+    try {
+      await this.roomService.updateParticipant(roomId, identity, {
+        permission: {
+          canPublish,
+          canSubscribe: true,
+          canPublishData: true
+        }
+      })
+      if (!canPublish) {
+        await this.muteParticipantAudio(roomId, identity)
+      }
+    } catch (err: any) {
+      console.warn('LiveKit setParticipantSpeakingPermission warning/error:', err?.message || err)
     }
   }
 

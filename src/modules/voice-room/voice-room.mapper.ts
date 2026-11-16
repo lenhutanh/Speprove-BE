@@ -50,7 +50,9 @@ export class VoiceRoomMapper extends BaseMapper<VoiceRoomType, VoiceRoomResponse
       status: entity.status,
       currentParticipants,
       members,
-      allowMemberPin: !!(entity as any).allowMemberPin,
+      speakingPolicy: entity.speakingPolicy,
+      questionPinPolicy: entity.questionPinPolicy,
+      welcomeMessage: entity.welcomeMessage ?? null,
       pinnedQuestion,
       createdAt: (entity as any).createdAt || new Date()
     }

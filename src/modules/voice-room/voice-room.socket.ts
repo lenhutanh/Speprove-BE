@@ -2,16 +2,17 @@ import { Socket } from 'socket.io'
 import {
   getVoiceRoomSocketRoom,
   VOICE_ROOM_CHAT_CONFIG,
-  VOICE_ROOM_SOCKET_EVENTS
+  VOICE_ROOM_SOCKET_EVENTS,
+  VOICE_ROOM_SOCKET_ROOMS
 } from './voice-room.constants'
 
 export function registerVoiceRoomSocket(socket: Socket, userId: string) {
   socket.on(VOICE_ROOM_SOCKET_EVENTS.LOBBY_JOIN, () => {
-    socket.join('lobby')
+    socket.join(VOICE_ROOM_SOCKET_ROOMS.LOBBY)
   })
 
   socket.on(VOICE_ROOM_SOCKET_EVENTS.LOBBY_LEAVE, () => {
-    socket.leave('lobby')
+    socket.leave(VOICE_ROOM_SOCKET_ROOMS.LOBBY)
   })
 
   socket.on(VOICE_ROOM_SOCKET_EVENTS.ROOM_JOIN, (roomId: string) => {
@@ -56,4 +57,3 @@ export function registerVoiceRoomSocket(socket: Socket, userId: string) {
     }
   )
 }
-

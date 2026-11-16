@@ -68,6 +68,46 @@ export class VoiceRoomController {
     return ResponseTransformer.successNoData(res, 'Unpin question successfully')
   }
 
+  public async transferHost(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user._id.toString()
+    const result = await this.voiceRoomService.transferHost(
+      req.validated.params.id,
+      userId,
+      req.validated.body.targetUserId
+    )
+    return ResponseTransformer.success(res, result, 'Host permissions transferred successfully')
+  }
+
+  public async muteParticipant(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user._id.toString()
+    await this.voiceRoomService.muteParticipant(
+      req.validated.params.id,
+      userId,
+      req.validated.body.targetUserId
+    )
+    return ResponseTransformer.successNoData(res, 'Participant muted successfully')
+  }
+
+  public async unmuteParticipant(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user._id.toString()
+    await this.voiceRoomService.unmuteParticipant(
+      req.validated.params.id,
+      userId,
+      req.validated.body.targetUserId
+    )
+    return ResponseTransformer.successNoData(res, 'Participant unmuted successfully')
+  }
+
+  public async kickParticipant(req: AuthenticatedRequest, res: Response) {
+    const userId = req.user._id.toString()
+    await this.voiceRoomService.kickParticipant(
+      req.validated.params.id,
+      userId,
+      req.validated.body.targetUserId
+    )
+    return ResponseTransformer.successNoData(res, 'Participant removed from room successfully')
+  }
+
   public async handleWebhook(req: Request, res: Response) {
     if (env.LIVEKIT.API_KEY && env.LIVEKIT.API_SECRET) {
       const receiver = new WebhookReceiver(env.LIVEKIT.API_KEY, env.LIVEKIT.API_SECRET)
