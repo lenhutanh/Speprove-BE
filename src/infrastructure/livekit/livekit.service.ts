@@ -1,6 +1,7 @@
 import { AccessToken, RoomServiceClient, TrackSource, TrackType, VideoGrant } from 'livekit-server-sdk'
 import { singleton } from 'tsyringe'
 import { env } from '~/common/config/env.config'
+import { logger } from '~/infrastructure/logging/logger'
 
 export interface GenerateTokenOptions {
   roomId: string
@@ -18,11 +19,9 @@ export class LiveKitService {
   constructor() {
     if (env.LIVEKIT.URL && env.LIVEKIT.API_KEY && env.LIVEKIT.API_SECRET) {
       const httpUrl = env.LIVEKIT.URL.replace(/^wss:\/\//i, 'https://').replace(/^ws:\/\//i, 'http://')
-      this.roomService = new RoomServiceClient(
-        httpUrl,
-        env.LIVEKIT.API_KEY,
-        env.LIVEKIT.API_SECRET
-      )
+      this.roomService = new RoomServiceClient(httpUrl, env.LIVEKIT.API_KEY, env.LIVEKIT.API_SECRET, {
+        requestTimeout: env.HTTP_TIMEOUT_MS
+      })
     }
   }
 
@@ -64,7 +63,7 @@ export class LiveKitService {
         maxParticipants
       })
     } catch (err: any) {
-      console.warn('LiveKit createRoom warning/error:', err?.message || err)
+      logger.warn('LiveKit createRoom warning/error:', err?.message || err)
       return null
     }
   }
@@ -97,7 +96,7 @@ export class LiveKitService {
     try {
       await this.roomService.removeParticipant(roomId, identity)
     } catch (err: any) {
-      console.warn('LiveKit removeParticipant warning/error:', err?.message || err)
+      logger.warn('LiveKit removeParticipant warning/error:', err?.message || err)
     }
   }
 
@@ -115,7 +114,7 @@ export class LiveKitService {
         }
       }
     } catch (err: any) {
-      console.warn('LiveKit muteParticipantAudio warning/error:', err?.message || err)
+      logger.warn('LiveKit muteParticipantAudio warning/error:', err?.message || err)
     }
   }
 
@@ -133,7 +132,7 @@ export class LiveKitService {
         await this.muteParticipantAudio(roomId, identity)
       }
     } catch (err: any) {
-      console.warn('LiveKit setParticipantSpeakingPermission warning/error:', err?.message || err)
+      logger.warn('LiveKit setParticipantSpeakingPermission warning/error:', err?.message || err)
     }
   }
 
@@ -142,7 +141,7 @@ export class LiveKitService {
     try {
       await this.roomService.deleteRoom(roomId)
     } catch (err: any) {
-      console.warn('LiveKit deleteRoom error:', err?.message || err)
+      logger.warn('LiveKit deleteRoom error:', err?.message || err)
     }
   }
 }

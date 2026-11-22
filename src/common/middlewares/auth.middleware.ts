@@ -2,9 +2,10 @@ import { NextFunction, Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ITokenService } from '../contracts/token-service.contract'
 import { TOKENS } from '../constants/di.tokens'
-import { inject, singleton } from 'tsyringe'
+import { container, inject, singleton } from 'tsyringe'
 import { ErrorCodes } from '../constants/error-codes'
 import { AppError } from '../errors'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class AuthMiddleware {
@@ -29,7 +30,7 @@ export class AuthMiddleware {
       try {
         req.user = this.tokenService.verifyAccessToken(clientAccessToken)
       } catch (error) {
-        console.log('Optional Auth: Invalid token, proceeding as guest')
+        logger.debug('Optional Auth: Invalid token, proceeding as guest')
       }
     }
     next()
@@ -66,4 +67,14 @@ export class AuthMiddleware {
       }
     }
   }
+}
+
+/** Resolves AuthMiddleware per request, so route files do not need the DI container at import time. */
+export const authMiddleware = {
+  isAuthorized: (req: Request, res: Response, next: NextFunction) =>
+    container.resolve(AuthMiddleware).isAuthorized(req, res, next),
+  isAuthorizedOptional: (req: Request, res: Response, next: NextFunction) =>
+    container.resolve(AuthMiddleware).isAuthorizedOptional(req, res, next),
+  hasPermission: (requiredPermissions: string | string[]) => (req: Request, res: Response, next: NextFunction) =>
+    container.resolve(AuthMiddleware).hasPermission(requiredPermissions)(req, res, next)
 }

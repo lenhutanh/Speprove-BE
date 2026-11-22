@@ -1,6 +1,7 @@
 import ffmpeg from 'fluent-ffmpeg'
 import { Readable } from 'stream'
 import { singleton } from 'tsyringe'
+import { logger } from '~/infrastructure/logging/logger'
 
 export type FfmpegConfigurator = (command: ffmpeg.FfmpegCommand) => ffmpeg.FfmpegCommand
 
@@ -14,22 +15,22 @@ export class FfmpegProvider {
 
       command
         .on('start', (cmdLine) => {
-          console.log(`[FFmpeg] Start: ${cmdLine}`)
+          logger.debug(`[FFmpeg] Start: ${cmdLine}`)
         })
         .on('stderr', (line) => {
-          console.log(`[FFmpeg] ${line}`)
+          logger.debug(`[FFmpeg] ${line}`)
         })
         .on('progress', (progress) => {
           if (progress.percent) {
-            console.log(`[FFmpeg] ${progress.percent.toFixed(2)}%`)
+            logger.debug(`[FFmpeg] ${progress.percent.toFixed(2)}%`)
           }
         })
         .on('end', () => {
-          console.log('[FFmpeg] Finished')
+          logger.info('[FFmpeg] Finished')
           resolve()
         })
         .on('error', (err) => {
-          console.error('[FFmpeg] Error:', err.message)
+          logger.error('[FFmpeg] Error:', err.message)
           reject(err)
         })
         .run()

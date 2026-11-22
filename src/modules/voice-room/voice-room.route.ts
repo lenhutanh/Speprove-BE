@@ -1,8 +1,7 @@
 import express from 'express'
-import { container } from 'tsyringe'
 import { bindHandler } from '~/common/http'
 import { validateMiddleware } from '~/common/middlewares'
-import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
+import { authMiddleware } from '~/common/middlewares/auth.middleware'
 import { VoiceRoomController } from './voice-room.controller'
 import {
   createVoiceRoomSchema,
@@ -17,8 +16,6 @@ import {
 } from './voice-room.validation'
 
 const router = express.Router()
-const authMiddleware = container.resolve(AuthMiddleware)
-
 router.post(
   '/webhook',
   express.raw({ type: 'application/webhook+json' }),

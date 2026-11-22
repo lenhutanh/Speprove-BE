@@ -7,6 +7,7 @@ import os from 'os'
 import crypto from 'crypto'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class EdgeTTSProvider {
@@ -46,7 +47,7 @@ export class EdgeTTSProvider {
         duration: metadata.format.duration ?? 0
       }
     } catch (error) {
-      console.error('EdgeTTS Provider Error:', error)
+      logger.error('EdgeTTS Provider Error:', error)
       throw new AppError(
         `TTS failed: ${error instanceof Error ? error.message : String(error)}`,
         StatusCodes.INTERNAL_SERVER_ERROR

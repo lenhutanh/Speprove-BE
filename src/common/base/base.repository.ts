@@ -158,7 +158,7 @@ export abstract class BaseRepository<T> implements IBaseRepository<T> {
   async updateOne(filter: QueryFilter<T>, update: UpdateQuery<T>, options?: QueryOptions): Promise<T | null> {
     const appliedFilter = this.getFilter(filter, options)
     let query = this.model.findOneAndUpdate(appliedFilter, update, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
       context: 'query',
       upsert: options?.upsert ?? false

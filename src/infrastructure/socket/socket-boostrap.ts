@@ -1,6 +1,7 @@
 import { container } from 'tsyringe'
 import { registerVoiceRoomSocket } from '~/modules/voice-room/voice-room.socket'
 import { SocketService } from './socket.service'
+import { logger } from '~/infrastructure/logging/logger'
 
 export function initSocket(server: any, corsOptions: any) {
   const socketService = container.resolve(SocketService)
@@ -15,7 +16,7 @@ export function initSocket(server: any, corsOptions: any) {
     }
 
     socket.join(`user:${userId}`)
-    console.log(`User ${userId} connected to socket`)
+    logger.info(`User ${userId} connected to socket`)
 
     registerVoiceRoomSocket(socket, userId)
   })

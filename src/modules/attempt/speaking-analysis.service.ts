@@ -27,6 +27,7 @@ import { calculateCreditCost } from '../credit-log/credit.util'
 import { AttemptType } from './attempt.model'
 import { SocketService } from '~/infrastructure/socket/socket.service'
 import { SOCKET_EVENTS } from '~/infrastructure/socket/socket.constants'
+import { logger } from '~/infrastructure/logging/logger'
 
 type AnalysisStage = 'transcribe' | 'assess' | 'evaluate' | 'score_session'
 
@@ -108,7 +109,7 @@ export class SpeakingAnalysisService {
         { upsert: true }
       )
 
-      console.log('Finish transcribing at: ', Date.now())
+      logger.info('Finish transcribing at: ', Date.now())
 
       await this.speakingProducer.assess({
         attemptId,
@@ -186,7 +187,7 @@ export class SpeakingAnalysisService {
         { upsert: true }
       )
 
-      console.log('Finishing assessing at: ', Date.now())
+      logger.info('Finishing assessing at: ', Date.now())
 
       await this.speakingProducer.evaluate({
         attemptId,
@@ -299,12 +300,12 @@ export class SpeakingAnalysisService {
         })
       }
 
-      console.log(`Finish evaluating attempt ${attemptId} at: `, Date.now())
+      logger.info(`Finish evaluating attempt ${attemptId} at: `, Date.now())
 
       try {
         await this.speakingProducer.extractVocabulary({ attemptId })
       } catch (error) {
-        console.warn(`Skip enqueueing vocabulary extraction for attempt ${attemptId}: ${this._formatError(error)}`)
+        logger.warn(`Skip enqueueing vocabulary extraction for attempt ${attemptId}: ${this._formatError(error)}`)
       }
 
       if (updatedAttempt.mode === SPEAKING_SESSION_MODE.MOCK && updatedAttempt.speakingSessionId) {
@@ -329,7 +330,7 @@ export class SpeakingAnalysisService {
 
     const allDone = attempts.every((a) => a.status === ATTEMPT_STATUS.DONE)
     if (!allDone || attempts.length === 0) {
-      console.warn(`[Job 4] Session ${speakingSessionId} is not complete or has no attempts. Skip.`)
+      logger.warn(`[Job 4] Session ${speakingSessionId} is not complete or has no attempts. Skip.`)
       return
     }
 
@@ -378,7 +379,7 @@ export class SpeakingAnalysisService {
       })
     }
 
-    console.log(
+    logger.info(
       `Session ${speakingSessionId} completed. Overall: ${overallBand} | FC: ${sessionCriteriaScores.fluency.toFixed(1)}, PR: ${sessionCriteriaScores.pronunciation.toFixed(1)}, LR: ${sessionCriteriaScores.lexical.toFixed(1)}, GRA: ${sessionCriteriaScores.grammar.toFixed(1)}`
     )
   }

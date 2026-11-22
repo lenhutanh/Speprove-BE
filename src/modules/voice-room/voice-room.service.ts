@@ -31,6 +31,7 @@ import {
   VOICE_ROOM_STATUS
 } from './voice-room.constants'
 import { Question } from '~/modules/question/question.model'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class VoiceRoomService {
@@ -151,7 +152,7 @@ export class VoiceRoomService {
       this.voiceRoomRepository
         .updateMany({ _id: { $in: zombieRoomIds as any } }, { status: VOICE_ROOM_STATUS.CLOSED, endedAt: new Date() })
         .catch((err) => {
-          console.warn('Failed to batch clean zombie rooms:', err?.message || err)
+          logger.warn('Failed to batch clean zombie rooms:', err?.message || err)
         })
     }
 

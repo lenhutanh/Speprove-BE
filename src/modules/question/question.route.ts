@@ -8,12 +8,9 @@ import {
 } from './question.validation'
 import { bindHandler } from '~/common/http'
 import { QuestionController } from './question.controller'
-import { container } from 'tsyringe'
-import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
+import { authMiddleware } from '~/common/middlewares/auth.middleware'
 
 const Router = express.Router()
-
-const authMiddleware = container.resolve(AuthMiddleware)
 
 Router.route('/')
   .post(

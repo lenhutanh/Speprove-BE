@@ -19,6 +19,7 @@ import { StatusCodes } from 'http-status-codes'
 import { PaymentMapper } from './payment.mapper'
 import { AccountService } from '../account/account.service'
 import { CreditLogService } from '../credit-log/credit-log.service'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class PaymentService {
@@ -88,7 +89,7 @@ export class PaymentService {
     if (!payment || payment.status !== PAYMENT_STATUS.PENDING) return
 
     if (payment.amount !== data.amount) {
-      console.error(
+      logger.error(
         `[Webhook Alert] Mismatch amount for order ${data.orderCode}. Expected: ${payment.amount}, Actual: ${data.amount}`
       )
       return
@@ -108,7 +109,7 @@ export class PaymentService {
       )
 
       if (!updateResult) {
-        console.log(`[Webhook] Order ${data.orderCode} already processed by another request.`)
+        logger.info(`[Webhook] Order ${data.orderCode} already processed by another request.`)
         return
       }
 

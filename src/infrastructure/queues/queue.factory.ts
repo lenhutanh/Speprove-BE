@@ -3,6 +3,7 @@ import Redis from 'ioredis'
 import { singleton } from 'tsyringe'
 import { createRedisClient } from '../redis/redis.factory'
 import { QUEUE_NAME, QueueName } from './queue.constant'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class QueueFactory {
@@ -25,7 +26,7 @@ export class QueueFactory {
       })
 
       this.queues.set(name, queue)
-      console.log(`[QueueFactory] Created queue: ${name}`)
+      logger.info(`[QueueFactory] Created queue: ${name}`)
     }
 
     return this.queues.get(name)!
@@ -33,7 +34,7 @@ export class QueueFactory {
 
   initQueues(): void {
     Object.values(QUEUE_NAME).forEach((name) => this.getQueue(name as QueueName))
-    console.log('[QueueFactory] All queues initialized')
+    logger.info('[QueueFactory] All queues initialized')
   }
 
   getAllQueues(): Queue[] {
@@ -42,6 +43,6 @@ export class QueueFactory {
 
   async shutdown(): Promise<void> {
     await Promise.all([...this.queues.values()].map((q) => q.close()))
-    console.log('[QueueFactory] All queues closed')
+    logger.info('[QueueFactory] All queues closed')
   }
 }

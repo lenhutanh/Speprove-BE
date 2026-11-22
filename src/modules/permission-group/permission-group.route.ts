@@ -3,13 +3,10 @@ import { validateMiddleware } from '~/common/middlewares/validate.middleware'
 import { idParamSchema } from '~/common/base/base.validation'
 import { createPermissionGroupSchema, updatePermissionGroupSchema } from './permission-group.validation'
 import { bindHandler } from '~/common/http'
-import { container } from 'tsyringe'
 import { PermissionGroupController } from './permission-group.controller'
-import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
+import { authMiddleware } from '~/common/middlewares/auth.middleware'
 
 const router = express.Router()
-
-const authMiddleware = container.resolve(AuthMiddleware)
 
 router
   .route('/')

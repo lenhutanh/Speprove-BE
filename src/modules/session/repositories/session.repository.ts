@@ -17,7 +17,7 @@ export class SessionRepository extends BaseRepository<SessionType> implements IS
         { $set: data },
         {
           upsert: true,
-          new: true,
+          returnDocument: 'after',
           lean: true
         }
       )
@@ -50,7 +50,7 @@ export class SessionRepository extends BaseRepository<SessionType> implements IS
         filter,
         { $set: data },
         {
-          new: true,
+          returnDocument: 'after',
           lean: true
         }
       )

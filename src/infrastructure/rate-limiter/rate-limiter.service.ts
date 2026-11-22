@@ -3,6 +3,7 @@ import { singleton } from 'tsyringe'
 import { createRedisClient } from '../redis/redis.factory'
 import { buildRedisKey } from '~/infrastructure/redis/redis-key.util'
 import { RateLimitResult } from './rate-limiter.types'
+import { logger } from '~/infrastructure/logging/logger'
 
 type RateLimitRedis = Redis & {
   rateLimitLog(key: string, seqKey: string, nowMs: number, windowMs: number, limit: number): Promise<[number, number]>
@@ -79,7 +80,7 @@ export class RateLimiterService {
         retryAfter
       }
     } catch (error) {
-      console.error(`[RateLimiter] Strict mode failed for key ${key}:`, error)
+      logger.error(`[RateLimiter] Strict mode failed for key ${key}:`, error)
       return { allowed: false, remaining: 0 }
     }
   }
@@ -110,7 +111,7 @@ export class RateLimiterService {
         retryAfter
       }
     } catch (error) {
-      console.error(`[RateLimiter] Fast mode failed for key ${key}. Failing open.`, error)
+      logger.error(`[RateLimiter] Fast mode failed for key ${key}. Failing open.`, error)
       return { allowed: true, remaining: limit }
     }
   }

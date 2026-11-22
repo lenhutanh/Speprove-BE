@@ -4,6 +4,7 @@ import { container } from 'tsyringe'
 import { AppError } from '~/common/errors'
 import { RateLimiterService } from './rate-limiter.service'
 import { ErrorCodes } from '~/common/constants/error-codes'
+import { logger } from '~/infrastructure/logging/logger'
 
 export const rateLimitMiddleware = (
   limit: number,
@@ -12,10 +13,9 @@ export const rateLimitMiddleware = (
   isStrict = false,
   message?: string
 ) => {
-  const limiter = container.resolve(RateLimiterService)
-
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const limiter = container.resolve(RateLimiterService)
       const identifier = (req.user as any)?.id || req.ip || 'anonymous'
       const key = `${actionName}:${identifier}`
 
@@ -37,7 +37,7 @@ export const rateLimitMiddleware = (
 
       next()
     } catch (err) {
-      console.error(`[RateLimit] Error on ${actionName}:`, err)
+      logger.error(`[RateLimit] Error on ${actionName}:`, err)
       next()
     }
   }

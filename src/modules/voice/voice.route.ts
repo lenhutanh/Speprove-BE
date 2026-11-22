@@ -4,12 +4,9 @@ import { createVoiceSchema, updateVoiceSchema } from './voice.validation'
 import { idParamSchema } from '~/common/base/base.validation'
 import { bindHandler } from '~/common/http'
 import { VoiceController } from './voice.controller'
-import { container } from 'tsyringe'
-import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
+import { authMiddleware } from '~/common/middlewares/auth.middleware'
 
 const router = express.Router()
-
-const authMiddleware = container.resolve(AuthMiddleware)
 
 router
   .route('/')

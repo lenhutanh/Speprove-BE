@@ -31,9 +31,10 @@ import { registerTopicModule } from '~/modules/topic/topic.di'
 import { registerVocabularySuggestionModule } from '~/modules/vocabulary-suggestion/vocabulary-suggestion.di'
 import { registerVoiceModule } from '~/modules/voice/voice.di'
 import { registerVoiceRoomModule } from '~/modules/voice-room/voice-room.di'
+import { logger } from '~/infrastructure/logging/logger'
 
 export function setupContainer(): void {
-  console.log('Setting up DI container...')
+  logger.info('Setting up DI container...')
 
   container.registerSingleton(TOKENS.ITokenService, JwtTokenService)
   container.registerSingleton(TOKENS.IHasher, BcryptHasher)
@@ -68,5 +69,5 @@ export function setupContainer(): void {
   registerVocabularySuggestionModule()
   registerVoiceRoomModule()
 
-  console.log('DI container ready\n')
+  logger.info('DI container ready\n')
 }
