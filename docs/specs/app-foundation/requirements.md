@@ -55,7 +55,7 @@ Give the backend a runtime that can be operated and observed (health probes, req
 - **AC10.** A Redis client created inside `runWithRequestId('abc', ...)` is constructed with no request id in its async context.
 - **AC12.** Shutdown with open Socket.io clients (refines AC4): on `SIGINT`, `SIGTERM` or a fatal error, connected Socket.io clients are disconnected so that the HTTP server can close; shutdown completes and exits with the requested code well before `SHUTDOWN_TIMEOUT_MS`. If a cleanup step (workers, queues, database) fails, the error is logged and the process exits with code 1 immediately instead of waiting for the timeout. The sequence lives in `createShutdown` and has automated tests, including one with a real WebSocket connection.
 - **AC13.** An image started without environment variables listens on the port the Dockerfile exposes (8017), so its `HEALTHCHECK` probes the right port.
-- **AC11.** Quality gates: `pnpm lint` has 0 errors, `pnpm build` succeeds, `pnpm test` passes in full (23 tests), and the diff of the last three commits touches only the files of `design.md` section 3.
+- **AC11.** Quality gates: `pnpm lint` has 0 errors, `pnpm build` succeeds, `pnpm test` passes in full (26 tests), and the diff of each fix commit touches only the files of `design.md` section 3.
 
 ---
 

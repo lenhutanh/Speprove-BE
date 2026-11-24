@@ -47,11 +47,11 @@
 
 ## 3c. Shutdown with open Socket.io clients and the Dockerfile port (review of 2026-11-25)
 
-- [ ] 3c.1. Extract the sequence of `src/index.ts` into `createShutdown` with no change of behavior; the 23 existing tests stay green (AC12).
-- [ ] 3c.2. Add `tests/unit/shutdown.test.ts` and see it fail for the right reasons: no exit within the timeout with a real WebSocket client; no prompt exit when cleanup fails (AC12).
-- [ ] 3c.3. Fix the order (Socket.io first) and catch failures of the cleanup steps; the new tests pass (AC12).
-- [ ] 3c.4. `Dockerfile`: `ENV APP_PORT=8017` in the runner stage (AC13).
-- [ ] 3c.5. Quality gates again: `pnpm lint`, `pnpm build`, `pnpm test`; `git diff --stat` of each commit lists only its files (AC11).
+- [x] 3c.1. Extract the sequence of `src/index.ts` into `createShutdown` with no change of behavior (commit `b9e09d2`); `tsc` clean and the 23 existing tests stayed green (AC12).
+- [x] 3c.2. Add `tests/unit/shutdown.test.ts` and see it fail for the right reasons: with a real WebSocket client no exit within 1.5 s; with a failing cleanup step no exit and an unhandled rejection; the repeated-signal test passed (AC12).
+- [x] 3c.3. Fix the order (Socket.io first) and catch failures of the cleanup steps (commit `57136bd`); the three tests pass, 8 of 8 repeated runs (AC12).
+- [x] 3c.4. `Dockerfile`: `ENV APP_PORT=8017` in the runner stage (commit `f751568`); checked by reading, the image was not built (AC13).
+- [x] 3c.5. Quality gates: 26 of 26 tests, `tsc` and Prettier clean, lint 0 errors and 227 warnings (unchanged), build exit 0; each commit touches only its files (AC11).
 - [ ] 3c.6. Owner check: with a browser or client connected to the Socket.io server, Ctrl+C on `node dist/index.js` finishes in about a second and `$LASTEXITCODE` is `0` (AC12).
 
 ## 5. Quality Gates (2026-11-25, branch `feat/app-foundation`)

@@ -61,10 +61,14 @@
 
 ---
 
-## 3. Files of the Last Three Commits (AC11)
+## 3. Files of the Fix Commits (AC11)
 
 | File | Change | AC |
 | :--- | :--- | :--- |
+| `src/infrastructure/shutdown.ts` | New: `createShutdown`, Socket.io closed first, cleanup failures caught | AC12 |
+| `src/index.ts` | Use `createShutdown` | AC12 |
+| `tests/unit/shutdown.test.ts` | New file, three tests | AC12 |
+| `Dockerfile` | `ENV APP_PORT=8017` in the runner stage | AC13 |
 | `src/infrastructure/livekit/livekit.service.ts` | Convert the timeout to seconds | AC5 |
 | `tests/unit/livekit-service.test.ts` | New file, one test | AC5 |
 | `src/app.ts` | Reorder as in 2.3 | AC9 |
