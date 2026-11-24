@@ -208,7 +208,7 @@ export class AttemptService {
   }
 
   public async getList(userId: string, queryOptions: AttemptQueryType) {
-    const { limit, page, sortBy, sortOrder, forecastQuestionId, speakingSessionId } = queryOptions || {}
+    const { limit, page, sortBy, forecastQuestionId, speakingSessionId } = queryOptions || {}
 
     const qb = new QueryBuilder<AttemptType>()
 

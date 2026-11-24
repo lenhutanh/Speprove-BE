@@ -21,7 +21,7 @@ export class QuestionService {
   ) {}
 
   public async createNew(data: CreateQuestionBodyType) {
-    const { errors, warnings } = checkSpelling(data.content)
+    const { errors } = checkSpelling(data.content)
 
     if (errors.length) {
       const suggestions = errors.map((w) => ({

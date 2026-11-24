@@ -41,7 +41,7 @@ export class ForecastTopicRepository extends BaseRepository<ForecastTopicType> i
   }
 
   public async getList(query: ForecastTopicQueryType): Promise<any> {
-    const { page, limit, search, forecastId, topicId, sortBy, sortOrder } = query ?? {}
+    const { page, limit, search, forecastId, topicId, sortOrder } = query ?? {}
     const pipeline: PipelineStage[] = [
       {
         $match: {

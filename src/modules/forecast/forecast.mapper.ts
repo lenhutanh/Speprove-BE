@@ -9,7 +9,6 @@ import { ImageFileType } from '../file/file.model'
 export class ForecastMapper extends BaseMapper<ForecastType, ForecastResponseDto> {
   toResponse(entity: ForecastType): ForecastResponseDto {
     const { validFrom, validTo } = getQuarterRange(entity.quarter, entity.year)
-    const now = new Date()
 
     return {
       id: entity._id.toString(),

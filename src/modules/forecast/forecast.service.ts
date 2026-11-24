@@ -1,5 +1,5 @@
 import { StatusCodes } from 'http-status-codes'
-import { CreateForecastBodyType, UpdateForecastBodyType } from '~/modules/forecast/types/forecast.type'
+import { CreateForecastBodyType } from '~/modules/forecast/types/forecast.type'
 import { inject, singleton } from 'tsyringe'
 import { QueryBuilder } from '~/common/base/query-builder'
 import { TOKENS } from '~/common/constants/di.tokens'
@@ -15,7 +15,7 @@ import { QuestionService } from '../question/question.service'
 import { IForecastTopicRepository } from '~/modules/forecast-topic/repositories/forecast-topic.repository.interface'
 import { IForecastQuestionRepository } from '~/modules/forecast-question/forecast-question.repository.interface'
 import { STATUS } from '~/common/constants/status.constants'
-import { PART_KIND, PART2_CATEGORY, Part23CategoryValue } from '~/modules/question/question.constants'
+import { PART_KIND } from '~/modules/question/question.constants'
 
 @singleton()
 export class ForecastService {

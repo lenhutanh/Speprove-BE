@@ -20,7 +20,6 @@ import {
   RegisterBodyType,
   ResetPasswordBodyType,
   SetPasswordBodyType,
-  UpdateProfileBodyType,
   VerifyBodyType
 } from '../types/auth.type'
 import { AppError } from '~/common/errors'

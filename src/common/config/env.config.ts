@@ -1,6 +1,5 @@
 import 'dotenv/config'
 import { z } from 'zod'
-import jwt from 'jsonwebtoken'
 import { StringValue } from 'ms'
 
 const isTest = process.env.NODE_ENV === 'test'
