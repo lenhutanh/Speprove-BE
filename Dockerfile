@@ -27,6 +27,7 @@ FROM node:24-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV APP_PORT=8017
 
 # Ffmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
