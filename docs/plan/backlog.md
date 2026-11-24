@@ -3,6 +3,39 @@
 > Work plan until the thesis defense. Cross-repo epics live here (BE repo). Rubric references (TC…, G…) point to `rubric.txt` in the workspace folder.
 > Architecture details for E1–E7 and E10–E12 are in [`specs/architecture-refactor/design.md`](../specs/architecture-refactor/design.md) (draft, pending owner verification). Measured starting point: [baseline](./baseline-2026-11-22.md).
 
+## Progress Board (2026-11-25)
+
+The board is the source of truth for the **order** and the **status** of the tickets. The epics and checklists further down are the original plan and keep the detail of each epic; where they disagree with the board, the board wins. The state of the work and the next step are in [handoff.md](./handoff.md).
+
+Kinds: **spec** means a spec of three files in [`../specs/`](../specs/) approved before coding; **tasks** means a task list with acceptance criteria, approved in chat before coding, no spec file; **docs** means a documentation ticket. Each spec is written just in time, when its ticket is next, and needs the owner's approval before code. Status: `done` (code and checks done), `owner check` (waiting for a manual check of the owner), `todo`. Every branch below is local only: nothing has been pushed.
+
+| # | Ticket (branch) | Repo | Kind | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | `chore/upgrade-deps` | BE, FE | tasks | done. Not checked: running the app with the new dependency versions (auth, upload, payment, sockets, voice rooms) |
+| 2 | `chore/clean-workspace` (FE) | FE | tasks | partial: lint reports untracked (`30e5778`). Open: the stray folder (stays until a fresh clone on Linux) and the uncommitted `src/messages/vi.d.json.ts` |
+| 3 | `docs/project-docs` | BE, FE | docs | done |
+| 4 | `feat/app-foundation` | BE | spec: [app-foundation](../specs/app-foundation/) | code done; owner check pending (task 3c.6); docs follow code pending (tasks 12, 13) |
+| 5 | `chore/remove-dead-code` | BE | tasks | code done; owner check pending (start the app, `/health`, login, one practice); `AGENTS.md` follow-up pending |
+| 6 | `ci-cd-staging` (pipeline, deploy, rollback, monitoring) | BE, FE | spec | todo. Spec not written; needs the owner's decisions on the staging host, registry, secrets and trigger |
+| 7 | `fix/http-error-handling` | BE | tasks | todo |
+| 8 | `chore/seed-split` | BE | tasks | todo |
+| 9 | `module-layout` (core-layout, five `git mv` PRs, architecture-guard) | BE | spec | todo |
+| 10 | `refactor/billing-wallet` | BE | spec | todo. Decision needed: wallet collection or the leaner `adjustBalance` |
+| 11 | `platform-modules`: file-tts, notification-module | BE | spec | todo (before account-auth: `account` depends on them) |
+| 12 | `refactor/account-auth` | BE | spec | todo |
+| 13 | `refactor/access-control` (admin API, `assertOwner`, the permission checks commented out in the routes) | BE, FE | spec | todo |
+| 14 | `platform-modules`: content-module, voice-room-service | BE | spec | todo |
+| 15 | `refactor/practice-assessment` (with `fix/fe-error-handling`) | BE, FE | spec | todo |
+| 16 | `perf/static-data-cache`, `test/core-modules` | BE | tasks | todo |
+| 17 | `feat/friend`, `feat/chat`, `feat/call` (three specs; reuse `feature/friend`, `feature/chat`, `feature/call` as reference) | BE, FE | spec | todo |
+| 18 | `docs/scoring-v2-design` (update `specs/scoring-pipeline-v2/design.md`) | BE | docs | todo |
+| 19 | `feat/audio-quality-gate`, `feat/speech-features`, `feat/gop-pronunciation` (with the benchmark), `feat/evidence-based-scoring` (four specs) | BE, SV | spec | todo |
+| 20 | `test/e2e-mock-test`, `test/load-scoring` | TS | tasks | todo |
+| 21 | `feat/observability-metrics` | BE | tasks | todo |
+| 22 | `docs/thesis-docs` (system diagram, data model, quantified non-functional requirements, technical debt) | BE | docs | todo |
+
+User testing (epic E8) starts when staging runs (row 6) and the product is stable; the second round follows the improvements. The documents of the nine domains in [layout-and-index.md](../layout-and-index.md) are written in the ticket that creates their content.
+
 ## Conventions
 
 - **Epic = one GitHub issue with a checklist. Each checklist line = one small PR** (one branch, CI green). Pure moves (`git mv`) are separate PRs from logic changes; bug fixes are separate from refactors.

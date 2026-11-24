@@ -45,4 +45,6 @@ The monolith is meant to be split into microservices later, so code must follow 
 
 ## Workflow
 
+Before starting a task, read `docs/plan/handoff.md` (current state, next step, working agreement) and `docs/plan/backlog.md` (progress board).
+
 A new feature, or a change spanning several modules or both BE and FE, has a spec in `docs/specs/<feature-name>/` (`requirements.md`, `design.md`, `tasks.md`). If one already exists for the task, read it first and continue from `tasks.md`. Documentation changes and small fixes need no spec.
