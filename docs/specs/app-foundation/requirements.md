@@ -1,6 +1,6 @@
 # App Foundation: Requirements (Backend)
 
-> Repository: `speprove-be`. Branch: `feat/app-foundation` (local only, 5 commits).
+> Repository: `speprove-be`. Branch: `feat/app-foundation` (local only, 8 commits).
 > Epic: E1 of the [backlog](../../plan/backlog.md); step R0 of the [architecture refactor design](../architecture-refactor/design.md).
 > Status: **Step 1: Requirements (approved 2026-11-25)**.
 > Note: the first two commits (`3db0e35`, `42fb4fc`) were implemented before this spec existed. AC1 to AC8 were reconstructed from their commit messages, the backlog and the code; `tasks.md` records which of them have evidence and which do not.
@@ -24,6 +24,7 @@ Give the backend a runtime that can be operated and observed (health probes, req
 2.1.5. `REDIS_URL` was ignored (finding F29 of the refactor design), and the default of `APP_PORT` did not match the Docker port.
 2.1.6. The Dockerfile had no `HEALTHCHECK`.
 2.1.7. The repository had no automated test and no CI for the backend.
+2.1.8. A review on 2026-11-25 found two defects in the runtime commit. (a) `src/index.ts` calls `closeSocket()` only inside the callback of `server.close()`, but that callback runs only after every connection has ended and Socket.io connections stay open, so with one connected client shutdown waits for the full timeout and exits with code 1; reproduced with a real WebSocket (callback not called after 3 s, versus 4 ms when Socket.io is closed first). The owner's manual check passed because no client was connected. (b) The Dockerfile `EXPOSE`s 8017 and its `HEALTHCHECK` falls back to 8017, but the app defaults to port 5000 and the Dockerfile sets no `APP_PORT`.
 
 ### 2.2. Decisions
 
@@ -52,6 +53,8 @@ Give the backend a runtime that can be operated and observed (health probes, req
 - **AC8.** A CI workflow runs lint, build, test, `pnpm audit --audit-level=high` and gitleaks on pull requests and on pushes to `main`.
 - **AC9.** `GET /health` and `GET /ready` have no `x-powered-by` header and have `x-content-type-options: nosniff`.
 - **AC10.** A Redis client created inside `runWithRequestId('abc', ...)` is constructed with no request id in its async context.
+- **AC12.** Shutdown with open Socket.io clients (refines AC4): on `SIGINT`, `SIGTERM` or a fatal error, connected Socket.io clients are disconnected so that the HTTP server can close; shutdown completes and exits with the requested code well before `SHUTDOWN_TIMEOUT_MS`. If a cleanup step (workers, queues, database) fails, the error is logged and the process exits with code 1 immediately instead of waiting for the timeout. The sequence lives in `createShutdown` and has automated tests, including one with a real WebSocket connection.
+- **AC13.** An image started without environment variables listens on the port the Dockerfile exposes (8017), so its `HEALTHCHECK` probes the right port.
 - **AC11.** Quality gates: `pnpm lint` has 0 errors, `pnpm build` succeeds, `pnpm test` passes in full (23 tests), and the diff of the last three commits touches only the files of `design.md` section 3.
 
 ---

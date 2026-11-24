@@ -45,6 +45,15 @@
 - [x] 3b.2. Convert milliseconds to seconds in `LiveKitService` (AC5).
 - [x] 3b.3. Check the other timeouts: Groq (milliseconds), PayOS (milliseconds), axios audio download (milliseconds) are correct (AC5).
 
+## 3c. Shutdown with open Socket.io clients and the Dockerfile port (review of 2026-11-25)
+
+- [ ] 3c.1. Extract the sequence of `src/index.ts` into `createShutdown` with no change of behavior; the 23 existing tests stay green (AC12).
+- [ ] 3c.2. Add `tests/unit/shutdown.test.ts` and see it fail for the right reasons: no exit within the timeout with a real WebSocket client; no prompt exit when cleanup fails (AC12).
+- [ ] 3c.3. Fix the order (Socket.io first) and catch failures of the cleanup steps; the new tests pass (AC12).
+- [ ] 3c.4. `Dockerfile`: `ENV APP_PORT=8017` in the runner stage (AC13).
+- [ ] 3c.5. Quality gates again: `pnpm lint`, `pnpm build`, `pnpm test`; `git diff --stat` of each commit lists only its files (AC11).
+- [ ] 3c.6. Owner check: with a browser or client connected to the Socket.io server, Ctrl+C on `node dist/index.js` finishes in about a second and `$LASTEXITCODE` is `0` (AC12).
+
 ## 5. Quality Gates (2026-11-25, branch `feat/app-foundation`)
 
 - [x] 5. `pnpm test`: 23 of 23 pass (twice in a row); the three new tests failed before their fixes (AC11). One earlier full run failed `mongo-ping` (flaky under parallel load, requirements 6.1).

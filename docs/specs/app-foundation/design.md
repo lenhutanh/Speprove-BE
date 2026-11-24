@@ -48,6 +48,17 @@
 
 `LiveKitService` passed `env.HTTP_TIMEOUT_MS` (milliseconds) as `requestTimeout` to `RoomServiceClient`, which reads seconds (`AbortSignal.timeout(timeout * 1e3)` in the SDK). It now passes `Math.ceil(env.HTTP_TIMEOUT_MS / 1000)`. The other timeouts were checked and are correct: Groq, PayOS and axios all read milliseconds. Test in `tests/unit/livekit-service.test.ts` mocks `livekit-server-sdk` and checks the options given to the client.
 
+### 2.6. Shutdown with open Socket.io clients (AC12)
+
+2.6.1. The sequence moves out of `src/index.ts` into `createShutdown` in `src/infrastructure/shutdown.ts`, so that it can be tested. It takes the HTTP server, the timeout, `closeSocket`, a `stopBackground` function (workers, then queues, then the database) and an `exit` function (default `process.exit`). `index.ts` only wires it.
+2.6.2. Order: ignore repeated calls; arm the forced-exit timer; call `closeSocket()` (Socket.io disconnects its clients and closes the HTTP server); call `server.close(...)` and `server.closeIdleConnections()`; when the server has closed, run `stopBackground`; then log `Shutdown complete` and exit with the requested code. A rejection of `stopBackground` is caught, logged, and exits with code 1 at once.
+2.6.3. **Alternatives considered:** (a) *only move `closeSocket()` before `server.close()` inside `index.ts`*: fixes the order but leaves the sequence untestable. (b) *`server.closeAllConnections()`*: also unblocks the server but cuts in-flight HTTP requests, which defeats graceful shutdown.
+2.6.4. Tests in `tests/unit/shutdown.test.ts`: with a real HTTP server, a Socket.io server and one WebSocket client the exit code is the requested one and arrives before the timeout; a failing cleanup step exits with 1 before the timeout; repeated calls run cleanup once.
+
+### 2.7. Dockerfile port (AC13)
+
+`ENV APP_PORT=8017` in the runner stage of the `Dockerfile`, matching `EXPOSE 8017` and the `HEALTHCHECK` fallback. `docker-compose.dev.yaml` already sets the same value. No automated test: the image is not built in this environment, so the check is reading the file.
+
 ---
 
 ## 3. Files of the Last Three Commits (AC11)
