@@ -88,7 +88,6 @@
     "music-metadata": "^11.16.1",
     "node-edge-tts": "^1.2.12",
     "nspell": "^2.1.5",
-    "redis": "^5.12.4",
     "reflect-metadata": "^0.2.2",
     "slugify": "^1.6.9",
     "socket.io": "^4.8.4",

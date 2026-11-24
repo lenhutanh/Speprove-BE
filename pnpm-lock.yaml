@@ -101,9 +101,6 @@ importers:
       nspell:
         specifier: ^2.1.5
         version: 2.1.5
-      redis:
-        specifier: ^5.12.4
-        version: 5.12.4
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -3630,22 +3627,27 @@ snapshots:
   '@redis/bloom@5.12.4(@redis/client@5.12.4)':
     dependencies:
       '@redis/client': 5.12.4
+    optional: true
 
   '@redis/client@5.12.4':
     dependencies:
       cluster-key-slot: 1.1.2
+    optional: true
 
   '@redis/json@5.12.4(@redis/client@5.12.4)':
     dependencies:
       '@redis/client': 5.12.4
+    optional: true
 
   '@redis/search@5.12.4(@redis/client@5.12.4)':
     dependencies:
       '@redis/client': 5.12.4
+    optional: true
 
   '@redis/time-series@5.12.4(@redis/client@5.12.4)':
     dependencies:
       '@redis/client': 5.12.4
+    optional: true
 
   '@rolldown/binding-android-arm-eabi@1.2.19':
     optional: true
@@ -4286,7 +4288,8 @@ snapshots:
 
   cluster-key-slot@1.1.1: {}
 
-  cluster-key-slot@1.1.2: {}
+  cluster-key-slot@1.1.2:
+    optional: true
 
   color-convert@2.0.1:
     dependencies:
@@ -5636,6 +5639,7 @@ snapshots:
     transitivePeerDependencies:
       - '@node-rs/xxhash'
       - '@opentelemetry/api'
+    optional: true
 
   reflect-metadata@0.2.2: {}
 
