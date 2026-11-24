@@ -2,7 +2,7 @@
 
 > Repository: `speprove-be`. Branch: `feat/app-foundation`.
 > Requirements: [requirements.md](./requirements.md) (AC1 to AC11).
-> Status: **Step 2: Design (awaiting approval)**.
+> Status: **Step 2: Design (approved 2026-11-25)**.
 > Note: sections 2.1 to 2.4 describe what the first two commits did, read back from their commit messages and from the code. The alternatives that were weighed when they were written were not recorded.
 
 ---
@@ -14,7 +14,7 @@
 1.2.1. *Hide the probe headers with `app.disable('x-powered-by')` instead of reordering.* Rejected: it hides one header; the probes would still lack the other helmet headers (AC9).
 1.2.2. *`AsyncLocalStorage.enterWith(undefined)` before creating a Redis client.* Rejected: `enterWith` changes the context of the rest of the request; `exit(fn)` scopes the change to `fn`.
 1.2.3. *Create the Redis clients at boot.* Rejected for this ticket: it changes the start-up order and the test container.
-1.3. **Requirement refinements:** none.
+1.3. **Requirement refinements:** AC5 now states that each timeout is given in the unit its client expects. It came from checking the claim "timeouts on LiveKit" of the runtime commit: the timeout existed but was 1000 times too long.
 
 ---
 
@@ -44,12 +44,18 @@
 
 `runOutsideRequest(fn)` in `request-context.ts` is `storage.exit(fn)`; `createRedisClient` builds the client inside it. Only the constructor needs it; commands issued by request code keep the request context. Test in `tests/unit/redis-factory.test.ts` mocks `ioredis` with a class that records `getRequestId()` in its constructor.
 
+### 2.5. LiveKit request timeout unit (commit `252b414`, AC5)
+
+`LiveKitService` passed `env.HTTP_TIMEOUT_MS` (milliseconds) as `requestTimeout` to `RoomServiceClient`, which reads seconds (`AbortSignal.timeout(timeout * 1e3)` in the SDK). It now passes `Math.ceil(env.HTTP_TIMEOUT_MS / 1000)`. The other timeouts were checked and are correct: Groq, PayOS and axios all read milliseconds. Test in `tests/unit/livekit-service.test.ts` mocks `livekit-server-sdk` and checks the options given to the client.
+
 ---
 
-## 3. Files of the Last Two Commits (AC11)
+## 3. Files of the Last Three Commits (AC11)
 
 | File | Change | AC |
 | :--- | :--- | :--- |
+| `src/infrastructure/livekit/livekit.service.ts` | Convert the timeout to seconds | AC5 |
+| `tests/unit/livekit-service.test.ts` | New file, one test | AC5 |
 | `src/app.ts` | Reorder as in 2.3 | AC9 |
 | `src/infrastructure/logging/request-context.ts` | Add `runOutsideRequest` | AC10 |
 | `src/infrastructure/redis/redis.factory.ts` | Construct the client inside `runOutsideRequest` | AC10 |

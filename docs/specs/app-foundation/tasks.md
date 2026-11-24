@@ -2,7 +2,7 @@
 
 > Repository: `speprove-be`. Branch: `feat/app-foundation`.
 > Requirements: [requirements.md](./requirements.md). Design: [design.md](./design.md).
-> Status: **Step 3: Tasks (awaiting approval)**.
+> Status: **Step 3: Tasks (approved 2026-11-25; implementation done except the owner checks and docs follow code)**.
 > Evidence column: **test** means an automated test covers it; **code** means it was read in the code only; **none** means no evidence was found.
 
 ---
@@ -17,7 +17,7 @@
 | [x] | Bounded shutdown, repeated signals ignored, fatal errors exit 1 | AC4 | code; exit codes not checked on this machine |
 | [x] | `APP_PORT` default, `REDIS_URL`, Mongo pool and selection timeout, `returnDocument` | AC5 | code |
 | [x] | Timeouts on Groq, PayOS and the audio download | AC5 | code |
-| [ ] | Timeout on LiveKit | AC5 | **none**: the commit message claims it, but a search for `timeout` under `src/infrastructure/livekit` finds nothing |
+| [x] | Timeout on LiveKit, in the unit the SDK reads (seconds), see section 3b | AC5 | test (`livekit-service.test.ts`); the timeout existed in the runtime commit but was 30000 seconds |
 | [x] | Third-party keys optional when `NODE_ENV=test` | AC5 | test (the suite runs without them) |
 | [x] | Dockerfile `HEALTHCHECK` and workspace file | AC6 | code; the image was not built |
 
@@ -39,12 +39,18 @@
 - [x] 3. Add the test and see it fail (the constructor saw request id `abc`) (AC10).
 - [x] 4. Add `runOutsideRequest` and use it in `createRedisClient` (AC10).
 
+## 3b. LiveKit timeout unit (commit `252b414`)
+
+- [x] 3b.1. Add the test and see it fail (`requestTimeout` was 30000, expected 30) (AC5).
+- [x] 3b.2. Convert milliseconds to seconds in `LiveKitService` (AC5).
+- [x] 3b.3. Check the other timeouts: Groq (milliseconds), PayOS (milliseconds), axios audio download (milliseconds) are correct (AC5).
+
 ## 5. Quality Gates (2026-11-25, branch `feat/app-foundation`)
 
-- [x] 5. `pnpm test`: 22 of 22 pass; the two new tests failed before the fixes (AC11).
+- [x] 5. `pnpm test`: 23 of 23 pass (twice in a row); the three new tests failed before their fixes (AC11). One earlier full run failed `mongo-ping` (flaky under parallel load, requirements 6.1).
 - [x] 6. `pnpm lint`: 0 errors, 227 warnings (same as before the fixes); Prettier check passes on the changed files (AC11).
 - [x] 7. `pnpm build`: exit code 0, `dist/index.js` created (AC11).
-- [x] 8. `git diff --stat` of the two fixes lists only the five files of design section 3 (AC11).
+- [x] 8. `git diff --stat` of each fix lists only the files of design section 3 (AC11).
 
 ## 6. Manual Check (owner, with the real `.env`)
 
@@ -59,5 +65,5 @@
 
 ## 8. Decisions Still Open
 
-- [ ] 14. LiveKit timeout (task above): add it here or leave it out of AC5. Recommendation: add it, it is a one-line option, and re-run the quality gates.
-- [ ] 15. `mongo-ping` first-run timeout (requirements 6.1): recommendation, leave it to the CI ticket.
+- [x] 14. LiveKit timeout: decided (owner) to fix it in this branch; done in commit `252b414`.
+- [x] 15. `mongo-ping` flake (requirements 6.1): decided (owner) to leave it to the CI ticket.
