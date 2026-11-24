@@ -2,7 +2,7 @@
 
 > Repository: `speprove-be`. Branch: `feat/app-foundation`.
 > Requirements: [requirements.md](./requirements.md). Design: [design.md](./design.md).
-> Status: **Step 3: Tasks (approved 2026-11-25; implementation done except the owner checks and docs follow code)**.
+> Status: **Step 3: Tasks (approved 2026-11-25; implementation and owner checks done; open: task 11 decision, docs follow code after the docs pull request merges)**.
 > Evidence column: **test** means an automated test covers it; **code** means it was read in the code only; **none** means no evidence was found.
 
 ---
@@ -54,9 +54,9 @@
 
 ## 6. Manual Check (owner, with the real `.env`)
 
-- [ ] 9. `node dist/index.js`: `/health` answers 200 with no `x-powered-by`; `/ready` answers 200 (AC3, AC9).
-- [ ] 10. Ctrl+C exits with code 0 (`echo $?`); the Redis client log lines carry no request id (AC4, AC10).
-- [ ] 11. With Redis stopped, `/ready` answers 503 and `/health` still 200; after restarting Redis, `/ready` answers 200 again (AC3).
+- [x] 9. `/health` answers 200 with no `x-powered-by`; `/ready` answers 200 (AC3, AC9). Result 2026-11-25 (owner, cloud Mongo and Redis): `/health` 200 `{"status":"ok","uptimeSeconds":65}`, `/ready` 200 `{"status":"ok","dependencies":{"mongo":"ok","redis":"ok"}}`, helmet headers present, no `X-Powered-By`, a new `X-Request-Id` on each response.
+- [x] 10. Ctrl+C exits with code 0 (AC4). Result 2026-11-25 (owner, `node dist/index.js`): logged `SIGINT: shutting down`, workers closed, queues closed, Mongo closed, `Shutdown complete` in about 0.1 s, `$LASTEXITCODE` was `0`. The "no request id on Redis client log lines" part (AC10) is covered by `redis-factory.test.ts`, not checked by eye.
+- [ ] 11. With Redis stopped, `/ready` answers 503 and `/health` still 200 (AC3). Open: not applicable with a cloud Redis; the 503 behavior is covered by the automated test `GET /ready is 200 when dependencies answer and 503 when one is down`. Proposal: drop this task, owner to confirm.
 
 ## 7. Docs Follow Code
 
