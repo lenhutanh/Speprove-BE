@@ -44,6 +44,7 @@ Shared building blocks used across the whole application:
 - `config/`: app configuration (environment, database, Swagger, etc.).
 - `constants/`: constants, enums, error codes, DI tokens.
 - `errors/`: custom error classes (e.g. `AppError`).
+- `http/`: response envelope and controller binding helpers (`ResponseTransformer`, `bindHandler`).
 - `contracts/`, `types/`: shared type definitions.
 - `middlewares/`: Express middlewares (auth, error handling, validation).
 - `utils/`: helper functions.
@@ -90,6 +91,7 @@ Aggregates all the main API routes.
 ## 6. NPM scripts
 
 - `pnpm dev`: start the app with `nodemon` for development (auto-reload).
+- `pnpm clean`: delete the `dist` folder.
 - `pnpm build`: compile TypeScript into `dist`.
 - `pnpm start`: run the compiled `dist/index.js`.
 - `pnpm lint`, `pnpm lint:fix`: check and fix lint errors with ESLint.

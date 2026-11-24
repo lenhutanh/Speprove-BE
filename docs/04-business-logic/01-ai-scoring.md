@@ -1,5 +1,7 @@
 # AI Scoring Flow
 
+> **Status: as-is.** This document describes how the code works today, including behavior that is a known defect or an undecided product rule. It is not an approved rule set. The target design is in [`specs/architecture-refactor/design.md`](../specs/architecture-refactor/design.md).
+
 > A learner's spoken answer (one practice question, or each question in a mock test) is scored by 3 chained stages on BullMQ: **transcribe → assess → evaluate**. Mock tests add a **score_session** stage that computes the band for the whole session.
 
 ## Context

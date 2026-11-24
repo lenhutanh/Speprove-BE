@@ -1,5 +1,7 @@
 # Payment & Credit Flow
 
+> **Status: as-is.** This document describes how the code works today, including behavior that is a known defect or an undecided product rule. It is not an approved rule set. The target design is in [`specs/architecture-refactor/design.md`](../specs/architecture-refactor/design.md).
+
 > Learners buy credit packages through PayOS (QR bank transfer). Credits are added when PayOS calls the webhook to confirm success. Credits are deducted for practice and mock tests, and refunded when scoring fails.
 
 ## Data model
