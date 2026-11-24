@@ -18,7 +18,7 @@ docs/
 │   ├── 01-ai-scoring.md                 # transcribe, assess, evaluate; mock sessions; retries; refunds
 │   └── 02-payment-and-credit.md         # PayOS, webhook safeguards, credit deduction and refunds
 ├── specs/                               # one folder per feature: requirements, design, tasks
-│   ├── app-foundation-fixes/            # health probes behind helmet; Redis log context
+│   ├── app-foundation/                  # runtime foundation: logger, probes, shutdown, config, tests, CI
 │   ├── architecture-refactor/           # ten modules, core layout, conventions, work breakdown (draft)
 │   └── scoring-pipeline-v2/             # hybrid feature-based scoring design (draft, partly superseded)
 ├── plan/
