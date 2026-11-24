@@ -25,7 +25,7 @@
 
 - [ ] 7. Re-run both new tests: they **pass** (AC1, AC2).
 - [ ] 8. `pnpm lint && pnpm build && pnpm test`: 0 lint errors, build green, 22 tests pass (AC3).
-- [ ] 9. `git diff --stat` lists only the files of design section 3 and, after tasks 12 and 13, `CLAUDE.md` and the system overview (AC4).
+- [ ] 9. `git diff --stat` lists only the files of design section 3 and, after tasks 12 and 13, `AGENTS.md` and the system overview (AC4).
 
 ## 5. Manual Check (owner, with the real `.env`)
 
@@ -34,5 +34,5 @@
 
 ## 6. Docs follow code
 
-- [ ] 12. `CLAUDE.md`: replace "There is no test runner" with the vitest setup (`pnpm test`, `tests/`, the first run downloads the MongoDB binary).
+- [ ] 12. `AGENTS.md`: replace "There is no test runner" with the vitest setup (`pnpm test`, `tests/`, the first run downloads the MongoDB binary).
 - [ ] 13. Document the health probes (`/health`, `/ready`) and the request-id logging in the system overview, in this same pull request (the `project-docs` ticket deliberately leaves them out).

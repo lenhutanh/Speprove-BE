@@ -41,7 +41,7 @@ Finish the two open items of the foundation ticket so the branch can be pushed a
 - **AC1.** `GET /health` and `GET /ready` have no `x-powered-by` header and have `x-content-type-options: nosniff`.
 - **AC2.** A Redis client created inside `runWithRequestId('abc', ...)` is constructed with no request id in its async context.
 - **AC3.** No regression: `pnpm lint`, `pnpm build` and `pnpm test` pass, with exactly two more tests than the baseline (22), and no existing test changes status.
-- **AC4.** The diff touches only the files listed in `design.md` section 3, plus `CLAUDE.md` and the system overview document (docs follow code, tasks 12 and 13).
+- **AC4.** The diff touches only the files listed in `design.md` section 3, plus `AGENTS.md` and the system overview document (docs follow code, tasks 12 and 13).
 
 ---
 
