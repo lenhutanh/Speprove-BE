@@ -58,14 +58,6 @@ export const errorMiddleware = (err: any, _req: Request, res: Response, _next: N
     )
   }
 
-  // if (err.name === 'JsonWebTokenError') {
-  //   return ResponseTransformer.error(res, 'Invalid token', StatusCodes.UNAUTHORIZED, ErrorCodes.INVALID_TOKEN)
-  // }
-
-  // if (err.name === 'TokenExpiredError') {
-  //   return ResponseTransformer.error(res, 'Token expired', StatusCodes.UNAUTHORIZED, ErrorCodes.TOKEN_EXPIRED)
-  // }
-
   logger.error('Unexpected error', err)
 
   return ResponseTransformer.error(

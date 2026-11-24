@@ -4,5 +4,4 @@ import { FileRepository } from './repositories/file.repository'
 
 export const registerFileModule = () => {
   container.registerSingleton(TOKENS.IFileRepository, FileRepository)
-  // container.registerSingleton(FileWorker, FileWorker)
 }

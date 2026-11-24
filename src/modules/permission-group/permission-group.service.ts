@@ -18,10 +18,6 @@ export class PermissionGroupService {
     return await this.permissionGroupRepository.create(data)
   }
 
-  // async getList() {
-  //   return await this.permissionGroupRepository.findMany({})
-  // }
-
   async getDetails(id: string) {
     const permissionGroup = await this.permissionGroupRepository.findById(id)
     if (!permissionGroup) {

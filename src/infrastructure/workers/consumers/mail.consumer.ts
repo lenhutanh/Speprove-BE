@@ -22,10 +22,6 @@ export class MailConsumer extends BaseConsumer {
       case JOB_NAME.MAIL.SEND_OTP:
         return this.handleSendEmail(job.data)
 
-      // Sau này có thêm loại mail khác, chỉ cần thêm case ở đây
-      // case JOB_NAME.MAIL.SEND_WELCOME:
-      //   return this.handleWelcomeEmail(job.data)
-
       default:
         throw new Error(`[MailConsumer] Unknown job name: ${job.name}`)
     }
@@ -33,8 +29,6 @@ export class MailConsumer extends BaseConsumer {
 
   private async handleSendEmail(data: any) {
     const { to, subject, htmlContent } = data
-
-    // console.log(`[MailConsumer] ✉️ Sending email to: ${to} | Subject: ${subject}`)
 
     return await this.mailService.sendEmail(to, subject, htmlContent)
   }
