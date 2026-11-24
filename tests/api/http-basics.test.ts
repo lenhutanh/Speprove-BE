@@ -25,6 +25,14 @@ describe('HTTP basics', () => {
     expect(res.body.status).toBe('ok')
   })
 
+  it('the health probes carry the helmet headers and hide X-Powered-By', async () => {
+    for (const path of ['/health', '/ready']) {
+      const res = await request(app).get(path)
+      expect(res.headers['x-powered-by'], path).toBeUndefined()
+      expect(res.headers['x-content-type-options'], path).toBe('nosniff')
+    }
+  })
+
   it('GET /ready is 200 when dependencies answer and 503 when one is down', async () => {
     ready = true
     expect((await request(app).get('/ready')).status).toBe(200)
