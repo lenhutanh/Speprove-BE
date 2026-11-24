@@ -30,9 +30,4 @@ export class SocketService {
     if (!this.io) return
     this.io.to(room).emit(event, data)
   }
-
-  public joinUserToRoom(userId: string, room: string) {
-    if (!this.io) return
-    this.io.in(`user:${userId}`).socketsJoin(room)
-  }
 }

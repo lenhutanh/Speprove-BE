@@ -264,10 +264,6 @@ export class AttemptService {
     return this.attemptMapper.toResponse(updatedAttempt!)
   }
 
-  public async countCompletedAttempts(speakingSessionId: string) {
-    return await this.attemptRepository.count({ speakingSessionId })
-  }
-
   public async findBySpeakingSessionId(speakingSessionId: string) {
     return await this.attemptRepository.findMany({ speakingSessionId })
   }

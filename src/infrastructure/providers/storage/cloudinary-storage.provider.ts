@@ -54,13 +54,4 @@ export class CloudinaryStorageProvider {
       streamifier.createReadStream(fileBuffer).pipe(stream)
     })
   }
-
-  async deleteFile(publicId: string, resourceType: 'image' | 'video' | 'raw' = 'image') {
-    return new Promise<void>((resolve, reject) => {
-      cloudinary.uploader.destroy(publicId, { resource_type: resourceType }, (err) => {
-        if (err) return reject(err)
-        resolve()
-      })
-    })
-  }
 }

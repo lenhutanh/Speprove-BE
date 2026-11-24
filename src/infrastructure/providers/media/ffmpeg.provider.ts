@@ -45,30 +45,4 @@ export class FfmpegProvider {
       })
     })
   }
-
-  static async getDuration(path: string): Promise<number> {
-    const metadata = await this.probe(path)
-
-    return metadata.format?.duration ?? 0
-  }
-
-  static async convertAudio(
-    input: string,
-    output: string,
-    options?: {
-      sampleRate?: number
-      channels?: number
-      codec?: string
-      format?: string
-    }
-  ) {
-    await this.run(input, (cmd) => {
-      if (options?.channels) cmd.audioChannels(options.channels)
-      if (options?.sampleRate) cmd.audioFrequency(options.sampleRate)
-      if (options?.codec) cmd.audioCodec(options.codec)
-      if (options?.format) cmd.format(options.format)
-
-      return cmd.save(output)
-    })
-  }
 }
