@@ -20,7 +20,7 @@ export class LiveKitService {
     if (env.LIVEKIT.URL && env.LIVEKIT.API_KEY && env.LIVEKIT.API_SECRET) {
       const httpUrl = env.LIVEKIT.URL.replace(/^wss:\/\//i, 'https://').replace(/^ws:\/\//i, 'http://')
       this.roomService = new RoomServiceClient(httpUrl, env.LIVEKIT.API_KEY, env.LIVEKIT.API_SECRET, {
-        requestTimeout: env.HTTP_TIMEOUT_MS
+        requestTimeout: Math.ceil(env.HTTP_TIMEOUT_MS / 1000)
       })
     }
   }
