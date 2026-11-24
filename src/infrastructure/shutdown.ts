@@ -18,6 +18,15 @@ export function createShutdown({
 }: ShutdownOptions) {
   let shuttingDown = false
 
+  const stop = async () => {
+    // Socket.io connections keep the HTTP server open, so they must be closed before waiting for it
+    closeSocket()
+    const httpClosed = new Promise<void>((resolve) => server.close(() => resolve()))
+    server.closeIdleConnections()
+    await httpClosed
+    await stopBackground()
+  }
+
   return (reason: string, exitCode: number) => {
     if (shuttingDown) return
     shuttingDown = true
@@ -28,12 +37,14 @@ export function createShutdown({
       exit(1)
     }, timeoutMs).unref()
 
-    server.close(async () => {
-      await stopBackground()
-      closeSocket()
-      logger.info('Shutdown complete')
-      exit(exitCode)
-    })
-    server.closeIdleConnections()
+    stop()
+      .then(() => {
+        logger.info('Shutdown complete')
+        exit(exitCode)
+      })
+      .catch((error) => {
+        logger.error('Shutdown failed', error)
+        exit(1)
+      })
   }
 }
