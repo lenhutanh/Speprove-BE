@@ -20,7 +20,7 @@
 
 ## 2. Backend Changes
 
-### 2.1. Runtime (commit `3db0e35`, AC1 to AC6)
+### 2.1. Runtime (commit `feat(app): add createApp`, AC1 to AC6)
 
 | Area | Files | AC |
 | :--- | :--- | :--- |
@@ -31,20 +31,20 @@
 | Configuration and timeouts | `src/common/config/` (`env.config.ts`, `redis.config.ts`, `mongodb.config.ts`), providers (Groq, Azure audio download, PayOS) | AC5 |
 | Container | `Dockerfile`, `pnpm-workspace.yaml`, `.env.example` | AC6 |
 
-### 2.2. Tests and CI (commit `42fb4fc`, AC7, AC8)
+### 2.2. Tests and CI (commit `test: add vitest`, AC7, AC8)
 
 2.2.1. `vitest.config.mts` sets the test environment inside the config so that `.env` is never read; `tests/setup.ts`, `tests/helpers/` (in-memory Mongo, in-memory fakes for cache, rate limiter and queues, token helper) and the test files under `tests/api/`, `tests/db/` and `tests/unit/`.
 2.2.2. `.github/workflows/ci.yml` runs lint, build, test, `pnpm audit --audit-level=high` and gitleaks.
 
-### 2.3. Health probes behind helmet (commit `d224a36`, AC9)
+### 2.3. Health probes behind helmet (commit `fix(app): serve the health probes behind helmet`, AC9)
 
 `src/app.ts` order: `requestIdMiddleware`, `helmet()`, health router, `cookieParser()`, `cors()`, `express.json()`. The probes stay before `cors()` and the body parser. Test in `tests/api/http-basics.test.ts`.
 
-### 2.4. Redis log context (commit `67f0af5`, AC10)
+### 2.4. Redis log context (commit `fix(redis): create clients outside the request context`, AC10)
 
 `runOutsideRequest(fn)` in `request-context.ts` is `storage.exit(fn)`; `createRedisClient` builds the client inside it. Only the constructor needs it; commands issued by request code keep the request context. Test in `tests/unit/redis-factory.test.ts` mocks `ioredis` with a class that records `getRequestId()` in its constructor.
 
-### 2.5. LiveKit request timeout unit (commit `252b414`, AC5)
+### 2.5. LiveKit request timeout unit (commit `fix(livekit): pass the request timeout`, AC5)
 
 `LiveKitService` passed `env.HTTP_TIMEOUT_MS` (milliseconds) as `requestTimeout` to `RoomServiceClient`, which reads seconds (`AbortSignal.timeout(timeout * 1e3)` in the SDK). It now passes `Math.ceil(env.HTTP_TIMEOUT_MS / 1000)`. The other timeouts were checked and are correct: Groq, PayOS and axios all read milliseconds. Test in `tests/unit/livekit-service.test.ts` mocks `livekit-server-sdk` and checks the options given to the client.
 

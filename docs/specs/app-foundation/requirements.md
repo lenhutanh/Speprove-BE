@@ -3,7 +3,7 @@
 > Repository: `speprove-be`. Branch: `feat/app-foundation` (local only, 8 commits).
 > Epic: E1 of the [backlog](../../plan/backlog.md); step R0 of the [architecture refactor design](../architecture-refactor/design.md).
 > Status: **Step 1: Requirements (approved 2026-11-25)**.
-> Note: the first two commits (`3db0e35`, `42fb4fc`) were implemented before this spec existed. AC1 to AC8 were reconstructed from their commit messages, the backlog and the code; `tasks.md` records which of them have evidence and which do not.
+> Note: the first two commits (`feat(app): add createApp`, `test: add vitest`) were implemented before this spec existed. AC1 to AC8 were reconstructed from their commit messages, the backlog and the code; `tasks.md` records which of them have evidence and which do not.
 
 ---
 

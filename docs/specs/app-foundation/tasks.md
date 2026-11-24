@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Runtime (commit `3db0e35`)
+## 1. Runtime (commit `feat(app): add createApp`)
 
 | Done | Task | AC | Evidence |
 | :--- | :--- | :--- | :--- |
@@ -21,7 +21,7 @@
 | [x] | Third-party keys optional when `NODE_ENV=test` | AC5 | test (the suite runs without them) |
 | [x] | Dockerfile `HEALTHCHECK` and workspace file | AC6 | code; the image was not built |
 
-## 2. Tests and CI (commit `42fb4fc`)
+## 2. Tests and CI (commit `test: add vitest`)
 
 | Done | Task | AC | Evidence |
 | :--- | :--- | :--- | :--- |
@@ -29,17 +29,17 @@
 | [x] | 20 tests listed in AC7 | AC7 | test: 20 of 20 pass (2026-11-24) |
 | [x] | CI workflow | AC8 | code; **never run on GitHub** |
 
-## 3. Health probes behind helmet (commit `d224a36`)
+## 3. Health probes behind helmet (commit `fix(app): serve the health probes behind helmet`)
 
 - [x] 1. Add the header test and see it fail (`x-powered-by: Express` was present) (AC9).
 - [x] 2. Reorder the middleware in `src/app.ts` (AC9).
 
-## 4. Redis log context (commit `67f0af5`)
+## 4. Redis log context (commit `fix(redis): create clients outside the request context`)
 
 - [x] 3. Add the test and see it fail (the constructor saw request id `abc`) (AC10).
 - [x] 4. Add `runOutsideRequest` and use it in `createRedisClient` (AC10).
 
-## 3b. LiveKit timeout unit (commit `252b414`)
+## 3b. LiveKit timeout unit (commit `fix(livekit): pass the request timeout`)
 
 - [x] 3b.1. Add the test and see it fail (`requestTimeout` was 30000, expected 30) (AC5).
 - [x] 3b.2. Convert milliseconds to seconds in `LiveKitService` (AC5).
@@ -47,10 +47,10 @@
 
 ## 3c. Shutdown with open Socket.io clients and the Dockerfile port (review of 2026-11-25)
 
-- [x] 3c.1. Extract the sequence of `src/index.ts` into `createShutdown` with no change of behavior (commit `b9e09d2`); `tsc` clean and the 23 existing tests stayed green (AC12).
+- [x] 3c.1. Extract the sequence of `src/index.ts` into `createShutdown` with no change of behavior (commit `refactor(app): extract the shutdown sequence`); `tsc` clean and the 23 existing tests stayed green (AC12).
 - [x] 3c.2. Add `tests/unit/shutdown.test.ts` and see it fail for the right reasons: with a real WebSocket client no exit within 1.5 s; with a failing cleanup step no exit and an unhandled rejection; the repeated-signal test passed (AC12).
-- [x] 3c.3. Fix the order (Socket.io first) and catch failures of the cleanup steps (commit `57136bd`); the three tests pass, 8 of 8 repeated runs (AC12).
-- [x] 3c.4. `Dockerfile`: `ENV APP_PORT=8017` in the runner stage (commit `f751568`); checked by reading, the image was not built (AC13).
+- [x] 3c.3. Fix the order (Socket.io first) and catch failures of the cleanup steps (commit `fix(app): close Socket.io before waiting`); the three tests pass, 8 of 8 repeated runs (AC12).
+- [x] 3c.4. `Dockerfile`: `ENV APP_PORT=8017` in the runner stage (commit `fix(docker): set APP_PORT`); checked by reading, the image was not built (AC13).
 - [x] 3c.5. Quality gates: 26 of 26 tests, `tsc` and Prettier clean, lint 0 errors and 227 warnings (unchanged), build exit 0; each commit touches only its files (AC11).
 - [ ] 3c.6. Owner check: with a browser or client connected to the Socket.io server, Ctrl+C on `node dist/index.js` finishes in about a second and `$LASTEXITCODE` is `0` (AC12).
 
@@ -74,5 +74,5 @@
 
 ## 8. Decisions Still Open
 
-- [x] 14. LiveKit timeout: decided (owner) to fix it in this branch; done in commit `252b414`.
+- [x] 14. LiveKit timeout: decided (owner) to fix it in this branch; done in commit `fix(livekit): pass the request timeout`.
 - [x] 15. `mongo-ping` flake (requirements 6.1): decided (owner) to leave it to the CI ticket.
