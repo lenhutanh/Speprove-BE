@@ -1,8 +1,6 @@
 import { container } from 'tsyringe'
 import { TOKENS } from '~/common/constants/di.tokens'
 import { CacheService } from '~/infrastructure/cache/cache.service'
-import { AppEventEmitter } from '~/infrastructure/event-bus'
-import { EventBus } from '~/infrastructure/event-bus/event-bus'
 import { GroqLLMProvider } from '~/infrastructure/providers/llm/groq.llm'
 import { GroqSTTProvider } from '~/infrastructure/providers/stt'
 import { QueueFactory } from '~/infrastructure/queues/queue.factory'
@@ -38,9 +36,7 @@ export function setupContainer(): void {
 
   container.registerSingleton(TOKENS.ITokenService, JwtTokenService)
   container.registerSingleton(TOKENS.IHasher, BcryptHasher)
-  container.registerSingleton(TOKENS.IEventBus, EventBus)
   container.registerSingleton(TOKENS.ICacheService, CacheService)
-  container.registerSingleton(AppEventEmitter, AppEventEmitter)
   container.registerSingleton(QueueFactory, QueueFactory)
   container.registerSingleton(WorkerFactory, WorkerFactory)
   container.registerSingleton(TOKENS.ISTTProvider, GroqSTTProvider)

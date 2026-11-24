@@ -6,7 +6,6 @@ import { TOKENS } from './common/constants/di.tokens'
 import { connectDB, closeDB, pingDB, env, corsOptions } from './common/config'
 import { ICacheService } from './infrastructure/cache/cache.interface'
 import { setupBullBoard } from './infrastructure/bull-board.config'
-import { EventBus } from './infrastructure/event-bus/event-bus'
 import { logger } from './infrastructure/logging/logger'
 import { QueueFactory } from './infrastructure/queues/queue.factory'
 import { createShutdown } from './infrastructure/shutdown'
@@ -25,7 +24,6 @@ import { initQuestionSpelling } from './modules/question/question-spelling.servi
     const queueFactory = container.resolve(QueueFactory)
     queueFactory.initQueues()
 
-    container.resolve(EventBus).registerHandlers()
     startWorkers()
 
     const cache = container.resolve<ICacheService>(TOKENS.ICacheService)
