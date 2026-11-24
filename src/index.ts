@@ -9,6 +9,7 @@ import { setupBullBoard } from './infrastructure/bull-board.config'
 import { EventBus } from './infrastructure/event-bus/event-bus'
 import { logger } from './infrastructure/logging/logger'
 import { QueueFactory } from './infrastructure/queues/queue.factory'
+import { createShutdown } from './infrastructure/shutdown'
 import { initSocket, closeSocket } from './infrastructure/socket/socket-boostrap'
 import { startWorkers, shutdownWorkers } from './infrastructure/workers/worker.setup'
 import { initQuestionSpelling } from './modules/question/question-spelling.service'
@@ -41,28 +42,17 @@ import { initQuestionSpelling } from './modules/question/question-spelling.servi
 
     initSocket(server, corsOptions)
 
-    let shuttingDown = false
-    const shutdown = (reason: string, exitCode: number) => {
-      if (shuttingDown) return
-      shuttingDown = true
-      logger.info(`${reason}: shutting down`)
-
-      setTimeout(() => {
-        logger.error('Shutdown timed out, forcing exit')
-        process.exit(1)
-      }, env.SHUTDOWN_TIMEOUT_MS).unref()
-
-      server.close(async () => {
+    const shutdown = createShutdown({
+      server,
+      timeoutMs: env.SHUTDOWN_TIMEOUT_MS,
+      closeSocket,
+      stopBackground: async () => {
         // Workers stop before the queues they read from
         await shutdownWorkers()
         await queueFactory.shutdown()
         await closeDB()
-        closeSocket()
-        logger.info('Shutdown complete')
-        process.exit(exitCode)
-      })
-      server.closeIdleConnections()
-    }
+      }
+    })
 
     process.on('SIGINT', () => shutdown('SIGINT', 0))
     process.on('SIGTERM', () => shutdown('SIGTERM', 0))
