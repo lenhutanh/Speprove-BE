@@ -39,7 +39,7 @@ erDiagram
 
 These are true on the branch this document ships with. A change that fixes one removes it from this list.
 
-4.1. Some routes lack a `hasPermission` check: `POST /credit-package`, the import of `/forecast-question`, all `/vocabulary-suggestion` routes and `PUT /voice/:id`; `GET /account/me` has its check commented out (finding F13).
+4.1. Nine routes change or list data without a `hasPermission` check: `POST /credit-package`, `POST /forecast-question/import`, `POST /forecast/:id/import-topics`, the five mutating or listing `/vocabulary-suggestion` routes and `PUT /voice/:id`. Several checks are commented out in the route files (`GET /account/me`, `GET /forecast`, `GET /group`, `PUT /forecast/:id`). The full list is the Gap column of the [endpoint index](../08-integration-contracts/03-endpoint-index.md) (finding F13).
 4.2. Some services answer `403` for another user's resource instead of `404` (finding F6).
 4.3. A denied permission answers `403` with the generic code `SYS_001` ([error codes](../08-integration-contracts/02-error-codes.md), section 4).
 

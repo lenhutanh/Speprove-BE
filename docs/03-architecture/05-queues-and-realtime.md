@@ -29,18 +29,24 @@ flowchart LR
 2.3. A **consumer** (`src/infrastructure/workers/consumers`) extends `BaseConsumer`, which creates the BullMQ `Worker`, logs start, completion and failure, and runs each job inside the request id carried in the job data, so logs of one request and its jobs share an id.
 2.4. Job payload types are in `src/infrastructure/queues/types`.
 
-## 3. Defaults
+## 3. Job Options
+
+3.1. Options come from three levels; the most specific wins: the job options a producer passes, then `BaseProducer.defaultOptions`, then the queue's `defaultJobOptions` in `QueueFactory`. Today every job gets the producer defaults, so the queue defaults are only a fallback.
 
 | Setting | Value | Where |
 | :--- | :--- | :--- |
-| Attempts per job | 5 | `QueueFactory` default job options |
-| Backoff | exponential, first delay 2000 ms | same |
-| Completed jobs kept | last 100 | same |
-| Failed jobs kept | last 500 | same |
-| Worker concurrency | 1 | `BaseConsumer` (one job at a time per queue) |
+| Default attempts and backoff | 3 attempts, exponential backoff starting at 2000 ms | `BaseProducer.defaultOptions` |
+| Completed jobs | removed | `BaseProducer.defaultOptions` (`removeOnComplete: true`) |
+| Failed jobs | kept | `BaseProducer.defaultOptions` (`removeOnFail: false`) |
+| `speaking:transcribe`, `speaking:assess`, `speaking:evaluate` | 3 attempts, exponential backoff starting at 5000 ms; transcribe has priority 1 | `SpeakingProducer` |
+| `speaking:score-session` | 3 attempts | `SpeakingProducer` |
+| `speaking:extract-vocabulary` | 2 attempts | `SpeakingProducer` |
+| `mail:send-otp` | 5 attempts, priority 1 | `MailProducer` |
+| Queue fallback | 5 attempts, backoff 2000 ms, keep the last 100 completed and 500 failed | `QueueFactory` |
+| Worker concurrency | 1 (one job at a time per queue) | `BaseConsumer` |
 
-3.1. A job that throws is retried with backoff. The consumer passes `job.attemptsMade` and `job.opts.attempts` to the stage method (`jobAttempts`, `jobMaxAttempts`) so it can tell a retry from the last attempt. What happens on the last failed attempt is in the [AI scoring flow](../04-business-logic/01-ai-scoring.md).
-3.2. A job must be **idempotent**: it can run twice. Work that charges, refunds or changes a score checks the stored state first: the refund of an attempt is a conditional update on `refundedAt: null`, so a second run refunds nothing.
+3.2. A job that throws is retried with backoff. The consumer passes `job.attemptsMade` and `job.opts.attempts` to the stage method (`jobAttempts`, `jobMaxAttempts`) so it can tell a retry from the last attempt. What happens on the last failed attempt is in the [AI scoring flow](../04-business-logic/01-ai-scoring.md).
+3.3. A job must be **idempotent**: it can run twice. Work that charges, refunds or changes a score checks the stored state first: the refund of an attempt is a conditional update on `refundedAt: null`, so a second run refunds nothing.
 
 ## 4. Realtime with Socket.io
 
@@ -71,4 +77,4 @@ flowchart LR
 
 7.1. `SocketService.emit` does nothing when the Socket.io server does not exist in the current process. Workers therefore cannot run in a separate process yet: they would lose every progress event. Splitting them needs the Socket.io Redis adapter or `redis-emitter` first.
 7.2. All scoring stages share one queue with concurrency 1, so a long job delays the others (finding F10).
-7.3. A job that fails every attempt stays in the failed set (last 500) and nobody is alerted; there is no reconciler that refunds attempts that failed and were never retried.
+7.3. A job that fails every attempt stays in the failed set (failed jobs are not removed) and nobody is alerted; there is no reconciler that refunds attempts that failed and were never retried.

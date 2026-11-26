@@ -70,7 +70,7 @@ Required in every environment except `test`.
 | Brevo | `BREVO_API_KEY`, `SENDER_EMAIL`, `SENDER_NAME` | OTP and notification email |
 | Cloudinary | `CLOUDINARY_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Audio and image storage |
 | Groq | `GROQ_API_KEY` | Speech to text and the scoring LLM |
-| Azure Speech | `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` | Pronunciation assessment and text to speech |
+| Azure Speech | `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` | Pronunciation assessment |
 | PayOS | `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY` | Payment creation and webhook signature |
 | Google | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Sign in with Google |
 | LiveKit | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | Voice rooms. Optional: without them the voice-room features fail when used |

@@ -35,7 +35,12 @@ The AI scoring pipeline (the `attempt` and `speaking-session` modules) runs in s
 | Where code goes, layers, module boundaries, DI, permissions | `docs/07-development-guides/02-layers-and-modules.md` |
 | A request or response, a status code, pagination | `docs/08-integration-contracts/01-api-conventions.md` |
 | An error or an `errorCode` | `docs/08-integration-contracts/02-error-codes.md` |
-| A test, a bug fix, a refactor | `docs/06-testing/01-testing-strategy.md` |
+| A test, a bug fix, a refactor | `docs/06-testing/01-testing-strategy.md`, `docs/06-testing/02-test-plan.md` |
+| What a feature must do, acceptance criteria, business rules | `docs/01-introduction/02-requirements.md` |
+| A route, its auth or permission | `docs/08-integration-contracts/03-endpoint-index.md` |
+| CI, quality gates, deployment | `docs/09-operations/02-ci-cd-and-quality-gates.md` |
+| Diagrams, deployment shape | `docs/03-architecture/07-system-diagrams.md` |
+| A known weakness or a refactor target | `docs/plan/technical-debt.md` |
 | A new feature, or a spec | `docs/04-business-logic/03-feature-design-guide.md` |
 | Scoring: queue stages, statuses, socket events, retries, refunds | `docs/04-business-logic/01-ai-scoring.md` |
 | Payment, PayOS webhook, credit, the balance and CreditLog invariant | `docs/04-business-logic/02-payment-and-credit.md` |
