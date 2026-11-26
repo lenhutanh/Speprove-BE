@@ -39,6 +39,12 @@ The AI scoring pipeline (the `attempt` and `speaking-session` modules) runs in s
 | A new feature, or a spec | `docs/04-business-logic/03-feature-design-guide.md` |
 | Scoring: queue stages, statuses, socket events, retries, refunds | `docs/04-business-logic/01-ai-scoring.md` |
 | Payment, PayOS webhook, credit, the balance and CreditLog invariant | `docs/04-business-logic/02-payment-and-credit.md` |
+| Running the project, environment variables | `docs/02-getting-started/01-setup-local-env.md`, `docs/09-operations/01-configuration-reference.md` |
+| Permissions, route protection, security controls | `docs/03-architecture/01-security-and-rbac.md` |
+| Sign-in, tokens, sessions, OTP | `docs/03-architecture/02-authentication.md` |
+| Models, repositories, transactions, indexes, Redis keys | `docs/03-architecture/03-data-persistence.md`, `docs/03-architecture/06-data-dictionary.md` |
+| Request validation (Zod) | `docs/03-architecture/04-validation.md` |
+| Queues, workers, Socket.io events | `docs/03-architecture/05-queues-and-realtime.md` |
 | The big picture and directory structure | `docs/01-introduction/01-system-overview.md` |
 | The module layout the refactor is heading to | `docs/specs/architecture-refactor/design.md` |
 

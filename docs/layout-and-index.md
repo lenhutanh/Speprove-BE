@@ -14,6 +14,15 @@ docs/
 ├── docs-update-guidelines.md            # rules for writing and updating documents
 ├── 01-introduction/
 │   └── 01-system-overview.md            # layers, DI, directory structure, conventions, scripts
+├── 02-getting-started/
+│   └── 01-setup-local-env.md            # requirements, install, checks, tests, Docker, seed warning, common problems
+├── 03-architecture/
+│   ├── 01-security-and-rbac.md          # groups, permissions, route protection, security controls, known gaps
+│   ├── 02-authentication.md             # tokens, cookies, registration, sessions, refresh rotation, socket tickets
+│   ├── 03-data-persistence.md           # MongoDB and Redis, repositories, transactions, indexes, Redis keys
+│   ├── 04-validation.md                 # Zod schemas, helpers, error shape, rules
+│   ├── 05-queues-and-realtime.md        # BullMQ queues and jobs, defaults, Socket.io events, shutdown, limits
+│   └── 06-data-dictionary.md            # every collection: fields, relations, indexes, ER diagram
 ├── 04-business-logic/
 │   ├── 01-ai-scoring.md                 # transcribe, assess, evaluate; mock sessions; retries; refunds
 │   ├── 02-payment-and-credit.md         # PayOS, webhook safeguards, credit deduction and refunds
@@ -26,6 +35,8 @@ docs/
 ├── 08-integration-contracts/
 │   ├── 01-api-conventions.md            # request, response envelope, status codes, pagination, rate limit
 │   └── 02-error-codes.md                # error code registry and known deviations
+├── 09-operations/
+│   └── 01-configuration-reference.md    # every environment variable, defaults, per-environment rules
 ├── specs/                               # one folder per feature: requirements, design, tasks
 │   ├── app-foundation/                  # runtime foundation: logger, probes, shutdown, config, tests, CI
 │   ├── architecture-refactor/           # ten modules, core layout, conventions, work breakdown (draft)
@@ -50,6 +61,14 @@ docs/
 | Layers, module boundaries, DI, permissions, adding a module | [`07-development-guides/02-layers-and-modules.md`](./07-development-guides/02-layers-and-modules.md) |
 | The shape of requests, responses, status codes | [`08-integration-contracts/01-api-conventions.md`](./08-integration-contracts/01-api-conventions.md) |
 | What an `errorCode` means, and known deviations | [`08-integration-contracts/02-error-codes.md`](./08-integration-contracts/02-error-codes.md) |
+| How to run the project locally | [`02-getting-started/01-setup-local-env.md`](./02-getting-started/01-setup-local-env.md) |
+| What an environment variable does | [`09-operations/01-configuration-reference.md`](./09-operations/01-configuration-reference.md) |
+| Who may do what, and how routes are protected | [`03-architecture/01-security-and-rbac.md`](./03-architecture/01-security-and-rbac.md) |
+| Sign-in, tokens, sessions, refresh | [`03-architecture/02-authentication.md`](./03-architecture/02-authentication.md) |
+| How data is stored, transactions, indexes, Redis keys | [`03-architecture/03-data-persistence.md`](./03-architecture/03-data-persistence.md) |
+| How input is validated | [`03-architecture/04-validation.md`](./03-architecture/04-validation.md) |
+| Background jobs and socket events | [`03-architecture/05-queues-and-realtime.md`](./03-architecture/05-queues-and-realtime.md) |
+| A collection, its fields and relations | [`03-architecture/06-data-dictionary.md`](./03-architecture/06-data-dictionary.md) |
 | How to test, and what must be tested | [`06-testing/01-testing-strategy.md`](./06-testing/01-testing-strategy.md) |
 | The target module layout and refactor steps | [`specs/architecture-refactor/design.md`](./specs/architecture-refactor/design.md) |
 | The planned scoring pipeline | [`specs/scoring-pipeline-v2/design.md`](./specs/scoring-pipeline-v2/design.md) |

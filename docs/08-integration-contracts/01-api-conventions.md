@@ -12,7 +12,7 @@ The contract between the backend and any client (the web frontend, tests, tools)
 
 ### 1.1. Pagination
 
-1.1.1. A list endpoint takes `page` (from 1) and `limit` query parameters. The repository caps `limit` at 100.
+1.1.1. A list endpoint takes `page` (from 1, default 1) and `limit` (1 to 100, default 12), and usually `sortBy` (default `createdAt`), `sortOrder` (`asc` or `desc`, default `asc`) and `search`.
 1.1.2. A list answers with the paginated envelope of section 2.2.
 
 ## 2. Response
@@ -80,8 +80,8 @@ All responses are JSON built by `ResponseTransformer` (`src/common/http/response
 
 | Path | Purpose |
 | :--- | :--- |
-| `GET /health` | Liveness: the process answers |
-| `GET /ready` | Readiness: pings MongoDB and Redis; `503` when one is down |
+| `GET /health` | Liveness: `200 { status: "ok", uptimeSeconds }`, no dependency is checked |
+| `GET /ready` | Readiness: pings MongoDB and Redis. `200 { status: "ok", dependencies: { mongo: "ok", redis: "ok" } }`, or `503 { status: "unavailable", ... }` with `"down"` for the failing one |
 
 ## 6. Realtime
 
