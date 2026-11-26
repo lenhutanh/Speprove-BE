@@ -55,7 +55,7 @@ The AI scoring pipeline (the `attempt` and `speaking-session` modules) runs in s
 
 ## Modularity rules (from `../architecture_roadmap.md`)
 
-The monolith is meant to be split into microservices later, so a module touches only its own models, calls other modules through their interface, and passes data as DTOs. The full rules are in `docs/07-development-guides/02-layers-and-modules.md`, section 3.
+The monolith is meant to be split into microservices later, so a module touches only its own models, calls other modules through their service (never their repository or model), and passes data as DTOs. The full rules are in `docs/07-development-guides/02-layers-and-modules.md`, section 3.
 
 ## Workflow
 

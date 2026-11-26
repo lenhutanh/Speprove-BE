@@ -43,10 +43,11 @@ flowchart LR
 These come from `architecture_roadmap.md` and apply to every change.
 
 3.1. **A module touches only its own models.** Do not import another module's model, and do not `.populate()` into its collection. Keep the other module's id, then ask that module's service, or merge the data in the mapper.
-3.2. **Cross-module calls go through the other module's interface.** Inject it by constructor. Do not import another module's repository, controller or internal helpers.
-3.3. **Asynchronous work between modules uses a BullMQ job**, not an in-process event bus (the event bus was removed because nothing used it). Events that carry money, score or exam state must be idempotent.
-3.4. **Data crosses a module boundary as a DTO**, never as a Mongoose document.
-3.5. **No circular dependency.** Do not hide one with `delay()`; move the shared piece to a third module or to `core`.
+3.2. **Calling another module is allowed and normal:** inject its **service** by constructor and call its methods. Never import its repository, model, controller or internal helpers.
+3.3. **A call to another module's service is synchronous and needs no queue.** Use a BullMQ job only for work that is slow or must be retried (scoring stages, email). The in-process event bus was removed because nothing used it. Work that carries money, score or exam state must be idempotent.
+3.4. **Interfaces:** repositories and external providers (Groq, Azure, PayOS, storage, mail) have interfaces and are faked in tests. A service is injected as a class; a test replaces it with `container.registerInstance`. Do not add an interface to a service only for testing.
+3.5. **Data crosses a module boundary as a DTO**, never as a Mongoose document.
+3.6. **No circular dependency.** Do not hide one with `delay()`; move the shared piece to a third module or to `core`.
 
 Known violations that the refactor removes are listed in section 11.1 of [the architecture refactor design](../specs/architecture-refactor/design.md) (findings F1, F8, F9, F28).
 
