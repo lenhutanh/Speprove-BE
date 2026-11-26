@@ -41,6 +41,8 @@ Known weaknesses of the code and the process, how bad each one is, and what is p
 | 3.1 | A scoring failure is refunded only after the user presses retry once; if the user never retries the credit is not refunded and there is no reconciler | Medium | Open (checked) | `fix/demo-path` (reconciler job) |
 | F15 | 75 secondary indexes, 8 redundant by prefix, and a duplicate on `Payment.orderCode` | Low | Open | `refactor/content-tts-file` |
 | F4 | The "recent sessions" query has no sort | Low | Open | `fix/webhook-and-http-errors` |
+| 3.3 | An attempt is charged in a transaction, then its first job is added after the commit with no error handling. If Redis or the queue fails at that moment the credit is gone and the attempt stays `PENDING`; nothing refunds it | High | Open (checked) | `fix/resilience` |
+| 3.4 | Scoring stages retry every error 3 times (no `UnrecoverableError`), including errors that never fix themselves; a manual retry adds 3 more. Each retry is a paid call to Groq or Azure | High (cost) | Open (checked) | `fix/scoring-retry-policy` and the scoring v2 design |
 | 3.2 | Payment fields `webhookVerified` and `retryCount`, and `CreditLog.descriptionKey` and `descriptionMetadata`, are written or defaulted and never read | Low | Open | `refactor/billing-wallet` |
 
 ## 4. Structure and Maintainability
@@ -55,6 +57,8 @@ Known weaknesses of the code and the process, how bad each one is, and what is p
 | F24 | `AccountService.getList` reads the model without pagination; `getById` selects `+password` | Medium | Open | `fix/route-permissions` |
 | F26 | AI vocabulary extraction costs an LLM call per qualifying attempt and its output is invisible until an admin approves it; no approval screen exists | Low | Open | `refactor/content-tts-file` (put it behind a flag) |
 | F10 | Worker concurrency 1 and one queue for all scoring stages | Medium | Open (checked) | After defense |
+| 4.3 | Upload goes through the server: the file is held in memory (audio up to 50 MB), written to a temporary file, converted by ffmpeg, read back twice and uploaded twice to Cloudinary, all inside the HTTP request; no rate limit and no timeout on ffmpeg or Cloudinary (F20) | High | Open (checked) | `fix/resilience` first; direct upload later (section 8) |
+| 4.4 | Question and word audio is generated on demand inside the request when it is not cached; two parallel requests for the same text both generate and the second hits the unique `cacheKey` without handling | Medium | Open (checked by reading) | `fix/resilience` |
 | 4.1 | 169 uses of `any`, 15 `eslint-disable` or `@ts-ignore`, 211 lint warnings | Medium | Open (checked) | each refactor ticket lowers the count |
 | 4.2 | 24 flat modules; the target is ten modules and a `core` ([layout](../specs/architecture-refactor/design.md), section 2) | Medium | Open | `refactor/module-layout` |
 
@@ -67,6 +71,8 @@ Known weaknesses of the code and the process, how bad each one is, and what is p
 | 5.3 | `ROLE=worker` (workers in a separate process) is blocked because `SocketService.emit` does nothing without the in-process server | Medium | Open (checked) | After defense (needs the Socket.io Redis adapter) |
 | 5.4 | No coverage report, no duplication figure, no static analysis service | Medium | Open | `ci/quality-gates` |
 | 5.5 | The Docker image has not been built and scanned in this environment | Medium | Open | `ci-cd-staging` |
+| 5.7 | Resilience: timeouts are missing for ffmpeg, Cloudinary uploads, the Azure Speech SDK, Brevo, Edge TTS and MongoDB queries; no circuit breaker and no bulkhead for any provider | Medium | Open (checked) | `fix/resilience` |
+| 5.8 | No load test, so capacity is unknown. Not measured yet: time of the Azure assessment against the length of the answer, effect of bcrypt on the thread pool, behavior when Redis is down | Medium | Open | `test/load-k6` |
 | 5.6 | Acceptance criteria with a test: 12 of 64 ([requirements](../01-introduction/02-requirements.md), section 5) | High | Open | each ticket adds the tests of its criteria |
 
 ## 6. Fixed on This Branch
@@ -85,3 +91,10 @@ Known weaknesses of the code and the process, how bad each one is, and what is p
 7.2. Then the process entries (5.1 to 5.4), because they gate delivery and are cheap.
 7.3. Then the structure entries, one module at a time, each with the tests of its criteria.
 7.4. Entries marked `After defense` are kept here as the roadmap.
+
+## 8. Notes for Later Decisions
+
+8.1. **Direct upload.** The file could go from the browser straight to Cloudinary with a signed upload, as with a presigned S3 URL. The conversion to 16 kHz mono WAV (for Azure) and to MP3 (for playback) is still needed, but it can run in a queue job after the upload instead of inside the request. Steps: the backend signs the upload with a preset that limits size and format; the browser uploads; the browser calls a completion route; a job probes the file, converts it, uploads the two derivatives and marks the file ready. Costs: a "converting" state, cleanup of orphan files, content checks moved to the worker. Whether Cloudinary itself can produce the required WAV with loudness normalization has not been checked. Decide after the load test shows how bad the current path is.
+8.2. **Retry policy.** Retry only transient errors (timeout, `429`, `5xx`, network); stop at once on permanent errors; allow one retry for invalid LLM output; add jitter; cap the paid calls per answer; log stage, provider and attempt number for each call so the cost can be seen.
+8.3. **Load test.** Use k6 on staging with fake providers (no paid calls): public reads, parallel login, parallel upload, bulk answer submission, parallel payment webhooks. The numbers fill NFR-01, NFR-05 and NFR-06.
+8.4. **Circuit breaker.** A library such as `cockatiel` (retry, circuit breaker, bulkhead, timeout) or a small wrapper behind the provider interfaces; not decided.
