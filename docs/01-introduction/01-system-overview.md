@@ -41,7 +41,7 @@ The project is a **Modular Monolith** that combines a **Layered Pattern** with *
 Shared building blocks used across the whole application:
 
 - `base/`: base classes such as `BaseRepository` and `BaseMapper`.
-- `config/`: app configuration (environment, database, Swagger, etc.).
+- `config/`: app configuration (environment, database, Redis, CORS).
 - `constants/`: constants, enums, error codes, DI tokens.
 - `errors/`: custom error classes (e.g. `AppError`).
 - `http/`: response envelope and controller binding helpers (`ResponseTransformer`, `bindHandler`).
@@ -54,8 +54,9 @@ Shared building blocks used across the whole application:
 Connections to external systems and shared infrastructure:
 
 - `cache/`, `redis/`: caching.
-- `event-bus/`: internal pub/sub.
-- `logging/`: logger setup (Winston).
+- `logging/`: JSON logger (Winston), request context and redaction.
+- `health/`: `/health` and `/ready` probes.
+- `shutdown.ts`: the bounded shutdown sequence.
 - `providers/`: external service integrations (LLM, mail, speech, storage, etc.).
 - `queues/`, `workers/`: background job processing (BullMQ).
 - `socket/`: Socket.io server and event constants.
