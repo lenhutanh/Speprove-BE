@@ -61,3 +61,4 @@ Rules for writing and updating the documentation of Speprove. They apply to huma
 
 3.4.1. A feature or a change that spans several modules, or both backend and frontend, has a spec in `docs/specs/<feature-name>/` with `requirements.md`, `design.md` and `tasks.md`. What each file contains is in the [feature design guide](./04-business-logic/03-feature-design-guide.md).
 3.4.2. Documentation changes and small fixes have no spec. The pull request description lists the acceptance criteria.
+3.4.3. A small ticket with several steps (a measurement, a CI change, a batch of fixes) keeps a `tasks.md` alone in `docs/specs/<name>/`, with the acceptance criteria, the evidence and a tick per task, so progress can be checked in the repository before a pull request exists.
