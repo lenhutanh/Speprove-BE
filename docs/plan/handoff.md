@@ -1,4 +1,4 @@
-# Handoff (2026-11-25)
+# Handoff (2026-11-26)
 
 ## 1. Purpose
 
@@ -25,7 +25,7 @@ State of the work for whoever continues it, for example on another machine or in
 
 ## 4. State of the Repositories
 
-Nothing has been pushed. `main` of the local clones is behind `origin/main` (BE by 2 commits, FE by 3): run `git fetch` first.
+State checked on 2026-11-26. In the backend the four branches of section 4.1 are pushed to `origin`, but **no pull request is open and nothing is merged**; `docs/reference-docs` exists only locally. In the frontend `chore/upgrade-deps` is pushed and `docs/project-docs` is local only. `main` of the local clones is behind `origin/main` (BE by 2 commits, FE by 3): run `git fetch` first.
 
 ### 4.1. Backend (`speprove-be`)
 
@@ -35,8 +35,9 @@ Nothing has been pushed. `main` of the local clones is behind `origin/main` (BE 
 | `docs/project-docs` | `chore/upgrade-deps` | 10 | Documentation layout and rules, `AGENTS.md`, `CLAUDE.md`, the specs, this handoff, the board |
 | `feat/app-foundation` | `docs/project-docs` | 8 | `feat(app): add createApp` (runtime foundation), `test: add vitest` (tests and CI), then fixes: health behind helmet, Redis log context, LiveKit timeout, shutdown (extracted, then fixed), Docker port |
 | `chore/remove-dead-code` | `feat/app-foundation` | 6 | Unused code, `redis`, event bus, Swagger, commented-out code |
+| `docs/reference-docs` | `chore/remove-dead-code` | local only | Reference documents (coding standards, layers and modules, API conventions, error codes, testing, requirements, NFRs, diagrams, endpoint index, test plan, technical debt, CI/CD, setup, configuration, security, authentication, persistence, validation, queues, data dictionary); `AGENTS.md` table of documents; decisions in the refactor design (voice in `content`, `WalletService` before `wallets`, sub-folders per entity) |
 
-4.1.1. The four branches form **one straight line**, in this order: each contains all the commits of the previous ones, so `chore/remove-dead-code` contains everything. The history was made linear with a rebase on 2026-11-25; the tips before it are kept as `backup/linear-feat-app-foundation`, `backup/linear-remove-dead-code` and `backup/linear-docs-project-docs`. `feat/app-foundation` therefore has `AGENTS.md` and the documentation tasks of its spec can be done there.
+4.1.1. The first four branches form **one straight line**, and `docs/reference-docs` sits on top of the last one, in this order: each contains all the commits of the previous ones, so `chore/remove-dead-code` contains everything. The history was made linear with a rebase on 2026-11-25; the tips before it are kept as `backup/linear-feat-app-foundation`, `backup/linear-remove-dead-code` and `backup/linear-docs-project-docs`. `feat/app-foundation` therefore has `AGENTS.md` and the documentation tasks of its spec can be done there.
 4.1.2. Old local branches kept as reference or backup: `feature/friend`, `feature/chat`, `feature/call` (single commits from July, no frontend), `feature/refactor-prisma`, `backup/app-foundation-before-squash`, `backup/wip-chat-friend`, `anh_dev`, `dev`, `list`, `ls`.
 4.1.3. The commits are named in the documents by their subject, not by their hash, because the hashes of the rebased branches change.
 
@@ -53,7 +54,7 @@ Nothing has been pushed. `main` of the local clones is behind `origin/main` (BE 
 
 ### 4.3. Push Order
 
-4.3.1. In each repository push the branches of the line: `chore/upgrade-deps`, then `docs/project-docs`, then (BE only) `feat/app-foundation`, then `chore/remove-dead-code`.
+4.3.1. In each repository push the branches of the line: `chore/upgrade-deps`, then `docs/project-docs`, then (BE only) `feat/app-foundation`, then `chore/remove-dead-code`, then `docs/reference-docs`.
 4.3.2. Open one pull request per branch, **chained**: the base of each pull request is the previous branch of the line (the first one targets `main`), so that it shows only its own commits. Merge from the bottom with merge commits, not squash: a squash gives the following branches different commits and they would show duplicates. After the first merge GitHub moves the base of the next pull request to `main`.
 4.3.3. The last branch is the complete state: test it once there (`pnpm test`, `pnpm lint`, `pnpm build`, then the manual checks of section 6) before merging anything.
 
@@ -84,19 +85,23 @@ Not verified: FE `pnpm build` and `pnpm lint` (blocked by the stray folder), the
 6.2.2. `/health` and `/ready` are open in production, and `/ready` shows the state of Mongo and Redis and pings them on every call. Options: keep, rate limit `/ready`, or restrict it at the proxy (decided in the CI/CD ticket).
 6.2.3. The unused `AUTHOR` setting in `env.config.ts` (it only served Swagger).
 6.2.4. Date of the defense (not given; the backlog assumed 2 to 3 weeks from 2026-11-22).
-6.2.5. For `billing-wallet`: a `wallets` collection (design preference) or keeping `balance` on the account with an `adjustBalance` function.
+6.2.5. Decided 2026-11-26: a `WalletService` over `account.balance` now; the `wallets` collection later, when `billing` gets its own database (refactor design, section 4.3).
 
 ## 7. Next Step
 
-7.1. The owner pushes the branches (4.3) and runs the manual checks (6.1).
-7.2. Next ticket: `ci-cd-staging` (row 6 of the board). Ask the owner where staging runs, which registry, which secrets and which trigger, then write its spec (three files) and wait for approval.
-7.3. After it, the tickets of rows 7 and 8, then `module-layout`.
+7.1. Order of work agreed on 2026-11-26. **Refactor is a must, not optional.** If time runs out, cut friend, chat, call and the scope of scoring v2 first.
+7.2. Settle the open branches: reinstall `node_modules` on Linux (`pnpm install --frozen-lockfile`), run `pnpm test`, `pnpm build`, `pnpm lint` and record the numbers; the owner runs the manual checks of 6.1, opens the chained pull requests and merges from the bottom.
+7.3. Gates and safety net: measure the baseline (duplication, lint, tests, coverage); CI quality gates (coverage, frontend CI, Dependabot, static analysis, image scan); staging with automatic deploy, health check and rollback (`ci-cd-staging`; ask the owner where staging runs, which registry, which secrets and which trigger, then write its spec).
+7.4. Refactor, one ticket per step, each leaving the system working: `module-layout`, `account-auth`, `billing`, `practice-assessment`, `content-tts-file`, `voice-room`, then conventions, cache and metrics. The ten modules and the order are in the [refactor design](../specs/architecture-refactor/design.md). Tests are written inside each ticket: tests of the current behavior first, then the change, then tests of any intended change of behavior.
+7.5. Fixes that ride with the refactor: webhook and HTTP errors, route permissions, a single credit path, a scoring retry policy (retry only transient errors), safe upload and enqueue, a reconciler for refunds. They are listed with their impact in the [technical debt register](./technical-debt.md).
+7.6. Last: edge cases of the demo path, a k6 load test on staging with fake providers, then scoring pipeline v2 (its design is rewritten first), then friend, chat, call.
+7.7. The owner handles, in parallel: the product commitment, the AI usage log, the survey, and recruiting people for user testing.
 
 ## 8. Known Leftovers
 
-8.1. `AGENTS.md` still says that there is no test runner, that the event bus is the way to call across modules, and that Swagger is served and empty. Each is corrected by the pull request that made it wrong: tasks 12 and 13 of the `app-foundation` spec and the follow-up of `chore/remove-dead-code`.
-8.2. The routes of `account`, `forecast` and `group` have `hasPermission` checks commented out (finding F13); they are handled by `access-control`.
-8.3. The payment webhook returns 200 for every error, including a bad signature (finding F2); handled with `billing-wallet`.
+8.1. The three outdated statements of `AGENTS.md` (no test runner, the event bus, Swagger) are corrected in `docs/reference-docs`; they stay wrong on the branches below it until that branch is merged.
+8.2. The routes of `account`, `forecast` and `group` have `hasPermission` checks commented out (finding F13); they are handled by `fix/route-permissions` and the `account-auth` refactor.
+8.3. The payment webhook returns 200 for every error, including a bad signature (finding F2); handled by `fix/webhook-and-http-errors` and the `billing` refactor.
 8.4. `ROLE=worker` (a separate worker process) is blocked: `SocketService.emit` does nothing without the in-process Socket.io server.
 8.5. The scoring pipeline design (`specs/scoring-pipeline-v2/design.md`) still describes a trained model; the decision of 2026-11-20 is that an LLM scores each criterion from measured evidence, with no training.
 

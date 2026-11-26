@@ -3,38 +3,41 @@
 > Work plan until the thesis defense. Cross-repo epics live here (BE repo). Rubric references (TC…, G…) point to `rubric.txt` in the workspace folder.
 > Architecture details for E1–E7 and E10–E12 are in [`specs/architecture-refactor/design.md`](../specs/architecture-refactor/design.md) (draft, pending owner verification). Measured starting point: [baseline](./baseline-2026-11-22.md).
 
-## Progress Board (2026-11-25)
+## Progress Board (2026-11-26)
 
-The board is the source of truth for the **order** and the **status** of the tickets. The epics and checklists further down are the original plan and keep the detail of each epic; where they disagree with the board, the board wins. The state of the work and the next step are in [handoff.md](./handoff.md).
+The board is the source of truth for the **order** and the **status** of the tickets. The epics and checklists further down are the original plan and keep the detail of each epic; where they disagree with the board, the board wins. The state of the work and the next step are in [handoff.md](./handoff.md); known weaknesses and their impact are in [technical-debt.md](./technical-debt.md).
 
-Kinds: **spec** means a spec of three files in [`../specs/`](../specs/) approved before coding; **tasks** means a task list with acceptance criteria, approved in chat before coding, no spec file; **docs** means a documentation ticket. Each spec is written just in time, when its ticket is next, and needs the owner's approval before code. Status: `done` (code and checks done), `owner check` (waiting for a manual check of the owner), `todo`. Every branch below is local only: nothing has been pushed.
+Kinds: **spec** means a spec of three files in [`../specs/`](../specs/) approved before coding; **tasks** means a task list with acceptance criteria, approved in chat before coding, no spec file; **docs** means a documentation ticket. Each spec is written just in time and needs the owner's approval before code. Status: `done`, `owner check` (waiting for a manual check of the owner), `todo`.
+
+**Rules of the order.** Refactor is a must. If time runs out, cut friend, chat, call and the scope of scoring v2 first. Tests are written inside each ticket (tests of the current behavior first, then the change, then tests of any intended change of behavior). Every refactor step leaves the system working, so the work can stop after any step.
 
 | # | Ticket (branch) | Repo | Kind | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| 1 | `chore/upgrade-deps` | BE, FE | tasks | done. Not checked: running the app with the new dependency versions (auth, upload, payment, sockets, voice rooms) |
-| 2 | `chore/clean-workspace` (FE) | FE | tasks | partial: lint reports untracked (`30e5778`). Open: the stray folder (stays until a fresh clone on Linux) and the uncommitted `src/messages/vi.d.json.ts` |
-| 3 | `docs/project-docs` | BE, FE | docs | done |
-| 4 | `feat/app-foundation` | BE | spec: [app-foundation](../specs/app-foundation/) | code done; owner check pending (task 3c.6); docs follow code pending (tasks 12, 13) |
-| 5 | `chore/remove-dead-code` | BE | tasks | code done; owner check pending (start the app, `/health`, login, one practice); `AGENTS.md` follow-up pending |
-| 6 | `ci-cd-staging` (pipeline, deploy, rollback, monitoring) | BE, FE | spec | todo. Spec not written; needs the owner's decisions on the staging host, registry, secrets and trigger |
-| 7 | `fix/http-error-handling` | BE | tasks | todo |
-| 8 | `chore/seed-split` | BE | tasks | todo |
-| 9 | `module-layout` (core-layout, five `git mv` PRs, architecture-guard) | BE | spec | todo |
-| 10 | `refactor/billing-wallet` | BE | spec | todo. Decision needed: wallet collection or the leaner `adjustBalance` |
-| 11 | `platform-modules`: file-tts, notification-module | BE | spec | todo (before account-auth: `account` depends on them) |
-| 12 | `refactor/account-auth` | BE | spec | todo |
-| 13 | `refactor/access-control` (admin API, `assertOwner`, the permission checks commented out in the routes) | BE, FE | spec | todo |
-| 14 | `platform-modules`: content-module, voice-room-service | BE | spec | todo |
-| 15 | `refactor/practice-assessment` (with `fix/fe-error-handling`) | BE, FE | spec | todo |
-| 16 | `perf/static-data-cache`, `test/core-modules` | BE | tasks | todo |
-| 17 | `feat/friend`, `feat/chat`, `feat/call` (three specs; reuse `feature/friend`, `feature/chat`, `feature/call` as reference) | BE, FE | spec | todo |
-| 18 | `docs/scoring-v2-design` (update `specs/scoring-pipeline-v2/design.md`) | BE | docs | todo |
-| 19 | `feat/audio-quality-gate`, `feat/speech-features`, `feat/gop-pronunciation` (with the benchmark), `feat/evidence-based-scoring` (four specs) | BE, SV | spec | todo |
-| 20 | `test/e2e-mock-test`, `test/load-scoring` | TS | tasks | todo |
-| 21 | `feat/observability-metrics` | BE | tasks | todo |
-| 22 | `docs/thesis-docs` (system diagram, data model, quantified non-functional requirements, technical debt) | BE | docs | todo |
+| 1 | `chore/upgrade-deps` | BE, FE | tasks | done and pushed; not merged. Not checked: running the app with the new dependency versions |
+| 2 | `chore/clean-workspace` (FE) | FE | tasks | partial: lint reports untracked. Open: the stray folder (gone with a fresh clone on Linux) and the uncommitted `src/messages/vi.d.json.ts` |
+| 3 | `docs/project-docs` | BE, FE | docs | done; BE pushed, FE local only |
+| 4 | `feat/app-foundation` | BE | spec: [app-foundation](../specs/app-foundation/) | code done, pushed; owner check pending (task 3c.6) |
+| 5 | `chore/remove-dead-code` | BE | tasks | code done, pushed; owner check pending (start the app, `/health`, login, one practice) |
+| 6 | `docs/reference-docs` | BE | docs | done locally, not pushed: reference documents, `AGENTS.md` table, refactor design decisions |
+| 7 | Settle the branches: reinstall `node_modules` on Linux, run test, build and lint, owner checks, chained pull requests, merge | BE, FE | tasks | todo |
+| 8 | `chore/measure-baseline` (duplication, lint, tests, coverage) | BE | tasks | todo |
+| 9 | `ci/quality-gates` (coverage, frontend CI, Dependabot, static analysis, image scan, branch protection) | BE, FE | tasks | todo |
+| 10 | `ci-cd-staging` (pipeline, deploy, rollback, health check, deploy history) | BE, FE | spec | todo. Needs the owner's decisions: staging host, registry, secrets, trigger |
+| 11 | `refactor/module-layout` (`core/`, ten modules, `public.ts`, dependency check; one pull request per group) | BE | spec | todo |
+| 12 | `refactor/account-auth` (split `AuthService`, `assertOwner`, admin routes and permissions, rate limits, OTP lockout) with `fix/route-permissions` | BE, FE | spec | todo |
+| 13 | `refactor/billing` (`WalletService`, one credit path, payment states, expiry job) with `fix/webhook-and-http-errors` | BE | spec | todo |
+| 14 | `refactor/practice-assessment` (`assessment` as its own module, listener, reconciler, safe enqueue, scoring retry policy) | BE, FE | spec | todo |
+| 15 | `refactor/content-tts-file` (voice catalog in `content`, `tts` capability, safe upload, TTS cache lock) with `fix/resilience` | BE | spec | todo |
+| 16 | `refactor/voice-room` | BE | spec | todo |
+| 17 | `refactor/conventions-cache-metrics` (lint rules, dependency check as an error, cache, `/metrics`) and `chore/seed-split` | BE | tasks | todo |
+| 18 | `fix/demo-path` (edge cases of mock test, frontend `error.tsx` and `loading.tsx`) | BE, FE | tasks | todo |
+| 19 | `test/load-k6` (staging with fake providers) and the measured values for the NFRs | BE | tasks | todo |
+| 20 | `docs/design-docs` (diagrams that match the code after the refactor, NFR numbers) | BE | docs | todo |
+| 21 | `docs/scoring-v2-design` (rewrite the design: no training, the LLM scores from measured evidence), then `feat/audio-quality-gate`, `feat/speech-features`, `feat/gop-pronunciation`, `feat/evidence-based-scoring` | BE, SV | spec | todo |
+| 22 | `feat/friend`, `feat/chat`, `feat/call` (reuse the old branches as reference) | BE, FE | spec | todo |
+| 23 | `feat/observability-metrics` | BE | tasks | todo |
 
-User testing (epic E8) starts when staging runs (row 6) and the product is stable; the second round follows the improvements. The documents of the nine domains in [layout-and-index.md](../layout-and-index.md) are written in the ticket that creates their content.
+The owner handles in parallel: the product commitment, the AI usage log, the survey, recruiting people for user testing, thesis writing and the defense. User testing needs staging (row 10) and a stable product. Documents of the nine domains in [layout-and-index.md](../layout-and-index.md) are written in the ticket that creates their content.
 
 ## Conventions
 
@@ -47,11 +50,7 @@ User testing (epic E8) starts when staging runs (row 6) and the product is stabl
 
 ## Windows
 
-The defense is about 2–3 weeks away (from 2026-11-22), so the plan has two columns:
-
-- **Before** the defense: must be finished; goes into the product commitment.
-- **If time**: refactor steps that are valuable but can be cut without breaking a rubric gate. Cut rule: if staging and CI/CD (E3) are not running by the end of week 1, stop the refactor and finish E3 first (gates G6 and G7 cap TC2.6 and TC2.7).
-- **After** the defense: kept as the roadmap and as "future work" in the thesis.
+The date of the defense is not set; the earlier assumption (2 to 3 weeks from 2026-11-22) no longer holds and the owner has said that only a few days remain. The order of the board is therefore the cut order: stop after any row and the product is still working. What is cut first: friend, chat, call, then the scope of scoring v2. Refactor is not cut. The first rows (7 to 10) exist because the rubric caps the grade without a running pipeline (G6), tests (G5) and user testing (G7).
 
 ## Epics
 
