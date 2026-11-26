@@ -45,7 +45,7 @@ Rule: **`core/` and `config/` never contain a business concept** (speaking, mail
 | `content` | exam content and catalogs written by admins: `topic/`, `question/`, `forecast/` (forecast + its topic and question links), `vocabulary/` (hints per question), `voice/` (the catalog of voices a learner can choose: code, gender, locale, speed, pitch, default, sample file) | `topic`, `question`, `forecast`, `forecast-topic`, `forecast-question`, `vocabulary-suggestion`, `voice` |
 | `practice` | what the learner does: attempts, mock tests, history, leaderboard, sharing | `attempt` (without the scoring parts), `speaking-session` (as `mock-test`) |
 | `assessment` | turning a recorded answer into scores and feedback: STT, pronunciation, LLM evaluation, result storage | scoring parts of `attempt` (`speaking-analysis*`, `attempt-analysis*`, `speech.mapper`) and the STT, pronunciation, evaluator and LLM providers |
-| `billing` | credit wallet and ledger (`wallet/`), credit packages (`package/`), payments with PayOS (`payment/`), prices | `payment`, `credit-package`, `credit-log` plus the balance stored on `account` |
+| `billing` | credit wallet and ledger (`wallet/`), credit packages (`package/`), payments with PayOS (`payment/`), prices | `payment`, `credit-package`, `credit-log`; the balance stays on `account` and only `billing` changes it (§4.3) |
 | `file` | upload, file metadata, storage provider, audio normalisation | `file`, storage and ffmpeg providers, the old `speech` module |
 | `tts` | the text-to-speech capability only: the provider (now an external library, later possibly self-hosted) and the cache of generated audio; it receives the voice parameters from the caller and owns no voice catalog | `generated-audio`, TTS providers |
 | `voice-room` | live practice rooms (LiveKit) | `voice-room`, LiveKit service |
@@ -75,7 +75,7 @@ One layout everywhere (today repositories are at the module root in 9 modules an
   public.ts       the few functions other modules may call
 ```
 
-Sub-areas (`account/access/`, `content/forecast/`, `auth/session/`) repeat the same layout. Files are `kebab-case`, `<name>.<role>.ts`. A `dto` or `mapper` file exists only if it maps something; a plain `_id` to `id` rename is not a reason for a mapper.
+**Sub-areas.** The default is flat: one set of files per module. A module that holds two or more entities with their own model, route and service gets one folder per entity (`content/topic/`, `content/question/`, `content/forecast/`, `content/vocabulary/`, `content/voice/`; `billing/wallet/`, `billing/package/`, `billing/payment/`; `account/access/` beside the profile files; `auth/session/`). Each sub-area repeats the same files by role. One level only; there are no `controllers/` or `services/` folders grouped by layer. Files are `kebab-case`, `<name>.<role>.ts`. A `dto` or `mapper` file exists only if it maps something; a plain `_id` to `id` rename is not a reason for a mapper.
 
 ### 2.4 Where today's shared code goes
 
@@ -115,7 +115,7 @@ Five pairs call each other:
 | Cycle | Cause | Fix |
 | :--- | :--- | :--- |
 | account ↔ auth | `account.service` imports types defined in `auth/types/auth.type`, which imports `account.validation` | profile and change-password types and schemas belong to `account`; `auth` imports them |
-| account ↔ billing | `payment.service` imports `AccountService` to add balance; `account.service` imports `CreditLogService` for the signup gift | the balance moves into `billing` (wallet); `account` only calls `billing.grant` |
+| account ↔ billing | `payment.service` imports `AccountService` to add balance; `account.service` imports `CreditLogService` for the signup gift | the balance stays on `account` and `billing` calls `account.adjustBalance` one way; the signup gift moves to `auth`, which calls `billing.grant`; `account` no longer imports `billing` |
 | assessment ↔ practice | `speaking-analysis.service` updates attempts and sessions directly (imports their repositories and constants); vocabulary extraction reads `attempt-analysis` | `assessment` reports through a listener interface that `practice` implements (§3); practice reads results through `assessment.getResult(attemptId)` |
 | billing ↔ practice | `credit.util.ts` imports the speaking-session constants | pricing in `billing` uses its own action names; `practice` maps mode and type to them |
 | practice ↔ content (voice) | `voice.service.ts` imports `INSTRUCTION_SCRIPTS` from speaking-session constants | move that constant into `content/voice` (counted as practice ↔ tts in the numbers above, which were computed with `voice` in `tts`) |
@@ -144,7 +144,7 @@ Rule: if two modules would need to call each other, the boundary is wrong; merge
 
 ### 4.1 `account` and `auth`
 
-- `account`: profile, selected voice, roles and permissions. `balance` leaves (→ `billing.wallet`); `kind` is derived from the group; the unused default status `PENDING` goes (accounts exist only after OTP verification and are created `ACTIVE`).
+- `account`: profile, selected voice, roles and permissions. `balance` stays on `account` and only `billing` changes it (through `adjustBalance`); `kind` is derived from the group; the unused default status `PENDING` goes (accounts exist only after OTP verification and are created `ACTIVE`).
 - `account` exposes `getAccountForLogin(email)` (id, email, password hash, permission codes) so `auth` never touches `Group` or `Permission`.
 - Permission tables stay database-driven: the admin CMS is planned and will probably manage roles. `PermissionGroup` is only a label for grouping in the UI.
 - `auth` is split into credential, session and social-login services (the OTP service exists). `AuthService` has 504 lines and 9 constructor dependencies.
@@ -160,12 +160,12 @@ Rule: if two modules would need to call each other, the boundary is wrong; merge
 
 ### 4.3 `billing`
 
-- `wallets` collection (`accountId` unique, integer `balance ≥ 0`, `version`) and the existing credit log as the ledger. The wallet is part of `billing`, not a module of its own. **Why it leaves `account`:** the balance and the ledger entry (`balanceBefore`, `balanceAfter`) must change in one transaction; today four services update the balance on `account` and write the ledger in `credit-log` with a shared session, which is a transaction across two modules and the cause of the account ↔ billing cycle. A leaner alternative (keep `balance` on `account`, expose `account.adjustBalance(delta, tx)`, move the signup grant into `auth`) avoids the migration but keeps the transaction across two modules; this spec prefers the wallet. `/account/me` keeps returning `balance` (the FE reads it in several screens).
+- **Decided 2026-11-26: a `WalletService` now, a `wallets` collection later.** `billing` exposes one wallet API (`charge`, `refund`, `grant`, `getBalance`, `quote`); every caller (practice, mock test, payment, signup) goes through it, so the charge or refund plus the ledger write exists once instead of in six places (F22). The balance stays on `account` for now: `billing` changes it through `account.adjustBalance(delta, session)`, which keeps the conditional update (`balance ≥ amount`) so parallel charges cannot make it negative. The signup gift moves into `auth` (`billing.grant` inside the registration transaction), which removes the account ↔ billing cycle. Balance and ledger share one MongoDB, so they still change in one transaction. **Later**, when `billing` gets its own database, the balance moves into a `wallets` collection (`accountId` unique, integer `balance ≥ 0`, `version`) inside `WalletService`; callers do not change. `/account/me` keeps returning `balance` (the FE reads it in several screens).
 - Public functions: `charge`, `refund` (returns exactly what was charged, once), `grant`, `getBalance`, `quote`.
 - Ledger entries are unique per `(accountId, refType, refId, type)`. The practice charge must use the attempt id as `refId` (today it uses the question id, F5).
 - Payment gets a small transition table (`PENDING → PAID | EXPIRED | CANCELLED | FAILED`), an expiry job, and the raw webhook payload.
 - Pricing (`calculateCreditCost`, `CREDIT_COST`) moves here with its own action names.
-- `/account/me` composes the balance from the wallet; its response shape does not change.
+- `/account/me` keeps reading `balance` from `account`; its response shape does not change.
 
 ### 4.4 `practice` and `assessment`
 
@@ -292,8 +292,8 @@ Redis is already used for OTP, rate limits and socket tickets only. Add cache-as
 
 | Collection | Change | Migration |
 | :--- | :--- | :--- |
-| `accounts` | remove `balance` (moves to `wallets`), `kind` (derived from the group; only the mapper and the seed read it, `Group.kind` stays for the admin check) and `isSuperAdmin` (nothing reads it: no bypass is implemented; remove it or implement it); remove default `PENDING`; unique generated `username` | script copies `balance` to `wallets`; the other old fields can stay unused in existing documents |
-| `wallets` (new) | `{accountId unique, balance integer ≥ 0, version}` | script (or reseed) |
+| `accounts` | keep `balance` (only `billing` changes it), remove `kind` (derived from the group; only the mapper and the seed read it, `Group.kind` stays for the admin check) and `isSuperAdmin` (nothing reads it: no bypass is implemented; remove it or implement it); remove default `PENDING`; unique generated `username` | none now; the old fields can stay unused in existing documents |
+| `wallets` (later, not in this refactor) | `{accountId unique, balance integer ≥ 0, version}` | script that copies `balance` when `billing` gets its own database |
 | `creditlogs` | unique `(accountId, refType, refId, type)`; practice charge `refId = attemptId`; **keep `description`** (the FE renders `item.description` in `credit-log-tab.tsx`); `descriptionKey` and `descriptionMetadata` are not read by the FE (only declared in its type) and can be dropped, or kept if i18n of the log is planned | old rows unchanged |
 | `payments` | drop `webhookVerified` (written once at `payment.service.ts:102`, never read, FE does not use it; remove the write too) and `retryCount` (declared only in the model; the `retryCount` of attempts and mock tests is used and stays); add `failureReason`, `rawWebhook`, optional `canceledAt`; remove duplicate `orderCode` index | none |
 | `attempts` | add `questionSnapshot`, `idempotencyKey` (unique `(userId, key)`, TTL); drop single-field indexes on `userId`, `status`, `isPublic`, `analysisProfile`; add `(status, createdAt)` for the reconciler | old rows fall back to a live lookup |
@@ -324,7 +324,7 @@ Redis is already used for OTP, rate limits and socket tickets only. Add cache-as
 
 **PayOS webhook:** invalid signature ⇒ 400; one transaction inside billing: `PENDING → PAID` with a state-conditional update plus `grant({refType: 'PAYMENT', refId: paymentId})`; a processing error ⇒ 500 so PayOS retries; already processed ⇒ 200; store the raw payload. A scheduled job expires overdue payments.
 
-**Register:** generate a unique `username`; create the account; `billing.grant({refType: 'MANUAL', refId: accountId})`; if the grant fails the wallet is created lazily on first read; `notification.sendOtp` sends the OTP email.
+**Register:** generate a unique `username`; create the account; `billing.grant({refType: 'MANUAL', refId: accountId})` in the same transaction (`auth` owns it), so an account never exists without its gift and its ledger row; `notification.sendOtp` sends the OTP email.
 
 ## 10. API changes and FE impact
 
@@ -442,8 +442,8 @@ One ticket (GitHub issue) per step with the checklist below; each line is one sm
 6. Only if needed (§15): multiple sessions per user (F11) and `permissionsVersion`.
 
 **R4 Billing (size M)**
-1. `wallets`, `WalletService` (`charge`, `refund`, `grant`, `getBalance`, `quote`) with the unique ledger index; script to copy `balance`; remove `addBalance` and `deductBalance` from account.
-2. Replace the six duplicated blocks (F22); practice `refId = attemptId` (F5); pricing moves here; `/account/me` composes the balance.
+1. `WalletService` (`charge`, `refund`, `grant`, `getBalance`, `quote`) over `account.adjustBalance` with the unique ledger index `(userId, refType, refId, type)`; replace `addBalance` and `deductBalance` on account by `adjustBalance`; move the signup gift into `auth`. The `wallets` collection is a later step.
+2. Replace the six duplicated blocks (F22); practice `refId = attemptId` (F5); pricing moves here; `/account/me` is unchanged.
 3. Payment transition table, expiry job, raw webhook payload, decision on `CANCELED` (F23).
 4. Concurrency tests: parallel charge, double refund, duplicate webhook.
 
@@ -501,6 +501,9 @@ The roadmap is the long-term target (Spring Boot for Auth, Content, Practice, Pa
 4. Is the repository public? (SonarCloud free tier; not verified.)
 5. AI vocabulary extraction: keep switched off, or delete?
 6. Which Mongo and Redis providers are used? (Limits and BullMQ settings must be checked.)
+7. **Decided 2026-11-26:** a `WalletService` now over `account.balance`; the `wallets` collection only when `billing` gets its own database.
+8. **Decided 2026-11-26:** the voice catalog lives in `content/voice`; `tts` is the capability only.
+9. **Decided 2026-11-26:** `assessment` is its own module from the start, and sub-folders per entity only in modules with two or more entities.
 
 **Not verified (check before relying on them)**
 - Whether `.env` points at a cloud database (then `seed` would wipe it).
