@@ -42,12 +42,12 @@ Rule: **`core/` and `config/` never contain a business concept** (speaking, mail
 | :--- | :--- | :--- |
 | `account` | user profile and preferences; roles and permissions (`access/`: group, permission, permission-group) | `account`, `group`, `permission`, `permission-group` |
 | `auth` | registration, login, OTP, Google login, sessions, refresh tokens, password reset; `social-identity/` keeps the link between an account and its Google id (Google is the only provider, no other is planned) | `auth`, `session`, `account-provider` |
-| `content` | exam content written by admins: `topic/`, `question/`, `forecast/` (forecast + its topic and question links), `vocabulary/` (hints per question) | `topic`, `question`, `forecast`, `forecast-topic`, `forecast-question`, `vocabulary-suggestion` |
+| `content` | exam content and catalogs written by admins: `topic/`, `question/`, `forecast/` (forecast + its topic and question links), `vocabulary/` (hints per question), `voice/` (the catalog of voices a learner can choose: code, gender, locale, speed, pitch, default, sample file) | `topic`, `question`, `forecast`, `forecast-topic`, `forecast-question`, `vocabulary-suggestion`, `voice` |
 | `practice` | what the learner does: attempts, mock tests, history, leaderboard, sharing | `attempt` (without the scoring parts), `speaking-session` (as `mock-test`) |
 | `assessment` | turning a recorded answer into scores and feedback: STT, pronunciation, LLM evaluation, result storage | scoring parts of `attempt` (`speaking-analysis*`, `attempt-analysis*`, `speech.mapper`) and the STT, pronunciation, evaluator and LLM providers |
-| `billing` | credit wallet and ledger, credit packages, payments (PayOS), prices | `payment`, `credit-package`, `credit-log` plus the balance stored on `account` |
+| `billing` | credit wallet and ledger (`wallet/`), credit packages (`package/`), payments with PayOS (`payment/`), prices | `payment`, `credit-package`, `credit-log` plus the balance stored on `account` |
 | `file` | upload, file metadata, storage provider, audio normalisation | `file`, storage and ffmpeg providers, the old `speech` module |
-| `tts` | text-to-speech: voices, generated-audio cache, TTS provider | `voice`, `generated-audio`, TTS providers |
+| `tts` | the text-to-speech capability only: the provider (now an external library, later possibly self-hosted) and the cache of generated audio; it receives the voice parameters from the caller and owns no voice catalog | `generated-audio`, TTS providers |
 | `voice-room` | live practice rooms (LiveKit) | `voice-room`, LiveKit service |
 | `notification` | sending messages to users: email now, in-app now, SMS and push later | old `mail` module, mail producer, consumer, provider and templates; the in-app part replaces direct socket emits |
 
@@ -56,6 +56,7 @@ Why these boundaries (checked against the code, not only the names):
 - **`account` vs `auth`:** they are separate because `auth` is the part that could later be replaced by an identity provider such as Keycloak, while the profile and the app's roles stay. Rule: `auth` may depend on `account`, never the reverse; nothing outside `auth` touches passwords, OTP, sessions or refresh tokens; every other module only reads `req.user` (id, role, permissions).
 - **Roles and permissions live in `account`:** an account has a required `groupId`, creating one needs the default group, and loading an account for login populates its group and permissions. They cannot work independently.
 - **`assessment` vs `practice`:** different vocabulary (a learner's submission vs measuring speech), different speed of change (scoring v2 will replace it), different resources (external AI calls, possibly a Python service later).
+- **`voice` in `content`, not in `tts`:** a voice is an entry of a catalog that an admin curates and a learner chooses (account and mock test keep only its id). `tts` is a capability: it turns text into audio with the voice parameters it is given. Replacing or self-hosting the provider changes `tts`, not the catalog. `content` calls `tts`; `tts` never imports `content`.
 - **`tts` vs `file`:** TTS has its own reason to change (provider and voices) and currently leaks into `file` (`FileService.generateAndSaveAudio`).
 - **`content` is one module** because one import creates topics, questions and a forecast together and vocabulary hints attach to a question. A learner's personal vocabulary list (future) would belong to `practice`, not here.
 - The old `mail` and `speech` modules disappear as modules; their content moves to `notification` and `file`.
@@ -117,7 +118,7 @@ Five pairs call each other:
 | account ↔ billing | `payment.service` imports `AccountService` to add balance; `account.service` imports `CreditLogService` for the signup gift | the balance moves into `billing` (wallet); `account` only calls `billing.grant` |
 | assessment ↔ practice | `speaking-analysis.service` updates attempts and sessions directly (imports their repositories and constants); vocabulary extraction reads `attempt-analysis` | `assessment` reports through a listener interface that `practice` implements (§3); practice reads results through `assessment.getResult(attemptId)` |
 | billing ↔ practice | `credit.util.ts` imports the speaking-session constants | pricing in `billing` uses its own action names; `practice` maps mode and type to them |
-| practice ↔ tts | `voice.service.ts` imports `INSTRUCTION_SCRIPTS` from speaking-session constants | move that constant into `tts` |
+| practice ↔ content (voice) | `voice.service.ts` imports `INSTRUCTION_SCRIPTS` from speaking-session constants | move that constant into `content/voice` (counted as practice ↔ tts in the numbers above, which were computed with `voice` in `tts`) |
 
 After the fixes the graph has no cycle. Order from the bottom: `billing`, `file`, `assessment`, `notification` have no dependencies on other modules; then `tts` (→ file); then `account` (→ billing, tts, notification via auth); `auth` (→ account, notification); `content` (→ tts, file); `voice-room` (→ account, content); `practice` on top (→ account, assessment, billing, content, file, tts, notification).
 
@@ -155,6 +156,7 @@ Rule: if two modules would need to call each other, the boundary is wrong; merge
 - **AI vocabulary extraction is switched off by default** (feature flag). Today every scored attempt that passes `lexical ≥ 6`, `grammar ≥ 6`, `≥ 20 words` costs one more LLM call, and the result is stored as `pending` with source `llm`. There is no admin screen to approve anything, so no learner can see these rows. The extraction service also imports `attemptRepository` and `forecastQuestionRepository` of other modules and populates the question and its parent.
 - If it is kept later it lives in `practice/jobs/` (it reads attempt data) and calls `content.vocabulary.suggest(...)`. If the CMS shows it is not used, delete it (history is in git).
 - The manual flow (create, approve, hide, update, list approved, audio) stays in `content/vocabulary/`.
+- `content/voice/` owns the voice catalog (create, update, activate, list, default, sample audio) and the admin permission codes `VOICE:*`. `account` stores the selected voice id and `practice` stores the voice id of a mock test; both read voices through `content`.
 
 ### 4.3 `billing`
 
@@ -175,6 +177,7 @@ Rule: if two modules would need to call each other, the boundary is wrong; merge
 
 ### 4.5 `tts`
 
+- `tts` is a capability, not a catalog: the caller (`content`, `practice`) looks up the voice in `content/voice` and passes `voiceCode`, `speed` and `pitch`; `tts` stores the cache with the voice id as an opaque reference and has no dependency on `content`.
 - One interface `TtsProvider.textToSpeech(text, voiceCode, speed, pitch) → { buffer, duration }`. Two implementations already exist with exactly this signature: `EdgeTTSProvider` (uses the unofficial `node-edge-tts` library, no guarantee from Microsoft) and `AzureSpeechProvider` (official SDK, currently unused, `AZURE_SPEECH_KEY` is already required).
 - Provider chosen by `TTS_PROVIDER=azure|edge`; **default `azure`**. Voice codes in the seed (`en-US-AriaNeural`...) are Microsoft neural voice names, so they should work with Azure (to be tested). Self-hosted TTS is a later option.
 - Fix before switching: the Azure provider interpolates the text into SSML without escaping XML characters (`&`, `<`).
@@ -317,7 +320,7 @@ Redis is already used for OTP, rate limits and socket tickets only. Add cache-as
 
 **Reconciler (every few minutes):** attempts in the submitted state older than 5 minutes with no job are re-enqueued; after K tries, or in processing for more than 15 minutes, they are marked `FAILED` and refunded.
 
-**Create a mock test:** `content.pickMockQuestions` → `tts.getVoice` → `billing.charge({refId: mockTestId})` → create. The recent-sessions query gets its missing sort.
+**Create a mock test:** `content.pickMockQuestions` → `content.getVoice` → `billing.charge({refId: mockTestId})` → create. The recent-sessions query gets its missing sort.
 
 **PayOS webhook:** invalid signature ⇒ 400; one transaction inside billing: `PENDING → PAID` with a state-conditional update plus `grant({refType: 'PAYMENT', refId: paymentId})`; a processing error ⇒ 500 so PayOS retries; already processed ⇒ 200; store the raw payload. A scheduled job expires overdue payments.
 
@@ -452,7 +455,7 @@ One ticket (GitHub issue) per step with the checklist below; each line is one sm
 5. `Notifier` replaces the 7 direct emits (in-app channel of `notification`).
 
 **R6 Content, tts, file, voice-room (size M–L)**
-1. `tts`: `TtsProvider` interface, `TTS_PROVIDER`, Azure default; move `generateAndSaveAudio` into `tts`; remove the voice ↔ generated-audio cycle.
+1. `tts`: `TtsProvider` interface, `TTS_PROVIDER`, Azure default; move `generateAndSaveAudio` into `tts`; `voice` moves to `content/voice`, which removes the voice ↔ generated-audio cycle.
 2. `file`: `getAudioForOwner`, `storeAudio`; ffmpeg as an adapter.
 3. `content`: `public.ts`; remove cross-module imports and the `populate` calls of F1 (ports or snapshots; map in controller or mapper where only display data is needed).
 4. `voice-room`: split the service; PIN hash and attempt limit; pinned-question snapshot; chat membership check; sender from the server.
