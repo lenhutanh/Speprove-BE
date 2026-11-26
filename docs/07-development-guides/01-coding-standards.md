@@ -13,7 +13,7 @@ Rules for writing code in `speprove-be`. They describe what the code does today;
 
 ### 1.2. Commands
 
-1.2.1. `pnpm lint`, `pnpm format`, `pnpm check` (ESLint plus the Prettier check), `pnpm build` (`tsc` plus `tsc-alias`), `pnpm test` (Vitest).
+1.2.1. The scripts are listed in [the system overview](../01-introduction/01-system-overview.md), section 6.
 1.2.2. Before a pull request: `pnpm lint`, `pnpm build` and `pnpm test` pass.
 
 ## 2. TypeScript

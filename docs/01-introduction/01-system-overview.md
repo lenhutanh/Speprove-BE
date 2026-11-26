@@ -81,12 +81,11 @@ Aggregates all the main API routes.
 
 ## 5. Coding conventions
 
-1. **Error handling**: throw `AppError` from services for business errors. `errorMiddleware` catches it and formats the response.
-2. **Validation**: declare Zod schemas in `*.validation.ts` and check input with `validateMiddleware` in the routes.
-3. **Data transfer**: use DTOs (`*.dto.ts`) for requests and mappers (`*.mapper.ts`) to map between DB data and API responses.
-4. **Database**: extend `BaseRepository`. Use a `session` transaction when updating several documents at once.
-5. **Types**: make full use of TypeScript type checking and avoid `any`.
-6. **Dependency injection**: use the `tsyringe` decorators (`@singleton()`, `@injectable()`) and register classes explicitly in the `*.di.ts` files.
+The conventions have their own documents, so each fact lives in one place:
+
+- Code style, naming, errors, logging, data access: [coding standards](../07-development-guides/01-coding-standards.md).
+- Layers, dependency injection, module boundaries, authorization: [layers and modules](../07-development-guides/02-layers-and-modules.md).
+- Response shape and status codes: [API conventions](../08-integration-contracts/01-api-conventions.md); error codes: [error code registry](../08-integration-contracts/02-error-codes.md).
 
 ## 6. NPM scripts
 
@@ -96,4 +95,5 @@ Aggregates all the main API routes.
 - `pnpm start`: run the compiled `dist/index.js`.
 - `pnpm lint`, `pnpm lint:fix`: check and fix lint errors with ESLint.
 - `pnpm format`, `pnpm check`: format the code with Prettier.
+- `pnpm test`, `pnpm test:watch`: run the Vitest suite once or in watch mode ([testing strategy](../06-testing/01-testing-strategy.md)).
 - `pnpm db:seed`: run the data seeding script.

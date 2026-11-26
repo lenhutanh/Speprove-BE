@@ -19,11 +19,7 @@ Speprove backend: a Node.js + Express 5 + TypeScript modular monolith for an IEL
 
 Request flow: Express router → middlewares (rate limiter, auth, Zod `validateMiddleware`) → controller → service → repository → Mongoose. Services push long-running work onto BullMQ queues (`src/infrastructure/queues`). Workers (`src/infrastructure/workers/consumers`, e.g. `speaking.consumer.ts`, `mail.consumer.ts`) process those jobs and send progress to clients through Socket.io (`src/infrastructure/socket`). `src/index.ts` boots in this order: queues first, then Bull Board, workers, HTTP. Shutdown stops the workers first.
 
-Each `src/modules/<name>/` packages its own `*.model.ts`, `*.repository(.interface).ts`, `*.service.ts`, `*.controller.ts`, `*.route.ts`, `*.validation.ts` (Zod), `*.dto.ts`, `*.mapper.ts` and `*.di.ts`.
-- DI uses `tsyringe`: classes use `@injectable()`/`@singleton()`; each `*.di.ts` registers interface tokens from `src/common/constants/di.tokens.ts`; `src/bootstrap/container.ts` wires all modules together.
-- Repositories extend `BaseRepository` (`src/common/base`). Use Mongo `session` transactions for writes that touch several documents.
-- Services throw `AppError` for business errors, and `errorMiddleware` formats the response.
-- Import alias: `~/*` → `src/*`.
+Each `src/modules/<name>/` packages its own model, repository, service, controller, route, validation, DTO, mapper and DI file. The duties of each layer, dependency injection and how to add a module are in `docs/07-development-guides/02-layers-and-modules.md`. Import alias: `~/*` → `src/*`.
 
 External integrations sit behind interfaces in `src/infrastructure/providers/` (llm/Groq, stt/Groq, tts/Edge TTS, speech-assessment/Azure, evaluator, storage/Cloudinary, mail/Brevo, media/ffmpeg). Payments go through PayOS.
 
@@ -48,10 +44,7 @@ The AI scoring pipeline (the `attempt` and `speaking-session` modules) runs in s
 
 ## Modularity rules (from `../architecture_roadmap.md`)
 
-The monolith is meant to be split into microservices later, so code must follow these rules:
-1. **Database-per-module:** a module touches only its own models. Never `.populate()` into another module's model. Fetch raw IDs, then go through the other module's service interface, or merge the data in the mapper/controller.
-2. **Cross-module calls:** inject the other module's *interface* through constructor injection (tsyringe). Never import another module's repository, controller or helpers directly. For async work, use a BullMQ job (the in-process event bus was removed). Financial, score and exam-state work must be idempotent.
-3. **DTO/Mapper boundary:** all data entering or leaving a module goes through DTOs and mappers.
+The monolith is meant to be split into microservices later, so a module touches only its own models, calls other modules through their interface, and passes data as DTOs. The full rules are in `docs/07-development-guides/02-layers-and-modules.md`, section 3.
 
 ## Workflow
 
