@@ -3,7 +3,6 @@ import { FfmpegProvider } from '~/infrastructure/providers/media/ffmpeg.provider
 
 @singleton()
 export class SpeechService {
-  constructor(private readonly ffmpegProvider: FfmpegProvider) {}
   public async convertToDual(input: string, wavOut: string, mp3Out: string): Promise<void> {
     await FfmpegProvider.run(input, (cmd) =>
       cmd

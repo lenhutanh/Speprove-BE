@@ -59,10 +59,6 @@ export class GeneratedAudioService {
     return this._toResult({ ...created, fileId: file }, false)
   }
 
-  public buildCacheKey(data: { text: string; voiceId: string }): string {
-    return this._cacheKey(this._normalizeText(data.text), data.voiceId)
-  }
-
   public normalizeText(text: string): string {
     return this._normalizeText(text)
   }

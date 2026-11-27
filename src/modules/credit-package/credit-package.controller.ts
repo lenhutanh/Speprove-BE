@@ -13,7 +13,7 @@ export class CreditPackageController {
     return ResponseTransformer.success(res, creditPackage, 'Create credit package successfully', StatusCodes.CREATED)
   }
 
-  public async getAll(req: Request, res: Response) {
+  public async getAll(_req: Request, res: Response) {
     const result = await this.creditPackageService.getAll()
     return ResponseTransformer.success(res, result, 'Get all credit packages successfully')
   }

@@ -208,7 +208,7 @@ export class AttemptService {
   }
 
   public async getList(userId: string, queryOptions: AttemptQueryType) {
-    const { limit, page, sortBy, sortOrder, forecastQuestionId, speakingSessionId } = queryOptions || {}
+    const { limit, page, sortBy, forecastQuestionId, speakingSessionId } = queryOptions || {}
 
     const qb = new QueryBuilder<AttemptType>()
 
@@ -262,10 +262,6 @@ export class AttemptService {
     }
     const updatedAttempt = await this.attemptRepository.updateById(attemptId, { isPublic })
     return this.attemptMapper.toResponse(updatedAttempt!)
-  }
-
-  public async countCompletedAttempts(speakingSessionId: string) {
-    return await this.attemptRepository.count({ speakingSessionId })
   }
 
   public async findBySpeakingSessionId(speakingSessionId: string) {

@@ -80,7 +80,7 @@ export class VocabularyExtractionService {
       grammarIssues: evaluation.grammar?.issues ?? []
     })
 
-    const safeItems = this.filterExtractedItems(extractedItems, transcript, evaluation, availableLevels)
+    const safeItems = this.filterExtractedItems(extractedItems, evaluation, availableLevels)
 
     for (const item of safeItems) {
       await this.vocabularySuggestionService.upsertExtractedSuggestion({
@@ -107,7 +107,6 @@ export class VocabularyExtractionService {
 
   private filterExtractedItems(
     items: ExtractedVocabularyItem[],
-    transcript: string,
     evaluation: Evaluation,
     availableLevels: VocabularySuggestionLevel[]
   ) {

@@ -18,11 +18,6 @@ export class PermissionGroupController {
     )
   }
 
-  // public async getList(_req: Request, res: Response) {
-  //   const permissionGroups = await this.permissionGroupService.getList()
-  //   return ResponseTransformer.success(res, permissionGroups, 'Get permission group list successfully')
-  // }
-
   public async getDetails(req: Request, res: Response) {
     const permissionGroup = await this.permissionGroupService.getDetails(req.validated.params.id)
     return ResponseTransformer.success(res, permissionGroup, 'Get permission group details successfully')

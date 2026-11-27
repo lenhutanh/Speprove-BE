@@ -24,7 +24,7 @@ export class AuthMiddleware {
     }
   }
 
-  isAuthorizedOptional = async (req: Request, res: Response, next: NextFunction) => {
+  isAuthorizedOptional = async (req: Request, _res: Response, next: NextFunction) => {
     const clientAccessToken = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1]
     if (clientAccessToken) {
       try {

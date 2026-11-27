@@ -26,10 +26,6 @@ export class GroupService {
     return group
   }
 
-  // async getList() {
-  //   return await this.groupRepository.find({}).sort({ createdAt: -1 })
-  // }
-
   async getDetails(id: string) {
     const group = await this.groupRepository.findById(id, {
       populate: 'permissionIds'

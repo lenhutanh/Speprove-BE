@@ -3,7 +3,6 @@ import { validateMiddleware } from '~/common/middlewares'
 import { forecastTopicQuerySchema } from './forecast-topic.validation'
 import { bindHandler } from '~/common/http'
 import { ForecastTopicController } from './forecast-topic.controller'
-import { authMiddleware } from '~/common/middlewares/auth.middleware'
 import { idParamSchema } from '~/common/base'
 
 const router = express.Router()

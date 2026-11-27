@@ -13,11 +13,6 @@ export class GroupController {
     return ResponseTransformer.success(res, group, 'Create group successfully', StatusCodes.CREATED)
   }
 
-  // public async getList(_req: Request, res: Response) {
-  //   const groups = await this.groupService.getList()
-  //   return ResponseTransformer.success(res, groups, 'Get group list successfully')
-  // }
-
   public async getDetails(req: Request, res: Response) {
     const group = await this.groupService.getDetails(req.validated.params.id)
     return ResponseTransformer.success(res, group, 'Get group details successfully')

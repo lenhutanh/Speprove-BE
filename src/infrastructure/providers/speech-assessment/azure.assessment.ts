@@ -125,7 +125,7 @@ export class AzurePronunciationAssessmentProvider implements IPronunciationAsses
       let fullTranscript = ''
       let totalAudioDurationTicks = 0
 
-      recognizer.recognized = (s, e) => {
+      recognizer.recognized = (_s, e) => {
         if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
           const jsonStr = e.result.properties.getProperty(sdk.PropertyId.SpeechServiceResponse_JsonResult)
 
@@ -147,7 +147,7 @@ export class AzurePronunciationAssessmentProvider implements IPronunciationAsses
         }
       }
 
-      recognizer.canceled = (s, e) => {
+      recognizer.canceled = (_s, e) => {
         if (e.reason === sdk.CancellationReason.Error) {
           recognizer.stopContinuousRecognitionAsync()
           reject(new Error(`Azure recognizer error: ${e.errorDetails}`))

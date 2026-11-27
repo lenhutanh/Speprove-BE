@@ -2,12 +2,6 @@ export const TOKENS = {
   // Cache
   ICacheService: Symbol('ICacheService'),
 
-  // Domain event
-  DomainEventHandler: Symbol('DomainEventHandler'),
-
-  // Event Bus
-  IEventBus: Symbol('IEventBus'),
-
   ITokenService: Symbol('ITokenService'),
   IHasher: Symbol('IHasher'),
 
