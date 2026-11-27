@@ -69,7 +69,7 @@ Known weaknesses of the code and the process, how bad each one is, and what is p
 | 5.1 | The CI workflow has never run on GitHub; the frontend has no CI | High | Open | `ci/quality-gates` |
 | 5.2 | No staging environment, no automatic deploy, no rollback, no alert on `/health` | High | Open | `ci-cd-staging` |
 | 5.3 | `ROLE=worker` (workers in a separate process) is blocked because `SocketService.emit` does nothing without the in-process server | Medium | Open (checked) | After defense (needs the Socket.io Redis adapter) |
-| 5.4 | No coverage report, no duplication figure, no static analysis service | Medium | Open | `ci/quality-gates` |
+| 5.4 | Coverage is low: 22.03 percent of the lines (core modules about 20.4 percent, target 50). There is still no static analysis service (waiting for the public or private decision) | Medium | Open (checked) | each refactor ticket adds the tests of its criteria; static analysis in `ci/quality-gates` |
 | 5.5 | The Docker image has not been built and scanned in this environment | Medium | Open | `ci-cd-staging` |
 | 5.7 | Resilience: timeouts are missing for ffmpeg, Cloudinary uploads, the Azure Speech SDK, Brevo, Edge TTS and MongoDB queries; no circuit breaker and no bulkhead for any provider | Medium | Open (checked) | `fix/resilience` |
 | 5.8 | No load test, so capacity is unknown. Not measured yet: time of the Azure assessment against the length of the answer, effect of bcrypt on the thread pool, behavior when Redis is down | Medium | Open | `test/load-k6` |

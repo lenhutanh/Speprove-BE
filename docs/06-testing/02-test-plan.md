@@ -64,7 +64,7 @@ What is tested, at which level, by which test, and what must be added. The user 
 ## 6. Coverage
 
 6.1. Target: line coverage of the core modules (credit, payment, authentication, scoring) of at least 50 percent, 70 percent as a stretch. CI publishes the report.
-6.2. The current number is recorded in [the baseline](../plan/baseline-2026-11-22.md) when it is measured. Until then it is not known.
+6.2. Measured on 2026-11-26: 22.03 percent of the lines of `src/`, about 20.4 percent for the core modules (payment 51.2, credit-log 51.4, auth 23.4, account 38.7, attempt 8.6, speaking-session 11.8). The detail is in [the baseline](../plan/baseline-2026-11-22.md).
 
 ## 7. Defects
 

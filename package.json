@@ -14,6 +14,7 @@
     "check": "pnpm lint && prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "db:seed": "ts-node -r tsconfig-paths/register -r dotenv/config src/scripts/seed.ts"
   },
   "keywords": [],
@@ -34,6 +35,7 @@
     "@types/node": "^25.9.9",
     "@types/streamifier": "^0.1.2",
     "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "5.1.1",
     "dotenv": "^17.4.2",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",

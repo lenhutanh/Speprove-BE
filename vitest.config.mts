@@ -18,6 +18,13 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: ['src/scripts/**', 'src/types/**', 'src/**/*.d.ts'],
+      reporter: ['text-summary', 'json-summary', 'lcov'],
+      reportsDirectory: 'coverage'
+    },
     testTimeout: 30000,
     hookTimeout: 120000,
     env: {
