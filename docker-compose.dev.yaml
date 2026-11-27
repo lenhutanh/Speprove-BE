@@ -1,24 +1,19 @@
 services:
   api:
     container_name: speprove-api-dev
-
     image: speprove-be-dev:latest
-
     build:
       context: .
       dockerfile: Dockerfile
-
-    environment:
-      NODE_ENV: development
-
     env_file:
       - .env
-
+    environment:
+      NODE_ENV: development
+      APP_HOST: 0.0.0.0
+      APP_PORT: "8017"
     ports:
       - "8017:8017"
-
     restart: unless-stopped
-
     networks:
       - speprove-net
 

@@ -49,7 +49,7 @@ Speprove Backend is a modular monolith backend service for the Speprove IELTS Sp
 ## Tech Stack
 | Category | Technology |
 | :--- | :--- |
-| **Runtime & Framework** | Node.js (v20+), Express (v5.x) |
+| **Runtime & Framework** | Node.js (v24), Express (v5.x) |
 | **Language** | TypeScript (v5.x) |
 | **Database** | MongoDB with Mongoose (v9.x) |
 | **Cache & Queue** | Redis (`ioredis`), BullMQ, `@bull-board` |
@@ -98,7 +98,7 @@ graph TD
 ## Getting Started
 
 ### Prerequisites
-- Node.js 20+
+- Node.js 24 (see `.nvmrc`)
 - pnpm 10+
 
 ### Installation
@@ -127,7 +127,7 @@ pnpm start
 ### Docker
 Run the backend API container using Docker Compose:
 ```bash
-docker-compose -f docker-compose.dev.yaml up --build
+docker compose -f docker-compose.dev.yaml up --build
 ```
 
 ---
