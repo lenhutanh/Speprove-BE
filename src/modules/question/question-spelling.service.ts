@@ -1,4 +1,5 @@
 import nspell from 'nspell'
+import { logger } from '~/infrastructure/logging/logger'
 
 let spellUS: any
 let spellGB: any
@@ -42,15 +43,15 @@ export async function initQuestionSpelling() {
     spellUS = nspell(dictUS)
     spellGB = nspell(dictGB)
 
-    console.log('US:', spellUS.correct('storyline'))
-    console.log('GB:', spellGB.correct('storyline'))
+    logger.debug('US:', spellUS.correct('storyline'))
+    logger.debug('GB:', spellGB.correct('storyline'))
 
-    console.log('US suggestions:', spellUS.suggest('storyline'))
-    console.log('GB suggestions:', spellGB.suggest('storyline'))
+    logger.debug('US suggestions:', spellUS.suggest('storyline'))
+    logger.debug('GB suggestions:', spellGB.suggest('storyline'))
 
-    console.log('Spelling engine initialized')
+    logger.info('Spelling engine initialized')
   } catch (error) {
-    console.error('Spelling init failed:', error)
+    logger.error('Spelling init failed:', error)
   }
 }
 

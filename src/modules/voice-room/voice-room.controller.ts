@@ -6,6 +6,7 @@ import { env } from '~/common/config/env.config'
 import { ResponseTransformer } from '~/common/http'
 import { AuthenticatedRequest } from '~/common/types/request.type'
 import { VoiceRoomService } from './voice-room.service'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class VoiceRoomController {
@@ -127,7 +128,7 @@ export class VoiceRoomController {
           await this.voiceRoomService.handleWebhookEvent(event)
         }
       } catch (err: any) {
-        console.warn('LiveKit webhook error:', err?.message || err)
+        logger.warn('LiveKit webhook error:', err?.message || err)
       }
     }
     return res.status(StatusCodes.OK).send('OK')

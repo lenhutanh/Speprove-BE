@@ -4,6 +4,7 @@ import { AppEventEmitter } from './event-emitter'
 import { DomainEventName } from './event.types'
 import { DomainEventHandler } from './domain-event.handler'
 import { TOKENS } from '~/common/constants/di.tokens'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class EventBus implements IEventBus {
@@ -23,10 +24,10 @@ export class EventBus implements IEventBus {
         try {
           await handler.handle(payload)
         } catch (err) {
-          console.error(`[EventBus] ${handler.constructor.name} failed:`, err)
+          logger.error(`[EventBus] ${handler.constructor.name} failed:`, err)
         }
       })
-      console.log(`[EventBus] Registered ${handler.constructor.name} -> ${handler.eventName}`)
+      logger.info(`[EventBus] Registered ${handler.constructor.name} -> ${handler.eventName}`)
     })
 
     this.registered = true

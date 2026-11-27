@@ -4,12 +4,9 @@ import { idParamSchema } from '~/common/base/base.validation'
 import { createGroupSchema, updateGroupSchema } from './group.validation'
 import { bindHandler } from '~/common/http'
 import { GroupController } from './group.controller'
-import { container } from 'tsyringe'
-import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
+import { authMiddleware } from '~/common/middlewares/auth.middleware'
 
 const router = express.Router()
-
-const authMiddleware = container.resolve(AuthMiddleware)
 
 router
   .route('/')

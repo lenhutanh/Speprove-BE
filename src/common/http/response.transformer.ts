@@ -1,5 +1,6 @@
 import { Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
+import { getRequestId } from '~/infrastructure/logging/request-context'
 import { ApiResponse } from '../types'
 
 export class ResponseTransformer {
@@ -59,7 +60,8 @@ export class ResponseTransformer {
       success: false,
       message,
       errorCode,
-      errors
+      errors,
+      requestId: getRequestId()
     })
   }
 }

@@ -3,17 +3,29 @@ import { z } from 'zod'
 import jwt from 'jsonwebtoken'
 import { StringValue } from 'ms'
 
+const isTest = process.env.NODE_ENV === 'test'
+
+// Third-party keys are required everywhere except in tests, where they get placeholders
+const external = isTest ? z.string().default('test-placeholder') : z.string()
+const externalEmail = isTest ? z.string().email().default('test@example.com') : z.string().email()
+
 const envSchema = z.object({
   APP_NAME: z.string(),
   APP_URL: z.string().url(),
   MONGODB_URI: z.string().url(),
   DATABASE_NAME: z.string(),
+  MONGO_MAX_POOL_SIZE: z.coerce.number().int().positive().default(20),
+  MONGO_SERVER_SELECTION_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
   APP_HOST: z.string().default('localhost'),
-  APP_PORT: z.preprocess((val) => Number(val), z.number().default(5000)),
+  APP_PORT: z.coerce.number().int().positive().default(5000),
   PORT: z.preprocess((val) => (val ? Number(val) : undefined), z.number().optional()),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  HTTP_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
+  AI_TIMEOUT_MS: z.coerce.number().int().positive().default(60000),
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  AUTHOR: z.string(),
+  AUTHOR: z.string().default(''),
 
   // Auth
   ACCESS_TOKEN_SECRET_SIGNATURE: z.string().min(32),
@@ -24,39 +36,39 @@ const envSchema = z.object({
 
   // Redis
   REDIS_HOST: z.string().default('127.0.0.1'),
-  REDIS_PORT: z.preprocess((val) => parseInt(val as string, 10), z.number().default(6379)),
+  REDIS_PORT: z.coerce.number().int().positive().default(6379),
   REDIS_PASSWORD: z.string().default(''),
   REDIS_URL: z.string().optional(),
 
   // Mail
-  BREVO_API_KEY: z.string(),
-  SENDER_EMAIL: z.string().email(),
-  SENDER_NAME: z.string(),
+  BREVO_API_KEY: external,
+  SENDER_EMAIL: externalEmail,
+  SENDER_NAME: external,
 
   // Cloudinary
-  CLOUDINARY_NAME: z.string(),
-  CLOUDINARY_API_KEY: z.string(),
-  CLOUDINARY_API_SECRET: z.string(),
+  CLOUDINARY_NAME: external,
+  CLOUDINARY_API_KEY: external,
+  CLOUDINARY_API_SECRET: external,
 
   // Azure
-  AZURE_SPEECH_KEY: z.string(),
-  AZURE_SPEECH_REGION: z.string(),
+  AZURE_SPEECH_KEY: external,
+  AZURE_SPEECH_REGION: external,
 
   // LOG_LEVEL
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('info'),
 
   // Groq
-  GROQ_API_KEY: z.string(),
+  GROQ_API_KEY: external,
 
   // PayOS
-  PAYOS_CLIENT_ID: z.string(),
-  PAYOS_API_KEY: z.string(),
-  PAYOS_CHECKSUM_KEY: z.string(),
+  PAYOS_CLIENT_ID: external,
+  PAYOS_API_KEY: external,
+  PAYOS_CHECKSUM_KEY: external,
 
   // Google
-  GOOGLE_CLIENT_ID: z.string(),
-  GOOGLE_CLIENT_SECRET: z.string(),
-  GOOGLE_REDIRECT_URI: z.string(),
+  GOOGLE_CLIENT_ID: external,
+  GOOGLE_CLIENT_SECRET: external,
+  GOOGLE_REDIRECT_URI: external,
 
   // LiveKit
   LIVEKIT_URL: z.string().optional(),

@@ -1,5 +1,6 @@
 import { Worker } from 'bullmq'
 import { singleton } from 'tsyringe'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class WorkerFactory {
@@ -7,11 +8,11 @@ export class WorkerFactory {
 
   register(name: string, worker: Worker): void {
     if (this.workers.has(name)) {
-      console.warn(`[WorkerFactory] Worker "${name}" already registered, skipping`)
+      logger.warn(`[WorkerFactory] Worker "${name}" already registered, skipping`)
       return
     }
     this.workers.set(name, worker)
-    console.log(`[WorkerFactory] Registered worker: ${name}`)
+    logger.info(`[WorkerFactory] Registered worker: ${name}`)
   }
 
   getAllWorkers(): Worker[] {
@@ -20,6 +21,6 @@ export class WorkerFactory {
 
   async shutdown(): Promise<void> {
     await Promise.all([...this.workers.values()].map((w) => w.close()))
-    console.log('[WorkerFactory] All workers closed')
+    logger.info('[WorkerFactory] All workers closed')
   }
 }

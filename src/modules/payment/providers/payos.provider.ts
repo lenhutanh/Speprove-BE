@@ -14,7 +14,8 @@ export class PayOSProvider implements IPaymentProvider {
     this.client = new PayOS({
       clientId: env.PAYOS_CLIENT_ID,
       apiKey: env.PAYOS_API_KEY,
-      checksumKey: env.PAYOS_CHECKSUM_KEY
+      checksumKey: env.PAYOS_CHECKSUM_KEY,
+      timeout: env.HTTP_TIMEOUT_MS
     })
   }
 

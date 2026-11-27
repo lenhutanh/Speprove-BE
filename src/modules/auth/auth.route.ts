@@ -12,13 +12,10 @@ import {
   verifySchema
 } from './auth.validation'
 import { bindHandler } from '~/common/http'
-import { container } from 'tsyringe'
-import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
+import { authMiddleware } from '~/common/middlewares/auth.middleware'
 import { rateLimitMiddleware } from '~/infrastructure/rate-limiter/rate-limiter.middleware'
 
 const router = express.Router()
-
-const authMiddleware = container.resolve(AuthMiddleware)
 
 router.post(
   '/login',

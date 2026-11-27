@@ -8,6 +8,7 @@ import {
   ScoreSessionJobData,
   TranscribeJobData
 } from '../types/speaking.job.types'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class SpeakingProducer extends BaseProducer {
@@ -16,7 +17,7 @@ export class SpeakingProducer extends BaseProducer {
   }
 
   public async transcribe(data: TranscribeJobData) {
-    console.log('Start transcribing at: ', Date.now())
+    logger.info('Start transcribing at: ', Date.now())
     return this.addJob(JOB_NAME.SPEAKING.TRANSCRIBE, data, {
       priority: 1,
       attempts: 3,
@@ -25,7 +26,7 @@ export class SpeakingProducer extends BaseProducer {
   }
 
   public async assess(data: AssessJobData) {
-    console.log('Start assessing at: ', Date.now())
+    logger.info('Start assessing at: ', Date.now())
     return this.addJob(JOB_NAME.SPEAKING.ASSESS, data, {
       attempts: 3,
       backoff: { type: 'exponential', delay: 5000 }
@@ -33,7 +34,7 @@ export class SpeakingProducer extends BaseProducer {
   }
 
   public async evaluate(data: EvaluateJobData) {
-    console.log('Start evaluating at: ', Date.now())
+    logger.info('Start evaluating at: ', Date.now())
     return this.addJob(JOB_NAME.SPEAKING.EVALUATE, data, {
       attempts: 3,
       backoff: { type: 'exponential', delay: 5000 }

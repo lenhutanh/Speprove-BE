@@ -86,7 +86,7 @@ export class AzurePronunciationAssessmentProvider implements IPronunciationAsses
   }
 
   public async assess(audioUrl: string, referenceText: string): Promise<PronunciationAssessmentResult> {
-    const response = await axios.get(audioUrl, { responseType: 'stream' })
+    const response = await axios.get(audioUrl, { responseType: 'stream', timeout: env.HTTP_TIMEOUT_MS })
     return this._runAssessment(response.data, referenceText)
   }
 

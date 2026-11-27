@@ -15,6 +15,7 @@ import { SpeechService } from '../speech/speech.service'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class FileService {
@@ -84,7 +85,7 @@ export class FileService {
 
         return this.fileMapper.toResponse(result as FileType)
       } catch (err) {
-        console.error(err)
+        logger.error(err)
         throw new AppError('Could not process audio file.')
       } finally {
         await Promise.all([

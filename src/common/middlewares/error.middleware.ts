@@ -5,9 +5,11 @@ import { ErrorCodes } from '../constants/error-codes'
 import { ResponseTransformer } from '../http'
 import { ZodError } from 'zod'
 import { AppError } from '../errors'
+import { logger } from '~/infrastructure/logging/logger'
 
 export const errorMiddleware = (err: any, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {
+    if (err.statusCode >= StatusCodes.INTERNAL_SERVER_ERROR) logger.error('Request failed', err)
     return ResponseTransformer.error(res, err.message, err.statusCode, err.errorCode, err.errors)
   }
 
@@ -64,9 +66,7 @@ export const errorMiddleware = (err: any, _req: Request, res: Response, _next: N
   //   return ResponseTransformer.error(res, 'Token expired', StatusCodes.UNAUTHORIZED, ErrorCodes.TOKEN_EXPIRED)
   // }
 
-  if (env.NODE_ENV === 'development') {
-    console.error('Unexpected Error:', err)
-  }
+  logger.error('Unexpected error', err)
 
   return ResponseTransformer.error(
     res,

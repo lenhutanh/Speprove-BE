@@ -4,6 +4,7 @@ import { env } from '~/common/config'
 import { AppError } from '~/common/errors'
 import { StatusCodes } from 'http-status-codes'
 import { ISTTProvider, STTResult } from './stt.interface'
+import { logger } from '~/infrastructure/logging/logger'
 
 type GroqVerboseSegment = {
   text?: string
@@ -30,7 +31,8 @@ export class GroqSTTProvider implements ISTTProvider {
 
   constructor() {
     this.client = new Groq({
-      apiKey: env.GROQ_API_KEY
+      apiKey: env.GROQ_API_KEY,
+      timeout: env.AI_TIMEOUT_MS
     })
   }
 
@@ -79,7 +81,7 @@ export class GroqSTTProvider implements ISTTProvider {
         }
       }
     } catch (error) {
-      console.error('Groq STT Error:', error)
+      logger.error('Groq STT Error:', error)
       throw error
     }
   }

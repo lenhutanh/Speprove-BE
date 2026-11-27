@@ -3,12 +3,9 @@ import { validateMiddleware } from '~/common/middlewares'
 import { createTopicSchema, getTopicsSchema, updateTopicSchema } from './topic.validation'
 import { bindHandler } from '~/common/http'
 import { TopicController } from './topic.controller'
-import { container } from 'tsyringe'
-import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
+import { authMiddleware } from '~/common/middlewares/auth.middleware'
 
 const router = express.Router()
-
-const authMiddleware = container.resolve(AuthMiddleware)
 
 router
   .route('/')

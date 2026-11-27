@@ -3,13 +3,10 @@ import { validateMiddleware } from '~/common/middlewares'
 import { createForecastSchema, forecastQuerySchema, importTopicsSchema, importForecastSchema } from './forecast.validation'
 import { bindHandler } from '~/common/http'
 import { ForecastController } from './forecast.controller'
-import { container } from 'tsyringe'
-import { AuthMiddleware } from '~/common/middlewares/auth.middleware'
+import { authMiddleware } from '~/common/middlewares/auth.middleware'
 import { idParamSchema } from '~/common/base'
 
 const router = express.Router()
-
-const authMiddleware = container.resolve(AuthMiddleware)
 
 router
   .route('/')

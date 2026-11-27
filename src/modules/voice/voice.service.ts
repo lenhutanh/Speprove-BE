@@ -11,6 +11,7 @@ import { VoiceMapper } from './voice.mapper'
 import { INSTRUCTION_SCRIPTS } from '../speaking-session/speaking-session.constants'
 import { GeneratedAudioService } from '../generated-audio/generated-audio.service'
 import { VOICE_SAMPLE_TEXT } from './voice.constants'
+import { logger } from '~/infrastructure/logging/logger'
 
 @singleton()
 export class VoiceService {
@@ -76,7 +77,7 @@ export class VoiceService {
     Promise.all(
       Object.values(INSTRUCTION_SCRIPTS).map((text) =>
         this.generatedAudioService.getOrCreate({ text, voiceId: voice._id.toString() }).catch((err) => {
-          console.error(`Failed to pre-warm audio for text: "${text}"`, err)
+          logger.error(`Failed to pre-warm audio for text: "${text}"`, err)
         })
       )
     )

@@ -47,4 +47,8 @@ export class CacheService implements ICacheService {
   public async expire(key: string, seconds: number): Promise<void> {
     await this.redis.expire(key, seconds)
   }
+
+  public async ping(): Promise<void> {
+    await this.redis.ping()
+  }
 }

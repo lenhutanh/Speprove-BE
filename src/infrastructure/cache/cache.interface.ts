@@ -5,4 +5,6 @@ export interface ICacheService {
   clearPrefix(prefix: string): Promise<void>
   incr(key: string): Promise<number>
   expire(key: string, seconds: number): Promise<void>
+  /** Rejects when Redis does not answer; used by the readiness probe. */
+  ping(): Promise<void>
 }

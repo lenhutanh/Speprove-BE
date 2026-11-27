@@ -7,7 +7,7 @@ export class GroqLLMProvider implements ILLMProvider {
   private readonly model = 'openai/gpt-oss-120b'
 
   constructor() {
-    this.client = new Groq({ apiKey: env.GROQ_API_KEY })
+    this.client = new Groq({ apiKey: env.GROQ_API_KEY, timeout: env.AI_TIMEOUT_MS })
   }
 
   async complete(prompt: string): Promise<string> {
