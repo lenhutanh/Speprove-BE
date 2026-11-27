@@ -22,7 +22,7 @@ flowchart TD
 | Kind | Use when | Result |
 | :--- | :--- | :--- |
 | **Spec** | A feature, a change with design decisions, a change across modules or across backend and frontend | `docs/specs/<name>/requirements.md`, `design.md`, `tasks.md` |
-| **Task list** | A small or mechanical change (dependency upgrade, dead-code removal, a bug fix) | A table of tasks with acceptance criteria and evidence, approved in chat and copied into the pull request description |
+| **Task list** | A small or mechanical change (dependency upgrade, dead-code removal, a bug fix, a measurement) | A table of tasks with acceptance criteria and evidence, approved in chat and kept as `tasks.md` alone in `docs/specs/<name>/` (the pull request description links to it) |
 | **Docs only** | A document change | No spec; the pull request description lists what changed |
 
 ## 3. Explore

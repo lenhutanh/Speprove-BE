@@ -29,7 +29,7 @@ Quality targets with a number and a way to check each. **Implemented** is a limi
 | ID | Metric | Implemented | Proposed target | Measured | How |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | NFR-08 | Secrets in the repository and its history | secret scan in CI (gitleaks) | 0 findings | | CI report |
-| NFR-09 | Known vulnerable dependencies | `pnpm audit --audit-level=high` in CI | 0 high or critical | no high or critical on 2026-11-25 (see [handoff](../plan/handoff.md)) | CI step |
+| NFR-09 | Known vulnerable dependencies | `pnpm audit --audit-level=high` in CI | 0 high or critical | 0 high or critical, 1 moderate in development tooling on 2026-11-26 | CI step |
 | NFR-10 | Password storage | bcrypt hash, field not selected by default | bcrypt hash | n/a | Code review |
 | NFR-11 | Login brute force | 3 attempts per 10 s per user or IP; OTP has no attempt limit | 5 wrong OTP attempts lock the code | | API test with the real limiter |
 | NFR-12 | Token lifetime | set by `ACCESS_TOKEN_LIFE`, `REFRESH_TOKEN_LIFE` | access token at most 15 minutes | | Configuration review |
@@ -52,7 +52,7 @@ Quality targets with a number and a way to check each. **Implemented** is a limi
 | ID | Metric | Implemented | Proposed target | Measured | How |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | NFR-21 | Lint errors | 0 errors, 211 warnings | 0 errors, no new warning | 2026-11-26 | `pnpm lint` |
-| NFR-22 | Code duplication | not measured | at most 5 percent | | `jscpd` or the static analysis service |
+| NFR-22 | Code duplication | not measured before | at most 5 percent | 1.11 percent on 2026-11-26 (`jscpd`, 15 clones) | `jscpd` or the static analysis service |
 | NFR-23 | Blocker or critical static-analysis issues | not measured | at most 2 | | The static analysis service |
 | NFR-24 | Line coverage of the core modules | no report | at least 50 percent | | `pnpm test:coverage` in CI |
 | NFR-25 | Acceptance criteria with an automated test | 12 of 64 | at least 70 percent of the critical ones | 2026-11-26 | [Requirements](./02-requirements.md), section 5 |
