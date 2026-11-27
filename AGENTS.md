@@ -11,19 +11,15 @@ Speprove backend: a Node.js + Express 5 + TypeScript modular monolith for an IEL
 - `pnpm lint` / `pnpm lint:fix` / `pnpm format` / `pnpm check` (ESLint + Prettier check)
 - `pnpm db:seed`: seeds master and mock data (`src/scripts/seed.ts`)
 - Docker: `docker compose -f docker-compose.dev.yaml up --build`
-- There is no test runner. E2E and API tests live in the separate `speprove-testing` repo.
+- `pnpm test`: Vitest with supertest and an in-memory MongoDB (`tests/`). End-to-end tests against a deployed system live in the separate `speprove-testing` repo.
 - `src/common/config/env.config.ts` validates env with Zod at startup, so a missing variable crashes boot. Copy `.env.example` to `.env` to get started.
-- All REST routes are mounted under `/api/v1` (`src/routes/index.ts`), with singular resource names (`/attempt`, `/payment`, `/speaking-session`). Swagger UI is served at `/v1/api-docs` outside production, but it is currently empty: no route has `@swagger` annotations and the `apis` globs in `swagger.config.ts` point to paths that do not exist.
+- All REST routes are mounted under `/api/v1` (`src/routes/index.ts`), with singular resource names (`/attempt`, `/payment`, `/speaking-session`). There is no Swagger: the API contract is in `docs/08-integration-contracts/`.
 
 ## Architecture
 
 Request flow: Express router → middlewares (rate limiter, auth, Zod `validateMiddleware`) → controller → service → repository → Mongoose. Services push long-running work onto BullMQ queues (`src/infrastructure/queues`). Workers (`src/infrastructure/workers/consumers`, e.g. `speaking.consumer.ts`, `mail.consumer.ts`) process those jobs and send progress to clients through Socket.io (`src/infrastructure/socket`). `src/index.ts` boots in this order: queues first, then Bull Board, workers, HTTP. Shutdown stops the workers first.
 
-Each `src/modules/<name>/` packages its own `*.model.ts`, `*.repository(.interface).ts`, `*.service.ts`, `*.controller.ts`, `*.route.ts`, `*.validation.ts` (Zod), `*.dto.ts`, `*.mapper.ts` and `*.di.ts`.
-- DI uses `tsyringe`: classes use `@injectable()`/`@singleton()`; each `*.di.ts` registers interface tokens from `src/common/constants/di.tokens.ts`; `src/bootstrap/container.ts` wires all modules together.
-- Repositories extend `BaseRepository` (`src/common/base`). Use Mongo `session` transactions for writes that touch several documents.
-- Services throw `AppError` for business errors, and `errorMiddleware` formats the response.
-- Import alias: `~/*` → `src/*`.
+Each `src/modules/<name>/` packages its own model, repository, service, controller, route, validation, DTO, mapper and DI file. The duties of each layer, dependency injection and how to add a module are in `docs/07-development-guides/02-layers-and-modules.md`. Import alias: `~/*` → `src/*`.
 
 External integrations sit behind interfaces in `src/infrastructure/providers/` (llm/Groq, stt/Groq, tts/Edge TTS, speech-assessment/Azure, evaluator, storage/Cloudinary, mail/Brevo, media/ffmpeg). Payments go through PayOS.
 
@@ -31,17 +27,35 @@ The AI scoring pipeline (the `attempt` and `speaking-session` modules) runs in s
 
 ## Docs
 
-`docs/layout-and-index.md` is the index and `docs/docs-update-guidelines.md` holds the writing rules. Read the relevant flow doc before changing these areas, and update it in the same change when behavior changes:
-- `docs/04-business-logic/01-ai-scoring.md`: queue stages, attempt/session statuses, socket events, retry and refund rules.
-- `docs/04-business-logic/02-payment-and-credit.md`: PayOS webhook safeguards, credit costs, the balance + CreditLog invariant.
-- `docs/01-introduction/01-system-overview.md`: layers and conventions.
+`docs/layout-and-index.md` is the index and `docs/docs-update-guidelines.md` holds the writing rules. **Before you change something, read the document for it from this table, and update the document in the same change when behavior changes.**
+
+| If the task touches... | Read first |
+| :--- | :--- |
+| Any code you write | `docs/07-development-guides/01-coding-standards.md` |
+| Where code goes, layers, module boundaries, DI, permissions | `docs/07-development-guides/02-layers-and-modules.md` |
+| A request or response, a status code, pagination | `docs/08-integration-contracts/01-api-conventions.md` |
+| An error or an `errorCode` | `docs/08-integration-contracts/02-error-codes.md` |
+| A test, a bug fix, a refactor | `docs/06-testing/01-testing-strategy.md`, `docs/06-testing/02-test-plan.md` |
+| What a feature must do, acceptance criteria, business rules | `docs/01-introduction/02-requirements.md` |
+| A route, its auth or permission | `docs/08-integration-contracts/03-endpoint-index.md` |
+| CI, quality gates, deployment | `docs/09-operations/02-ci-cd-and-quality-gates.md` |
+| Diagrams, deployment shape | `docs/03-architecture/07-system-diagrams.md` |
+| A known weakness or a refactor target | `docs/plan/technical-debt.md` |
+| A new feature, or a spec | `docs/04-business-logic/03-feature-design-guide.md` |
+| Scoring: queue stages, statuses, socket events, retries, refunds | `docs/04-business-logic/01-ai-scoring.md` |
+| Payment, PayOS webhook, credit, the balance and CreditLog invariant | `docs/04-business-logic/02-payment-and-credit.md` |
+| Running the project, environment variables | `docs/02-getting-started/01-setup-local-env.md`, `docs/09-operations/01-configuration-reference.md` |
+| Permissions, route protection, security controls | `docs/03-architecture/01-security-and-rbac.md` |
+| Sign-in, tokens, sessions, OTP | `docs/03-architecture/02-authentication.md` |
+| Models, repositories, transactions, indexes, Redis keys | `docs/03-architecture/03-data-persistence.md`, `docs/03-architecture/06-data-dictionary.md` |
+| Request validation (Zod) | `docs/03-architecture/04-validation.md` |
+| Queues, workers, Socket.io events | `docs/03-architecture/05-queues-and-realtime.md` |
+| The big picture and directory structure | `docs/01-introduction/01-system-overview.md` |
+| The module layout the refactor is heading to | `docs/specs/architecture-refactor/design.md` |
 
 ## Modularity rules (from `../architecture_roadmap.md`)
 
-The monolith is meant to be split into microservices later, so code must follow these rules:
-1. **Database-per-module:** a module touches only its own models. Never `.populate()` into another module's model. Fetch raw IDs, then go through the other module's service interface, or merge the data in the mapper/controller.
-2. **Cross-module calls:** inject the other module's *interface* through constructor injection (tsyringe). Never import another module's repository, controller or helpers directly. For async work, use the event bus (`src/infrastructure/event-bus`). Financial, score and exam-state events (`attempt.submitted`, `payment.success`, ...) are meant to follow a transactional outbox pattern with idempotent handlers.
-3. **DTO/Mapper boundary:** all data entering or leaving a module goes through DTOs and mappers.
+The monolith is meant to be split into microservices later, so a module touches only its own models, calls other modules through their service (never their repository or model), and passes data as DTOs. The full rules are in `docs/07-development-guides/02-layers-and-modules.md`, section 3.
 
 ## Workflow
 

@@ -42,12 +42,12 @@ Rule: **`core/` and `config/` never contain a business concept** (speaking, mail
 | :--- | :--- | :--- |
 | `account` | user profile and preferences; roles and permissions (`access/`: group, permission, permission-group) | `account`, `group`, `permission`, `permission-group` |
 | `auth` | registration, login, OTP, Google login, sessions, refresh tokens, password reset; `social-identity/` keeps the link between an account and its Google id (Google is the only provider, no other is planned) | `auth`, `session`, `account-provider` |
-| `content` | exam content written by admins: `topic/`, `question/`, `forecast/` (forecast + its topic and question links), `vocabulary/` (hints per question) | `topic`, `question`, `forecast`, `forecast-topic`, `forecast-question`, `vocabulary-suggestion` |
+| `content` | exam content and catalogs written by admins: `topic/`, `question/`, `forecast/` (forecast + its topic and question links), `vocabulary/` (hints per question), `voice/` (the catalog of voices a learner can choose: code, gender, locale, speed, pitch, default, sample file) | `topic`, `question`, `forecast`, `forecast-topic`, `forecast-question`, `vocabulary-suggestion`, `voice` |
 | `practice` | what the learner does: attempts, mock tests, history, leaderboard, sharing | `attempt` (without the scoring parts), `speaking-session` (as `mock-test`) |
 | `assessment` | turning a recorded answer into scores and feedback: STT, pronunciation, LLM evaluation, result storage | scoring parts of `attempt` (`speaking-analysis*`, `attempt-analysis*`, `speech.mapper`) and the STT, pronunciation, evaluator and LLM providers |
-| `billing` | credit wallet and ledger, credit packages, payments (PayOS), prices | `payment`, `credit-package`, `credit-log` plus the balance stored on `account` |
+| `billing` | credit wallet and ledger (`wallet/`), credit packages (`package/`), payments with PayOS (`payment/`), prices | `payment`, `credit-package`, `credit-log`; the balance stays on `account` and only `billing` changes it (§4.3) |
 | `file` | upload, file metadata, storage provider, audio normalisation | `file`, storage and ffmpeg providers, the old `speech` module |
-| `tts` | text-to-speech: voices, generated-audio cache, TTS provider | `voice`, `generated-audio`, TTS providers |
+| `tts` | the text-to-speech capability only: the provider (now an external library, later possibly self-hosted) and the cache of generated audio; it receives the voice parameters from the caller and owns no voice catalog | `generated-audio`, TTS providers |
 | `voice-room` | live practice rooms (LiveKit) | `voice-room`, LiveKit service |
 | `notification` | sending messages to users: email now, in-app now, SMS and push later | old `mail` module, mail producer, consumer, provider and templates; the in-app part replaces direct socket emits |
 
@@ -56,6 +56,7 @@ Why these boundaries (checked against the code, not only the names):
 - **`account` vs `auth`:** they are separate because `auth` is the part that could later be replaced by an identity provider such as Keycloak, while the profile and the app's roles stay. Rule: `auth` may depend on `account`, never the reverse; nothing outside `auth` touches passwords, OTP, sessions or refresh tokens; every other module only reads `req.user` (id, role, permissions).
 - **Roles and permissions live in `account`:** an account has a required `groupId`, creating one needs the default group, and loading an account for login populates its group and permissions. They cannot work independently.
 - **`assessment` vs `practice`:** different vocabulary (a learner's submission vs measuring speech), different speed of change (scoring v2 will replace it), different resources (external AI calls, possibly a Python service later).
+- **`voice` in `content`, not in `tts`:** a voice is an entry of a catalog that an admin curates and a learner chooses (account and mock test keep only its id). `tts` is a capability: it turns text into audio with the voice parameters it is given. Replacing or self-hosting the provider changes `tts`, not the catalog. `content` calls `tts`; `tts` never imports `content`.
 - **`tts` vs `file`:** TTS has its own reason to change (provider and voices) and currently leaks into `file` (`FileService.generateAndSaveAudio`).
 - **`content` is one module** because one import creates topics, questions and a forecast together and vocabulary hints attach to a question. A learner's personal vocabulary list (future) would belong to `practice`, not here.
 - The old `mail` and `speech` modules disappear as modules; their content moves to `notification` and `file`.
@@ -74,7 +75,7 @@ One layout everywhere (today repositories are at the module root in 9 modules an
   public.ts       the few functions other modules may call
 ```
 
-Sub-areas (`account/access/`, `content/forecast/`, `auth/session/`) repeat the same layout. Files are `kebab-case`, `<name>.<role>.ts`. A `dto` or `mapper` file exists only if it maps something; a plain `_id` to `id` rename is not a reason for a mapper.
+**Sub-areas.** The default is flat: one set of files per module. A module that holds two or more entities with their own model, route and service gets one folder per entity (`content/topic/`, `content/question/`, `content/forecast/`, `content/vocabulary/`, `content/voice/`; `billing/wallet/`, `billing/package/`, `billing/payment/`; `account/access/` beside the profile files; `auth/session/`). Each sub-area repeats the same files by role. One level only; there are no `controllers/` or `services/` folders grouped by layer. Files are `kebab-case`, `<name>.<role>.ts`. A `dto` or `mapper` file exists only if it maps something; a plain `_id` to `id` rename is not a reason for a mapper.
 
 ### 2.4 Where today's shared code goes
 
@@ -114,10 +115,10 @@ Five pairs call each other:
 | Cycle | Cause | Fix |
 | :--- | :--- | :--- |
 | account ↔ auth | `account.service` imports types defined in `auth/types/auth.type`, which imports `account.validation` | profile and change-password types and schemas belong to `account`; `auth` imports them |
-| account ↔ billing | `payment.service` imports `AccountService` to add balance; `account.service` imports `CreditLogService` for the signup gift | the balance moves into `billing` (wallet); `account` only calls `billing.grant` |
+| account ↔ billing | `payment.service` imports `AccountService` to add balance; `account.service` imports `CreditLogService` for the signup gift | the balance stays on `account` and `billing` calls `account.adjustBalance` one way; the signup gift moves to `auth`, which calls `billing.grant`; `account` no longer imports `billing` |
 | assessment ↔ practice | `speaking-analysis.service` updates attempts and sessions directly (imports their repositories and constants); vocabulary extraction reads `attempt-analysis` | `assessment` reports through a listener interface that `practice` implements (§3); practice reads results through `assessment.getResult(attemptId)` |
 | billing ↔ practice | `credit.util.ts` imports the speaking-session constants | pricing in `billing` uses its own action names; `practice` maps mode and type to them |
-| practice ↔ tts | `voice.service.ts` imports `INSTRUCTION_SCRIPTS` from speaking-session constants | move that constant into `tts` |
+| practice ↔ content (voice) | `voice.service.ts` imports `INSTRUCTION_SCRIPTS` from speaking-session constants | move that constant into `content/voice` (counted as practice ↔ tts in the numbers above, which were computed with `voice` in `tts`) |
 
 After the fixes the graph has no cycle. Order from the bottom: `billing`, `file`, `assessment`, `notification` have no dependencies on other modules; then `tts` (→ file); then `account` (→ billing, tts, notification via auth); `auth` (→ account, notification); `content` (→ tts, file); `voice-room` (→ account, content); `practice` on top (→ account, assessment, billing, content, file, tts, notification).
 
@@ -143,7 +144,7 @@ Rule: if two modules would need to call each other, the boundary is wrong; merge
 
 ### 4.1 `account` and `auth`
 
-- `account`: profile, selected voice, roles and permissions. `balance` leaves (→ `billing.wallet`); `kind` is derived from the group; the unused default status `PENDING` goes (accounts exist only after OTP verification and are created `ACTIVE`).
+- `account`: profile, selected voice, roles and permissions. `balance` stays on `account` and only `billing` changes it (through `adjustBalance`); `kind` is derived from the group; the unused default status `PENDING` goes (accounts exist only after OTP verification and are created `ACTIVE`).
 - `account` exposes `getAccountForLogin(email)` (id, email, password hash, permission codes) so `auth` never touches `Group` or `Permission`.
 - Permission tables stay database-driven: the admin CMS is planned and will probably manage roles. `PermissionGroup` is only a label for grouping in the UI.
 - `auth` is split into credential, session and social-login services (the OTP service exists). `AuthService` has 504 lines and 9 constructor dependencies.
@@ -155,15 +156,16 @@ Rule: if two modules would need to call each other, the boundary is wrong; merge
 - **AI vocabulary extraction is switched off by default** (feature flag). Today every scored attempt that passes `lexical ≥ 6`, `grammar ≥ 6`, `≥ 20 words` costs one more LLM call, and the result is stored as `pending` with source `llm`. There is no admin screen to approve anything, so no learner can see these rows. The extraction service also imports `attemptRepository` and `forecastQuestionRepository` of other modules and populates the question and its parent.
 - If it is kept later it lives in `practice/jobs/` (it reads attempt data) and calls `content.vocabulary.suggest(...)`. If the CMS shows it is not used, delete it (history is in git).
 - The manual flow (create, approve, hide, update, list approved, audio) stays in `content/vocabulary/`.
+- `content/voice/` owns the voice catalog (create, update, activate, list, default, sample audio) and the admin permission codes `VOICE:*`. `account` stores the selected voice id and `practice` stores the voice id of a mock test; both read voices through `content`.
 
 ### 4.3 `billing`
 
-- `wallets` collection (`accountId` unique, integer `balance ≥ 0`, `version`) and the existing credit log as the ledger. The wallet is part of `billing`, not a module of its own. **Why it leaves `account`:** the balance and the ledger entry (`balanceBefore`, `balanceAfter`) must change in one transaction; today four services update the balance on `account` and write the ledger in `credit-log` with a shared session, which is a transaction across two modules and the cause of the account ↔ billing cycle. A leaner alternative (keep `balance` on `account`, expose `account.adjustBalance(delta, tx)`, move the signup grant into `auth`) avoids the migration but keeps the transaction across two modules; this spec prefers the wallet. `/account/me` keeps returning `balance` (the FE reads it in several screens).
+- **Decided 2026-11-26: a `WalletService` now, a `wallets` collection later.** `billing` exposes one wallet API (`charge`, `refund`, `grant`, `getBalance`, `quote`); every caller (practice, mock test, payment, signup) goes through it, so the charge or refund plus the ledger write exists once instead of in six places (F22). The balance stays on `account` for now: `billing` changes it through `account.adjustBalance(delta, session)`, which keeps the conditional update (`balance ≥ amount`) so parallel charges cannot make it negative. The signup gift moves into `auth` (`billing.grant` inside the registration transaction), which removes the account ↔ billing cycle. Balance and ledger share one MongoDB, so they still change in one transaction. **Later**, when `billing` gets its own database, the balance moves into a `wallets` collection (`accountId` unique, integer `balance ≥ 0`, `version`) inside `WalletService`; callers do not change. `/account/me` keeps returning `balance` (the FE reads it in several screens).
 - Public functions: `charge`, `refund` (returns exactly what was charged, once), `grant`, `getBalance`, `quote`.
 - Ledger entries are unique per `(accountId, refType, refId, type)`. The practice charge must use the attempt id as `refId` (today it uses the question id, F5).
 - Payment gets a small transition table (`PENDING → PAID | EXPIRED | CANCELLED | FAILED`), an expiry job, and the raw webhook payload.
 - Pricing (`calculateCreditCost`, `CREDIT_COST`) moves here with its own action names.
-- `/account/me` composes the balance from the wallet; its response shape does not change.
+- `/account/me` keeps reading `balance` from `account`; its response shape does not change.
 
 ### 4.4 `practice` and `assessment`
 
@@ -175,6 +177,7 @@ Rule: if two modules would need to call each other, the boundary is wrong; merge
 
 ### 4.5 `tts`
 
+- `tts` is a capability, not a catalog: the caller (`content`, `practice`) looks up the voice in `content/voice` and passes `voiceCode`, `speed` and `pitch`; `tts` stores the cache with the voice id as an opaque reference and has no dependency on `content`.
 - One interface `TtsProvider.textToSpeech(text, voiceCode, speed, pitch) → { buffer, duration }`. Two implementations already exist with exactly this signature: `EdgeTTSProvider` (uses the unofficial `node-edge-tts` library, no guarantee from Microsoft) and `AzureSpeechProvider` (official SDK, currently unused, `AZURE_SPEECH_KEY` is already required).
 - Provider chosen by `TTS_PROVIDER=azure|edge`; **default `azure`**. Voice codes in the seed (`en-US-AriaNeural`...) are Microsoft neural voice names, so they should work with Azure (to be tested). Self-hosted TTS is a later option.
 - Fix before switching: the Azure provider interpolates the text into SSML without escaping XML characters (`&`, `<`).
@@ -289,8 +292,8 @@ Redis is already used for OTP, rate limits and socket tickets only. Add cache-as
 
 | Collection | Change | Migration |
 | :--- | :--- | :--- |
-| `accounts` | remove `balance` (moves to `wallets`), `kind` (derived from the group; only the mapper and the seed read it, `Group.kind` stays for the admin check) and `isSuperAdmin` (nothing reads it: no bypass is implemented; remove it or implement it); remove default `PENDING`; unique generated `username` | script copies `balance` to `wallets`; the other old fields can stay unused in existing documents |
-| `wallets` (new) | `{accountId unique, balance integer ≥ 0, version}` | script (or reseed) |
+| `accounts` | keep `balance` (only `billing` changes it), remove `kind` (derived from the group; only the mapper and the seed read it, `Group.kind` stays for the admin check) and `isSuperAdmin` (nothing reads it: no bypass is implemented; remove it or implement it); remove default `PENDING`; unique generated `username` | none now; the old fields can stay unused in existing documents |
+| `wallets` (later, not in this refactor) | `{accountId unique, balance integer ≥ 0, version}` | script that copies `balance` when `billing` gets its own database |
 | `creditlogs` | unique `(accountId, refType, refId, type)`; practice charge `refId = attemptId`; **keep `description`** (the FE renders `item.description` in `credit-log-tab.tsx`); `descriptionKey` and `descriptionMetadata` are not read by the FE (only declared in its type) and can be dropped, or kept if i18n of the log is planned | old rows unchanged |
 | `payments` | drop `webhookVerified` (written once at `payment.service.ts:102`, never read, FE does not use it; remove the write too) and `retryCount` (declared only in the model; the `retryCount` of attempts and mock tests is used and stays); add `failureReason`, `rawWebhook`, optional `canceledAt`; remove duplicate `orderCode` index | none |
 | `attempts` | add `questionSnapshot`, `idempotencyKey` (unique `(userId, key)`, TTL); drop single-field indexes on `userId`, `status`, `isPublic`, `analysisProfile`; add `(status, createdAt)` for the reconciler | old rows fall back to a live lookup |
@@ -317,11 +320,11 @@ Redis is already used for OTP, rate limits and socket tickets only. Add cache-as
 
 **Reconciler (every few minutes):** attempts in the submitted state older than 5 minutes with no job are re-enqueued; after K tries, or in processing for more than 15 minutes, they are marked `FAILED` and refunded.
 
-**Create a mock test:** `content.pickMockQuestions` → `tts.getVoice` → `billing.charge({refId: mockTestId})` → create. The recent-sessions query gets its missing sort.
+**Create a mock test:** `content.pickMockQuestions` → `content.getVoice` → `billing.charge({refId: mockTestId})` → create. The recent-sessions query gets its missing sort.
 
 **PayOS webhook:** invalid signature ⇒ 400; one transaction inside billing: `PENDING → PAID` with a state-conditional update plus `grant({refType: 'PAYMENT', refId: paymentId})`; a processing error ⇒ 500 so PayOS retries; already processed ⇒ 200; store the raw payload. A scheduled job expires overdue payments.
 
-**Register:** generate a unique `username`; create the account; `billing.grant({refType: 'MANUAL', refId: accountId})`; if the grant fails the wallet is created lazily on first read; `notification.sendOtp` sends the OTP email.
+**Register:** generate a unique `username`; create the account; `billing.grant({refType: 'MANUAL', refId: accountId})` in the same transaction (`auth` owns it), so an account never exists without its gift and its ledger row; `notification.sendOtp` sends the OTP email.
 
 ## 10. API changes and FE impact
 
@@ -439,8 +442,8 @@ One ticket (GitHub issue) per step with the checklist below; each line is one sm
 6. Only if needed (§15): multiple sessions per user (F11) and `permissionsVersion`.
 
 **R4 Billing (size M)**
-1. `wallets`, `WalletService` (`charge`, `refund`, `grant`, `getBalance`, `quote`) with the unique ledger index; script to copy `balance`; remove `addBalance` and `deductBalance` from account.
-2. Replace the six duplicated blocks (F22); practice `refId = attemptId` (F5); pricing moves here; `/account/me` composes the balance.
+1. `WalletService` (`charge`, `refund`, `grant`, `getBalance`, `quote`) over `account.adjustBalance` with the unique ledger index `(userId, refType, refId, type)`; replace `addBalance` and `deductBalance` on account by `adjustBalance`; move the signup gift into `auth`. The `wallets` collection is a later step.
+2. Replace the six duplicated blocks (F22); practice `refId = attemptId` (F5); pricing moves here; `/account/me` is unchanged.
 3. Payment transition table, expiry job, raw webhook payload, decision on `CANCELED` (F23).
 4. Concurrency tests: parallel charge, double refund, duplicate webhook.
 
@@ -452,7 +455,7 @@ One ticket (GitHub issue) per step with the checklist below; each line is one sm
 5. `Notifier` replaces the 7 direct emits (in-app channel of `notification`).
 
 **R6 Content, tts, file, voice-room (size M–L)**
-1. `tts`: `TtsProvider` interface, `TTS_PROVIDER`, Azure default; move `generateAndSaveAudio` into `tts`; remove the voice ↔ generated-audio cycle.
+1. `tts`: `TtsProvider` interface, `TTS_PROVIDER`, Azure default; move `generateAndSaveAudio` into `tts`; `voice` moves to `content/voice`, which removes the voice ↔ generated-audio cycle.
 2. `file`: `getAudioForOwner`, `storeAudio`; ffmpeg as an adapter.
 3. `content`: `public.ts`; remove cross-module imports and the `populate` calls of F1 (ports or snapshots; map in controller or mapper where only display data is needed).
 4. `voice-room`: split the service; PIN hash and attempt limit; pinned-question snapshot; chat membership check; sender from the server.
@@ -498,6 +501,9 @@ The roadmap is the long-term target (Spring Boot for Auth, Content, Practice, Pa
 4. Is the repository public? (SonarCloud free tier; not verified.)
 5. AI vocabulary extraction: keep switched off, or delete?
 6. Which Mongo and Redis providers are used? (Limits and BullMQ settings must be checked.)
+7. **Decided 2026-11-26:** a `WalletService` now over `account.balance`; the `wallets` collection only when `billing` gets its own database.
+8. **Decided 2026-11-26:** the voice catalog lives in `content/voice`; `tts` is the capability only.
+9. **Decided 2026-11-26:** `assessment` is its own module from the start, and sub-folders per entity only in modules with two or more entities.
 
 **Not verified (check before relying on them)**
 - Whether `.env` points at a cloud database (then `seed` would wipe it).

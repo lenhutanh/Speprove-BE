@@ -152,7 +152,7 @@ docker compose -f docker-compose.dev.yaml up --build
 src/
 ├── bootstrap/             # Dependency container registration
 ├── common/                # Shared utilities, base classes, middlewares & config
-├── infrastructure/        # Caching, event-bus, socket.io, background queues & workers
+├── infrastructure/        # Caching, health probes, socket.io, background queues & workers
 ├── modules/               # Domain-specific modules (Modular Monolith)
 │   ├── account/           # Profile management, settings & configuration
 │   ├── auth/              # JWT, Google OAuth2, & OTP authentication
