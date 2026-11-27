@@ -58,7 +58,7 @@ jobs:
       # Fails on advisories rated high or critical; moderate ones are reported by Dependabot alerts
       - run: pnpm audit --audit-level=high
 
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
