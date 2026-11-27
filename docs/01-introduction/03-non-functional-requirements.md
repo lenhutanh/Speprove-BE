@@ -54,7 +54,7 @@ Quality targets with a number and a way to check each. **Implemented** is a limi
 | NFR-21 | Lint errors | 0 errors, 211 warnings | 0 errors, no new warning | 2026-11-26 | `pnpm lint` |
 | NFR-22 | Code duplication | not measured before | at most 5 percent | 1.11 percent on 2026-11-26 (`jscpd`, 15 clones) | `jscpd` or the static analysis service |
 | NFR-23 | Blocker or critical static-analysis issues | not measured | at most 2 | | The static analysis service |
-| NFR-24 | Line coverage of the core modules | no report | at least 50 percent | | `pnpm test:coverage` in CI |
+| NFR-24 | Line coverage of the core modules | report available (`pnpm test:coverage`) | at least 50 percent | 20.4 percent on 2026-11-26 (22.03 percent for the whole of `src/`) | `pnpm test:coverage` in CI |
 | NFR-25 | Acceptance criteria with an automated test | 12 of 64 | at least 70 percent of the critical ones | 2026-11-26 | [Requirements](./02-requirements.md), section 5 |
 
 ## 7. Usability and Compatibility

@@ -12,24 +12,29 @@ The workflow `CI` runs on every pull request and on every push to `main`. One jo
 | 2 | `pnpm/action-setup`, `actions/setup-node` with `.nvmrc`, `pnpm install --frozen-lockfile` | Reproducible install |
 | 3 | `pnpm lint` | ESLint and Prettier rules |
 | 4 | `pnpm build` | TypeScript compile |
-| 5 | cache of the MongoDB binary, `pnpm test` | Unit and API tests |
-| 6 | `pnpm audit --audit-level=high` | Fails on a high or critical advisory |
-| 7 | `gitleaks/gitleaks-action` | Secret scan over the history |
+| 5 | cache of the MongoDB binary, `pnpm test:coverage` | Unit and API tests with a coverage report |
+| 6 | Coverage summary and `actions/upload-artifact` | Writes the percentages to the job summary and keeps `lcov.info` and `coverage-summary.json` |
+| 7 | `pnpm audit --audit-level=high` | Fails on a high or critical advisory |
+| 8 | `gitleaks/gitleaks-action` | Secret scan over the history |
+| 9 | `SonarSource/sonarqube-scan-action` (only when the `SONAR_TOKEN` secret exists) | Sends the code and the coverage report to SonarQube Cloud; reports only, the quality gate does not fail the build yet |
+
+A second job, `image`, runs after `check`: it builds the Docker image, which proves that the `Dockerfile` still builds. It does not scan the image: the Trivy step was removed on 2026-11-28 because the action's version tags were rewritten in the March 2026 supply chain incident and the tag used here no longer resolves. An image scan is left for the registry of the cloud host (to be decided in the `ci-cd-staging` ticket).
 
 1.1. Concurrent runs of the same branch cancel the older one. The workflow has read-only repository permission.
-1.2. **Status:** the workflow is written and has not run on GitHub yet; the first run may need fixes. The frontend has no workflow.
+1.2. **Status:** the workflow is written and has not run on GitHub yet; the first run may need fixes. The coverage run and the duplication gate were run locally and pass; the image job was **not** run locally (the root disk of the development machine is too small for the build). The frontend has no workflow.
 
-## 2. Planned Quality Gates
+## 2. Quality Gates
 
-| Gate | What it adds | Decision needed | Checks |
-| :--- | :--- | :--- | :--- |
-| Coverage | `@vitest/coverage-v8`, script `test:coverage`, report uploaded by CI | none | NFR-24 |
-| Static analysis | SonarCloud (free for public repositories) or, for a private repository, `jscpd` for duplication plus ESLint for issues | Is the repository public? | NFR-22, NFR-23 |
-| Dependency updates | `.github/dependabot.yml` for npm and GitHub Actions; alerts enabled in the repository | none | NFR-09 |
-| Image scan | A container scan of the built image (Trivy) before it is pushed | none | NFR-09 |
-| Frontend CI | A workflow for `speprove-fe`: install, lint, type check, build, tests | none | NFR-20 |
-| Branch protection | `main` requires a pull request and a green CI; direct pushes refused | Repository owner action | process |
-| Commit lint | Conventional Commits checked on pull requests | none | process |
+| Gate | What it adds | Status |
+| :--- | :--- | :--- |
+| Coverage | `@vitest/coverage-v8`, script `pnpm test:coverage`, report in the job summary and as an artifact | **Done** in `ci/quality-gates`. Line coverage 22.03 percent on 2026-11-26 |
+| Duplication | Measured by SonarQube Cloud (the `jscpd` gate was dropped on 2026-11-28 because Sonar measures duplication too; 1.11 percent on 2026-11-26 with `jscpd`) | **Done** |
+| Dependency updates | `.github/dependabot.yml` for npm, GitHub Actions and Docker, weekly; npm minor and patch updates are grouped | **Done** (file added); the alerts must also be enabled in the repository settings by the owner |
+| Image build | Docker build in the `image` job | **Done**, not run on GitHub yet. The image scan (Trivy) was dropped, see section 1 |
+| Static analysis service | SonarQube Cloud, run from the workflow so that the coverage report reaches it: `sonar-project.properties` and one workflow step | **Written, not run**: the project is imported and the automatic analysis is switched off on 2026-11-28; the owner saves the token as the secret `SONAR_TOKEN` and sets the repository variables `SONAR_ORGANIZATION` and `SONAR_PROJECT_KEY`; until then the step is skipped and Sonar analyzes nothing. The quality gate of the new code includes coverage, so it may need a relaxed copy while the coverage is low |
+| Frontend CI | A workflow for `speprove-fe`: install, lint, type check, build | **Open**: next ticket step, in the frontend repository |
+| Branch protection | `main` requires a pull request and a green CI; direct pushes refused | **Open**: owner action in the repository settings |
+| Commit lint | Conventional Commits checked on pull requests | **Open** |
 
 2.1. A gate is added only with a first run that is green; a gate that is red from day one is ignored.
 2.2. Thresholds that fail a pull request: the CI steps above, no new `critical` or `blocker` static-analysis issue, and coverage of the core modules not below the agreed target ([test plan](../06-testing/02-test-plan.md), section 6).

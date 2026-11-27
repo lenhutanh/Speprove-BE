@@ -65,6 +65,7 @@ How `speprove-be` is tested, what a change must add, and how a test traces back 
 ```bash
 pnpm test              # all tests once
 pnpm test:watch        # re-run on change
+pnpm test:coverage     # tests plus a coverage report in coverage/ (git ignores it)
 pnpm test -- tests/api/credit-and-payment.test.ts   # one file
 ```
 

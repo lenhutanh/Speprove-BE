@@ -96,5 +96,5 @@ The conventions have their own documents, so each fact lives in one place:
 - `pnpm start`: run the compiled `dist/index.js`.
 - `pnpm lint`, `pnpm lint:fix`: check and fix lint errors with ESLint.
 - `pnpm format`, `pnpm check`: format the code with Prettier.
-- `pnpm test`, `pnpm test:watch`: run the Vitest suite once or in watch mode ([testing strategy](../06-testing/01-testing-strategy.md)).
+- `pnpm test`, `pnpm test:watch`, `pnpm test:coverage`: run the Vitest suite once, in watch mode, or with a coverage report
 - `pnpm db:seed`: run the data seeding script.

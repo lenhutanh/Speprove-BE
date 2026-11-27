@@ -47,7 +47,8 @@ docs/
 │   ├── app-foundation/                  # runtime foundation: logger, probes, shutdown, config, tests, CI
 │   ├── architecture-refactor/           # ten modules, core layout, conventions, work breakdown (draft)
 │   ├── scoring-pipeline-v2/             # hybrid feature-based scoring design (draft, partly superseded)
-│   └── measure-baseline/                # task list of the baseline measurement (tasks only, with results)
+│   ├── measure-baseline/                # task list of the baseline measurement (tasks only, with results)
+│   └── ci-quality-gates/                # task list of the CI quality gates (tasks only, with results)
 ├── plan/
 │   ├── backlog.md                       # epics and checklists until the thesis defense
 │   ├── baseline-2026-11-22.md           # measured code-quality, structure and test numbers

@@ -20,8 +20,8 @@ Kinds: **spec** means a spec of three files in [`../specs/`](../specs/) approved
 | 5 | `chore/remove-dead-code` | BE | tasks | code done, pushed; owner check pending (start the app, `/health`, login, one practice) |
 | 6 | `docs/reference-docs` | BE | docs | done locally, not pushed: reference documents, `AGENTS.md` table, refactor design decisions |
 | 7 | Settle the branches: reinstall `node_modules` on Linux, run test, build and lint, owner checks, chained pull requests, merge | BE, FE | tasks | todo |
-| 8 | `chore/measure-baseline` (duplication, lint, tests, coverage) | BE | tasks | todo |
-| 9 | `ci/quality-gates` (coverage, frontend CI, Dependabot, static analysis, image scan, branch protection) | BE, FE | tasks | todo |
+| 8 | `chore/measure-baseline` (duplication, lint, tests; coverage came with row 9) | BE | tasks | done locally, see [tasks](../specs/measure-baseline/tasks.md) |
+| 9 | `ci/quality-gates` (coverage, frontend CI, Dependabot, static analysis, image scan, branch protection) | BE, FE | tasks | BE part done locally, see [tasks](../specs/ci-quality-gates/tasks.md); open: frontend workflow, static analysis service, branch protection |
 | 10 | `ci-cd-staging` (pipeline, deploy, rollback, health check, deploy history) | BE, FE | spec | todo. Needs the owner's decisions: staging host, registry, secrets, trigger |
 | 11 | `refactor/module-layout` (`core/`, ten modules, `public.ts`, dependency check; one pull request per group) | BE | spec | todo |
 | 12 | `refactor/account-auth` (split `AuthService`, `assertOwner`, admin routes and permissions, rate limits, OTP lockout) with `fix/route-permissions` | BE, FE | spec | todo |
