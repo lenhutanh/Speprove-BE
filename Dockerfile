@@ -1,5 +1,5 @@
 # Build stage
-FROM node:24-slim AS builder
+FROM node:26-slim AS builder
 
 RUN corepack enable
 
@@ -22,7 +22,7 @@ RUN pnpm build
 RUN pnpm prune --prod
 
 # Run stage
-FROM node:24-slim AS runner
+FROM node:26-slim AS runner
 
 WORKDIR /app
 
