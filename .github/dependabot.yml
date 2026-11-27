@@ -14,7 +14,17 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # A new major Node is chosen on purpose (.nvmrc, Dockerfile and CI change together), not by a bot
+      - dependency-name: node
+        update-types:
+          - version-update:semver-major
