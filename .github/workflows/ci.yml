@@ -67,7 +67,7 @@ jobs:
       - id: sonar
         run: echo "enabled=${{ secrets.SONAR_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
 
-      - uses: SonarSource/sonarqube-scan-action@v8.4.1
+      - uses: SonarSource/sonarqube-scan-action@v8.5.1
         if: steps.sonar.outputs.enabled == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
