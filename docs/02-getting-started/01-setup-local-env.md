@@ -35,7 +35,7 @@ pnpm dev                    # nodemon, listens on APP_PORT (default 5000)
 | `GET http://localhost:5000/ready` | `200` when MongoDB and Redis answer; `503` otherwise, with the state of each |
 | Start the frontend, register, verify the OTP, sign in | A session cookie is set and `/api/v1/account/me` answers |
 
-3.1. If the process exits at boot, the log prints the invalid variable (the schema is in `src/common/config/env.config.ts`).
+3.1. If the process exits at boot, the log prints the invalid variable (the schema is in `src/config/env.config.ts`).
 
 ## 4. Tests
 

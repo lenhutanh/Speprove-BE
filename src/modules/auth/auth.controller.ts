@@ -1,12 +1,12 @@
 import { Request, Response } from 'express'
-import { env } from '~/common/config/env.config'
-import { ResponseTransformer } from '~/common/http'
+import { env } from '~/config/env.config'
+import { ResponseTransformer } from '~/core/http/response-transformer.util'
 import { injectable } from 'tsyringe'
-import { AuthenticatedRequest } from '~/common/types/request.type'
-import { AuthService } from './services'
-import { AppError } from '~/common/errors'
-import { ErrorCodes } from '~/common/constants/error-codes'
-import { tokenLifeToMs } from '~/infrastructure/security/token-duration.util'
+import { AuthenticatedRequest } from '~/core/types/request.type'
+import { AuthService } from './auth.service'
+import { AppError } from '~/core/errors/app.error'
+import { ERROR_CODES } from '~/core/errors/error.constants'
+import { tokenLifeToMs } from '~/core/security/token-duration.util'
 
 type AuthClientType = 'web' | 'mobile'
 type AuthTokens = { accessToken: string; refreshToken: string; refreshTokenExpiresAt: Date }
@@ -151,7 +151,7 @@ export class AuthController {
 
       return res.redirect(`${env.APP_URL}/auth/callback`)
     } catch (error) {
-      const errorCode = error instanceof AppError ? error.errorCode : ErrorCodes.INTERNAL_SERVER_ERROR
+      const errorCode = error instanceof AppError ? error.errorCode : ERROR_CODES.INTERNAL_SERVER_ERROR
 
       const params = new URLSearchParams({
         errorCode

@@ -1,8 +1,8 @@
-import { BaseMapper } from '~/common/base/base.mapper'
+import { BaseMapper } from '~/core/persistence/base.mapper'
 import { AccountType } from './account.model'
 import { AccountResponseDto } from './account.dto'
 import { singleton } from 'tsyringe'
-import { GroupMapper } from '../group/group.mapper'
+import { GroupMapper } from './group/group.mapper'
 
 @singleton()
 export class AccountMapper extends BaseMapper<AccountType, AccountResponseDto> {

@@ -1,8 +1,8 @@
 import { singleton } from 'tsyringe'
 import { FileService } from './file.service'
 import { Response } from 'express'
-import { ResponseTransformer } from '~/common/http'
-import { AuthenticatedRequest } from '~/common/types/request.type'
+import { ResponseTransformer } from '~/core/http/response-transformer.util'
+import { AuthenticatedRequest } from '~/core/types/request.type'
 
 @singleton()
 export class FileController {

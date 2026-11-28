@@ -49,7 +49,7 @@ docs/
 │   ├── scoring-pipeline-v2/             # hybrid feature-based scoring design (draft, partly superseded)
 │   ├── measure-baseline/                # task list of the baseline measurement (tasks only, with results)
 │   ├── ci-quality-gates/                # task list of the CI quality gates (tasks only, with results)
-│   └── module-layout/                   # move into core, config, main and ten modules without changing behavior (draft)
+│   └── module-layout/                   # move into core, config, main and ten modules without changing behavior (done on one branch, waiting for merge)
 ├── plan/
 │   ├── backlog.md                       # epics and checklists until the thesis defense
 │   ├── baseline-2026-11-22.md           # measured code-quality, structure and test numbers
@@ -95,7 +95,7 @@ docs/
 
 ## 4. API
 
-The conventions are in [`08-integration-contracts/`](./08-integration-contracts/). There is no endpoint reference yet: read the routes in `src/routes/index.ts` and each module's `*.route.ts` and `*.validation.ts`.
+The conventions are in [`08-integration-contracts/`](./08-integration-contracts/). There is no endpoint reference yet: read the routes in `src/main/routes.ts` and each module's `*.route.ts` and `*.validation.ts`.
 
 ## 5. Related Material Outside the Repository
 

@@ -3,7 +3,7 @@ import { fileTypeFromBuffer } from 'file-type'
 import { StatusCodes } from 'http-status-codes'
 import multer from 'multer'
 import path from 'path'
-import { AppError } from '~/common/errors'
+import { AppError } from '~/core/errors/app.error'
 import { ALLOWED_AUDIO_TYPES, ALLOWED_IMAGE_TYPES, LIMIT_AUDIO_SIZE, LIMIT_IMAGE_SIZE } from './file.constants'
 
 const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif']

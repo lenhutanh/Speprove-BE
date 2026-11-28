@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
-import { env } from '~/common/config/env.config'
-import { TOKEN_TYPE } from '~/common/types/token-payload.type'
+import { env } from '~/config/env.config'
+import { TOKEN_TYPE } from '~/core/security/token-payload.type'
 
 export const accessTokenFor = (permissions: string[] = []) =>
   jwt.sign(

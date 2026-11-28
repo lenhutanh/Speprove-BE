@@ -1,5 +1,5 @@
-import { emailSchema, otpSchema, passwordSchema } from '~/common/utils/validators.util'
-import { createSchema, querySchema, updateSchema } from '~/common/base/base.validation'
+import { emailSchema, otpSchema, passwordSchema } from '~/core/utils/validators.util'
+import { createSchema, querySchema, updateSchema } from '~/core/persistence/base.validation'
 import z from 'zod'
 
 export const loginSchema = createSchema({

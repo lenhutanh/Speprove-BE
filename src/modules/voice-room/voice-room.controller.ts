@@ -2,11 +2,11 @@ import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { WebhookReceiver } from 'livekit-server-sdk'
 import { singleton } from 'tsyringe'
-import { env } from '~/common/config/env.config'
-import { ResponseTransformer } from '~/common/http'
-import { AuthenticatedRequest } from '~/common/types/request.type'
+import { env } from '~/config/env.config'
+import { ResponseTransformer } from '~/core/http/response-transformer.util'
+import { AuthenticatedRequest } from '~/core/types/request.type'
 import { VoiceRoomService } from './voice-room.service'
-import { logger } from '~/infrastructure/logging/logger'
+import { logger } from '~/core/logging/logger'
 
 @singleton()
 export class VoiceRoomController {
@@ -81,31 +81,19 @@ export class VoiceRoomController {
 
   public async muteParticipant(req: AuthenticatedRequest, res: Response) {
     const userId = req.user._id.toString()
-    await this.voiceRoomService.muteParticipant(
-      req.validated.params.id,
-      userId,
-      req.validated.body.targetUserId
-    )
+    await this.voiceRoomService.muteParticipant(req.validated.params.id, userId, req.validated.body.targetUserId)
     return ResponseTransformer.successNoData(res, 'Participant muted successfully')
   }
 
   public async unmuteParticipant(req: AuthenticatedRequest, res: Response) {
     const userId = req.user._id.toString()
-    await this.voiceRoomService.unmuteParticipant(
-      req.validated.params.id,
-      userId,
-      req.validated.body.targetUserId
-    )
+    await this.voiceRoomService.unmuteParticipant(req.validated.params.id, userId, req.validated.body.targetUserId)
     return ResponseTransformer.successNoData(res, 'Participant unmuted successfully')
   }
 
   public async kickParticipant(req: AuthenticatedRequest, res: Response) {
     const userId = req.user._id.toString()
-    await this.voiceRoomService.kickParticipant(
-      req.validated.params.id,
-      userId,
-      req.validated.body.targetUserId
-    )
+    await this.voiceRoomService.kickParticipant(req.validated.params.id, userId, req.validated.body.targetUserId)
     return ResponseTransformer.successNoData(res, 'Participant removed from room successfully')
   }
 

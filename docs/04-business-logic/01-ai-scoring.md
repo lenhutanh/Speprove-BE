@@ -8,7 +8,7 @@
 
 - **Practice:** the learner answers one question. Credits are deducted when the attempt is created (`POST /api/v1/attempt`).
 - **Mock test:** the learner creates a speaking session (`POST /api/v1/speaking-session`). Credits for the whole session are deducted once, at creation. Each answer is then an attempt with a `speakingSessionId`.
-- Prices are in `CREDIT_COST` (`src/modules/credit-log/credit-log.constants.ts`), computed by `calculateCreditCost()`.
+- Prices are in `CREDIT_COST` (`src/modules/billing/wallet/credit-log.constants.ts`), computed by `calculateCreditCost()`.
 
 ## Flow
 
@@ -42,7 +42,7 @@ sequenceDiagram
 | :--- | :--- | :--- | :--- |
 | transcribe | `speaking:transcribe` (priority 1) | Groq STT on `aiAudioUrl ?? url`. Normalizes the text with `normalizeForAssessment` | `Attempt.transcriptPreview`, `duration`; `AttemptAnalysis.transcription.*` |
 | assess | `speaking:assess` | Azure Pronunciation Assessment, using the normalized transcript as the reference. `SpeechMapper` computes `speechAnalysis` (fluency metrics, etc.) and builds the display and scoring transcripts | `AttemptAnalysis.pronunciationAssessment`, `speechAnalysis`, `transcription.scoringTranscript` |
-| evaluate | `speaking:evaluate` | `LLMEvaluator`: `prompt.builder` → Groq LLM → `response.parser` (validation). Invalid output throws `EvaluatorValidationError`, which triggers a retry | `AttemptAnalysis.evaluation`; `Attempt.scores` + `status = DONE` |
+| evaluate | `speaking:evaluate` | `LLMEvaluator`: `evaluator-prompt.builder` → Groq LLM → `evaluator-response.parser` (validation). Invalid output throws `EvaluatorValidationError`, which triggers a retry | `AttemptAnalysis.evaluation`; `Attempt.scores` + `status = DONE` |
 | vocabulary | `speaking:extract-vocabulary` | Extracts suggested vocabulary from the scored answer. Failures here do not affect the score | `vocabulary-suggestion` module |
 | score_session | `speaking:score-session` | Mock only. See the formula below | `SpeakingSession.result`, `status = COMPLETED` |
 
@@ -71,7 +71,7 @@ Each stage enqueues the next one, and the next job carries the data it needs fro
 | `attempt:updated` | Every stage change, success or failure. **Practice only** | `practice/[questionId]/_components/practice-history.tsx` |
 | `mock-test:updated` | Session COMPLETED or FAILED | `account/_components/mock-test-history-tab.tsx` |
 
-Events are sent to the `userId` room. The constants are defined in `src/infrastructure/socket/socket.constants.ts`, and the FE keeps a copy in `src/constants/constants.ts`. The two must stay in sync.
+Events are sent to the `userId` room. The constants are defined in `src/modules/assessment/assessment.constants.ts`, and the FE keeps a copy in `src/constants/constants.ts`. The two must stay in sync.
 
 ## Errors, retries and refunds
 
@@ -91,12 +91,12 @@ Events are sent to the `userId` room. The constants are defined in `src/infrastr
 
 ## Related code
 
-- `src/modules/attempt/attempt.service.ts`: creating attempts, retries.
-- `src/modules/attempt/speaking-analysis.service.ts`: the logic of each stage, session scoring, practice refunds.
-- `src/modules/speaking-session/speaking-session.service.ts`: creating sessions (credit deduction), `refreshSessionStatus`, `checkAndRefund`, `retrySession`.
-- `src/infrastructure/queues/publishers/speaking.producer.ts`: retry settings for each job.
-- `src/infrastructure/workers/consumers/speaking.consumer.ts`: job dispatch (worker `concurrency: 1`).
-- `src/infrastructure/providers/{stt,speech-assessment,evaluator,llm}`.
+- `src/modules/practice/attempt/attempt.service.ts`: creating attempts, retries.
+- `src/modules/assessment/speaking-analysis.service.ts`: the logic of each stage, session scoring, practice refunds.
+- `src/modules/practice/mock-test/speaking-session.service.ts`: creating sessions (credit deduction), `refreshSessionStatus`, `checkAndRefund`, `retrySession`.
+- `src/modules/practice/jobs/speaking.producer.ts`: retry settings for each job.
+- `src/modules/practice/jobs/speaking.consumer.ts`: job dispatch (worker `concurrency: 1`).
+- `src/modules/assessment/adapters/{stt,speech-assessment,evaluator,llm}`.
 
 ## See also
 

@@ -1,6 +1,6 @@
 import { Types } from 'mongoose'
 import { describe, expect, it } from 'vitest'
-import { sanitize } from '~/infrastructure/logging/sanitize'
+import { sanitize } from '~/core/logging/sanitize'
 
 describe('sanitize', () => {
   it('redacts sensitive keys at any depth', () => {

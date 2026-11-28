@@ -1,6 +1,6 @@
 # Authentication
 
-How a user registers, signs in, stays signed in and signs out. What a user may do after that is in [security and RBAC](./01-security-and-rbac.md). The routes are in `src/modules/auth/auth.route.ts`, the logic in `src/modules/auth/services/` (`auth.service.ts`, `otp.service.ts`, `google.service.ts`) and the session in `src/modules/session`.
+How a user registers, signs in, stays signed in and signs out. What a user may do after that is in [security and RBAC](./01-security-and-rbac.md). The routes are in `src/modules/auth/auth.route.ts`, the logic in `src/modules/auth/` (`auth.service.ts`, `otp.service.ts`, `google.service.ts`) and the session in `src/modules/auth/session`.
 
 ## 1. Tokens and Cookies
 

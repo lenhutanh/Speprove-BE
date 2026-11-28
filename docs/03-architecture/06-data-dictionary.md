@@ -4,7 +4,7 @@ Every MongoDB collection of the backend, what it stores, its key fields, its rel
 
 ## 1. Conventions
 
-1.1. `_id` is an `ObjectId`. Models that spread `BaseSchemaContent` have `deletedAt` (soft delete, `null` when live). Models that use `BaseSchemaOptions` have `createdAt` and `updatedAt`. The field lists below do not repeat them.
+1.1. `_id` is an `ObjectId`. Models that spread `BASE_SCHEMA_CONTENT` have `deletedAt` (soft delete, `null` when live). Models that use `BaseSchemaOptions` have `createdAt` and `updatedAt`. The field lists below do not repeat them.
 1.2. Statuses and kinds are small numbers or strings from the module's `*.constants.ts`.
 1.3. A field named `<x>Id` is a reference to another collection and is resolved through that module's service.
 1.4. "Unique" lists unique indexes. Other indexes are listed when they matter for a query.

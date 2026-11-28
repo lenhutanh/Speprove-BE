@@ -1,17 +1,19 @@
 import 'reflect-metadata'
 import { container } from 'tsyringe'
-import { createApp } from './app'
-import { setupContainer } from './bootstrap/container'
-import { TOKENS } from './common/constants/di.tokens'
-import { connectDB, closeDB, pingDB, env, corsOptions } from './common/config'
-import { ICacheService } from './infrastructure/cache/cache.interface'
-import { setupBullBoard } from './infrastructure/bull-board.config'
-import { logger } from './infrastructure/logging/logger'
-import { QueueFactory } from './infrastructure/queues/queue.factory'
-import { createShutdown } from './infrastructure/shutdown'
-import { initSocket, closeSocket } from './infrastructure/socket/socket-boostrap'
-import { startWorkers, shutdownWorkers } from './infrastructure/workers/worker.setup'
-import { initQuestionSpelling } from './modules/question/question-spelling.service'
+import { createApp } from './main/app'
+import { setupContainer } from './main/container'
+import { TOKENS } from './core/di/di.constants'
+import { connectDB, closeDB, pingDB } from './config/mongodb.config'
+import { env } from './config/env.config'
+import { corsOptions } from './config/cors.config'
+import { ICacheService } from './core/cache/cache.service.interface'
+import { setupBullBoard } from './main/bull-board'
+import { logger } from './core/logging/logger'
+import { QueueRegistry } from './core/queue/queue.registry'
+import { createShutdown } from './core/lifecycle/shutdown'
+import { initSocket, closeSocket } from './main/socket'
+import { startWorkers, shutdownWorkers } from './main/workers'
+import { initQuestionSpelling } from './modules/content/question/question-spelling.service'
 ;(async () => {
   try {
     await initQuestionSpelling()
@@ -21,8 +23,8 @@ import { initQuestionSpelling } from './modules/question/question-spelling.servi
     await connectDB()
 
     // Queues first, so Bull Board and the workers see all of them
-    const queueFactory = container.resolve(QueueFactory)
-    queueFactory.initQueues()
+    const queueRegistry = container.resolve(QueueRegistry)
+    queueRegistry.initQueues()
 
     startWorkers()
 
@@ -47,7 +49,7 @@ import { initQuestionSpelling } from './modules/question/question-spelling.servi
       stopBackground: async () => {
         // Workers stop before the queues they read from
         await shutdownWorkers()
-        await queueFactory.shutdown()
+        await queueRegistry.shutdown()
         await closeDB()
       }
     })

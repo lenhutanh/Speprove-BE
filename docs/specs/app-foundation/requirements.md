@@ -43,7 +43,7 @@ Give the backend a runtime that can be operated and observed (health probes, req
 
 ## 4. Acceptance Criteria
 
-- **AC1.** `createApp()` in `src/app.ts` builds the Express app without listening, and route files do not resolve the DI container at import time.
+- **AC1.** `createApp()` in `src/main/app.ts` builds the Express app without listening, and route files do not resolve the DI container at import time.
 - **AC2.** One JSON logger writes to stdout. Every line logged inside a request carries its `requestId`. Sensitive keys are redacted, also in `toJSON` output. A valid `X-Request-Id` header is kept and returned, otherwise one is generated; the id appears in error response bodies and in BullMQ job data. Responses of status 5xx are always logged.
 - **AC3.** `GET /health` answers 200 without touching a dependency. `GET /ready` answers 200 when Mongo and Redis answer and 503 otherwise, with the status of each dependency; Mongo counts as down until connected. `trust proxy` comes from `TRUST_PROXY`.
 - **AC4.** On `SIGINT` or `SIGTERM` the process shuts down gracefully and exits with code 0; repeated signals are ignored; the process exits by force after `SHUTDOWN_TIMEOUT_MS`. `unhandledRejection` and `uncaughtException` shut down gracefully and exit with code 1.

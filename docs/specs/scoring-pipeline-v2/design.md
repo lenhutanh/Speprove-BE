@@ -5,7 +5,7 @@
 
 ## 1. Why change
 
-The current pipeline is `Groq Whisper → Azure Pronunciation Assessment → Groq LLM`. The LLM decides the FC, LR and GRA bands directly, and `rule-based.scorer.ts` maps Azure scores to the PR band with hand-set weights (0.45 / 0.35 / 0.20).
+The current pipeline is `Groq Whisper → Azure Pronunciation Assessment → Groq LLM`. The LLM decides the FC, LR and GRA bands directly, and `rule-based-scorer.service.ts` maps Azure scores to the PR band with hand-set weights (0.45 / 0.35 / 0.20).
 
 Problems:
 - **Black box.** Nobody can explain why an answer got a band, and the LLM does not give the same band twice for the same answer.
@@ -84,7 +84,7 @@ Notes:
 - Automated speaking systems filter non-scorable responses before scoring (Zechner et al., 2009); doing it before charging is our product choice.
 
 ### S2 ASR
-- **Groq `whisper-large-v3`** (already used in `groq.stt.ts`), with `response_format: verbose_json` and `timestamp_granularities: ['word']` for word confidence. Groq's docs disagree on word-timestamp support, so this must be tested.
+- **Groq `whisper-large-v3`** (already used in `groq-stt.provider.ts`), with `response_format: verbose_json` and `timestamp_granularities: ['word']` for word confidence. Groq's docs disagree on word-timestamp support, so this must be tested.
 - The existing prompt with "Um, uh, I think…" stays, to stop Whisper from deleting fillers. We measure how many fillers are still lost on ~30 hand-transcribed answers.
 - Precise word and phone timings come from the CTC alignment in S5 (PR branch), not from Whisper.
 - CrisperWhisper (verbatim Whisper; Wagner et al., 2024) was considered and rejected: its weights are CC BY-NC.

@@ -1,7 +1,7 @@
 import express from 'express'
-import { bindHandler } from '~/common/http'
-import { validateMiddleware } from '~/common/middlewares'
-import { authMiddleware } from '~/common/middlewares/auth.middleware'
+import { bindHandler } from '~/core/http/bind-handler'
+import { validateMiddleware } from '~/core/middlewares/validate.middleware'
+import { authMiddleware } from '~/core/middlewares/auth.middleware'
 import { VoiceRoomController } from './voice-room.controller'
 import {
   createVoiceRoomSchema,

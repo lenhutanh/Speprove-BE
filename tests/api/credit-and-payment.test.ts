@@ -1,17 +1,17 @@
 import mongoose from 'mongoose'
 import { container } from 'tsyringe'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { TOKENS } from '~/common/constants/di.tokens'
-import { STATUS } from '~/common/constants/status.constants'
+import { TOKENS } from '~/core/di/di.constants'
+import { STATUS } from '~/core/persistence/status.constants'
 import { Account } from '~/modules/account/account.model'
-import { IAccountRepository } from '~/modules/account/repositories'
-import { CreditLog } from '~/modules/credit-log/credit-log.model'
-import { Group } from '~/modules/group/group.model'
-import { GROUP_KIND } from '~/modules/group/group.constants'
-import { Payment } from '~/modules/payment/payment.model'
-import { PAYMENT_METHOD, PAYMENT_PROVIDER, PAYMENT_STATUS } from '~/modules/payment/payment.constants'
-import { PaymentService } from '~/modules/payment/payment.service'
-import { PaymentProviderFactory } from '~/modules/payment/providers/payment-provider.factory'
+import { IAccountRepository } from '~/modules/account/account.repository.interface'
+import { CreditLog } from '~/modules/billing/wallet/credit-log.model'
+import { Group } from '~/modules/account/group/group.model'
+import { GROUP_KIND } from '~/modules/account/group/group.constants'
+import { Payment } from '~/modules/billing/payment/payment.model'
+import { PAYMENT_METHOD, PAYMENT_PROVIDER, PAYMENT_STATUS } from '~/modules/billing/payment/payment.constants'
+import { PaymentService } from '~/modules/billing/payment/payment.service'
+import { PaymentProviderRegistry } from '~/modules/billing/payment/adapters/payment-provider.registry'
 import { resetMongo, startMongo, stopMongo } from '../helpers/mongo'
 import { setupTestContainer } from '../helpers/test-container'
 
@@ -39,7 +39,7 @@ async function createAccount(balance: number) {
 describe('credit balance and payment webhook', () => {
   beforeAll(async () => {
     setupTestContainer()
-    container.registerInstance(PaymentProviderFactory, {
+    container.registerInstance(PaymentProviderRegistry, {
       getProvider: () => ({ handleWebhook: async () => webhookResult })
     } as never)
     await startMongo()

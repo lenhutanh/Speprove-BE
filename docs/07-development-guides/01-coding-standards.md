@@ -27,28 +27,34 @@ Rules for writing code in `speprove-be`. They describe what the code does today;
 ## 3. Naming and Files
 
 3.1. Files are `kebab-case` with a role suffix: `<module>.service.ts`, `.controller.ts`, `.route.ts`, `.validation.ts`, `.dto.ts`, `.mapper.ts`, `.model.ts`, `.repository.ts`, `.repository.interface.ts`, `.di.ts`, `.constants.ts`, `.type.ts`, `.util.ts`.
-3.2. Classes are `PascalCase` (`PaymentService`); interfaces start with `I` (`IAccountRepository`); constants are `UPPER_SNAKE_CASE` (`PAYMENT_STATUS`).
+3.2. Classes are `PascalCase` (`PaymentService`); interfaces start with `I` (`IAccountRepository`); constants are `UPPER_SNAKE_CASE` (`PAYMENT_STATUS`, `ERROR_CODES`, `BASE_SCHEMA_OPTIONS`). An object that holds behavior or one shared instance (`logger`, `env`, `authMiddleware`) is `camelCase`.
 3.3. REST resources are singular and `kebab-case` (`/speaking-session`, `/credit-package`).
 3.4. One class per file. A file that grows past about 300 lines or a function past about 70 lines is a signal to split it, not a hard limit. **Target:** cyclomatic complexity of a function at most 12.
 3.5. A name says what the thing is or does. Do not use `data`, `info`, `temp`, `helper`, `manager` as the whole name.
+3.6. A module keeps its files in its own folder, without a folder per layer: no `repositories/`, `services/` or `types/` folder, because the suffix of 3.1 already says the role. A folder holds a different concept: an entity of a module with two or more entities, `adapters/` (external systems behind an interface), `jobs/` (background work) or `templates/`.
+3.7. One rule for the name of a file, in kebab-case: `<name>.<role>.ts`. The name uses hyphens (`password-hasher`, `llm-evaluator`); the part after the dot is a **role of the system** from this list, never a word taken from the name: `controller`, `route`, `service`, `repository`, `model`, `dto`, `validation`, `mapper`, `middleware`, `di`, `constants`, `type`, `util`, `provider`, `config`, `socket`, `error`, `producer`, `consumer`, and the patterns `builder`, `parser` and `registry`, which several files use. A new role needs a decision in this list. An interface is in the file of its class plus `.interface` (`token.service.ts` and `token.service.interface.ts`); an interface with several classes uses the role of the concept (`stt.provider.interface.ts`). Files without a role are the entry points of `main/`, `scripts/` and a few helpers of `core/` (`logger.ts`, `shutdown.ts`).
+3.7.1. A class is named after what it is, without the technology: the class of `IAccountRepository` is `AccountRepository`, the class of `ITokenService` is `TokenService`, of `ICacheService` is `CacheService`. The name of a technology or vendor goes in front only when several implementations exist or are planned (`ISTTProvider` with `GroqSTTProvider`, `IPaymentProvider` with `PayOSProvider`); the technology of a single implementation shows where it is registered (`src/main/container.ts`). A class that only looks an instance up by name is a registry, not a factory.
+3.7.2. An adapter of an outside system is in `adapters/` and is `<system>-<what>.provider.ts`; the files of one entity share the name of the entity folder; no two files in a module have the same name.
+3.8. No barrel files: do not add an `index.ts` that re-exports a folder. Import the file that holds the name. What a module offers to other modules is its `public.ts` (chosen name by name, not `export *`).
+3.9. A comment says why, not what. Do not leave commented-out code (the history keeps it) and do not draw banner lines.
 
 ## 4. Errors
 
-4.1. A business rule violation throws `AppError(message, statusCode, errorCode, errors?)` from `src/common/errors`. The full contract is in [the error code registry](../08-integration-contracts/02-error-codes.md).
-4.2. Always pass an `errorCode` from `ErrorCodes`. Without it the response carries the default `SYS_001`, which is wrong for a client error.
+4.1. A business rule violation throws `AppError(message, statusCode, errorCode, errors?)` from `src/core/errors`. The full contract is in [the error code registry](../08-integration-contracts/02-error-codes.md).
+4.2. Always pass an `errorCode` from `ERROR_CODES`. Without it the response carries the default `SYS_001`, which is wrong for a client error.
 4.3. Never catch an error only to swallow it. A `catch` either handles the error (and says how in a comment when it is not obvious), converts it to an `AppError`, or rethrows.
 4.4. Controllers do not catch errors. `errorMiddleware` formats every error.
 
 ## 5. Logging
 
-5.1. Use `logger` from `~/infrastructure/logging/logger`. Do not use `console.*` in `src/` (the exception is `src/scripts/`, which prints for a human).
+5.1. Use `logger` from `~/core/logging/logger`. Do not use `console.*` in `src/` (the exception is `src/scripts/`, which prints for a human).
 5.2. The request id is added to every log line by the request context. Do not add it by hand.
 5.3. Never log secrets, tokens, passwords, OTP codes or full request bodies. The logger redacts known keys; do not rely on that for new fields.
 5.4. Levels: `error` for a failure that needs attention, `warn` for a handled abnormal case, `info` for a lifecycle event, `debug` for detail off in production.
 
 ## 6. Configuration and Secrets
 
-6.1. Every setting is a variable validated in `src/common/config/env.config.ts` (Zod). The application stops at boot when a required variable is missing.
+6.1. Every setting is a variable validated in `src/config/env.config.ts` (Zod). The application stops at boot when a required variable is missing.
 6.2. Read configuration through `env`, never from `process.env` in a module.
 6.3. A new variable is added to the Zod schema and to `.env.example` in the same change, with a safe default or a comment.
 6.4. Never commit `.env` or a real key. Never write a secret value in a document or a test.

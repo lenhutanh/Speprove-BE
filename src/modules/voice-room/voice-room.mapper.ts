@@ -1,7 +1,7 @@
 import { singleton } from 'tsyringe'
-import { BaseMapper } from '~/common/base'
+import { BaseMapper } from '~/core/persistence/base.mapper'
 import { VoiceRoomType } from './voice-room.model'
-import { VoiceRoomHostDto, VoiceRoomMemberDto, VoiceRoomResponseDto } from './types/voice-room.type'
+import { VoiceRoomHostDto, VoiceRoomMemberDto, VoiceRoomResponseDto } from './voice-room.type'
 
 @singleton()
 export class VoiceRoomMapper extends BaseMapper<VoiceRoomType, VoiceRoomResponseDto> {

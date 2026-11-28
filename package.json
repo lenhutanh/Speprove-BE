@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "deps": "depcruise src --config .dependency-cruiser.cjs",
     "db:seed": "ts-node -r tsconfig-paths/register -r dotenv/config src/scripts/seed.ts"
   },
   "keywords": [],
@@ -36,6 +37,7 @@
     "@types/streamifier": "^0.1.2",
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "5.1.1",
+    "dependency-cruiser": "18.9.0",
     "dotenv": "^17.4.2",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",

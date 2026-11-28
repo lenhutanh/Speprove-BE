@@ -1,6 +1,6 @@
 # Error Codes
 
-The registry of error codes returned in `errorCode`. The source of truth is `src/common/constants/error-codes.ts` (`ErrorCodes`); this document explains it. The envelope is in [01-api-conventions.md](./01-api-conventions.md).
+The registry of error codes returned in `errorCode`. The source of truth is `src/core/errors/error.constants.ts` (`ERROR_CODES`); this document explains it. The envelope is in [01-api-conventions.md](./01-api-conventions.md).
 
 ## 1. How an Error Reaches the Client
 
@@ -98,7 +98,7 @@ The registry of error codes returned in `errorCode`. The source of truth is `src
 
 ## 3. Adding a Code
 
-3.1. Add it to `ErrorCodes` in the right group, with the next number of that group.
+3.1. Add it to `ERROR_CODES` in the right group, with the next number of that group.
 3.2. Add a row to the table above in the same change.
 3.3. Throw it with the status that fits (table in [01-api-conventions.md](./01-api-conventions.md), section 3).
 3.4. Add a test that checks the status and the `errorCode`.

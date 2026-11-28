@@ -1,6 +1,6 @@
 # Configuration Reference
 
-Every environment variable of the backend. The source of truth is the Zod schema in `src/common/config/env.config.ts`; `.env.example` lists the same names. The application stops at boot when a required variable is missing or malformed. A value is never written in a document: this table gives names, defaults and meaning only.
+Every environment variable of the backend. The source of truth is the Zod schema in `src/config/env.config.ts`; `.env.example` lists the same names. The application stops at boot when a required variable is missing or malformed. A value is never written in a document: this table gives names, defaults and meaning only.
 
 ## 1. How Configuration Works
 

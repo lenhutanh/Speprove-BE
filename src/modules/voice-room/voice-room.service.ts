@@ -1,13 +1,13 @@
 import { inject, singleton } from 'tsyringe'
 import { StatusCodes } from 'http-status-codes'
 import { Types } from 'mongoose'
-import { TOKENS } from '~/common/constants/di.tokens'
-import { AppError } from '~/common/errors'
-import { QueryBuilder } from '~/common/base/query-builder'
+import { TOKENS } from '~/core/di/di.constants'
+import { AppError } from '~/core/errors/app.error'
+import { QueryBuilder } from '~/core/persistence/query.builder'
 import { AccountService } from '~/modules/account/account.service'
-import { SocketService } from '~/infrastructure/socket/socket.service'
-import { LiveKitService } from '~/infrastructure/livekit/livekit.service'
-import { IVoiceRoomRepository } from './repositories/voice-room.repository.interface'
+import { SocketService } from '~/core/realtime/socket.service'
+import { LiveKitProvider } from '~/modules/voice-room/adapters/livekit.provider'
+import { IVoiceRoomRepository } from './voice-room.repository.interface'
 import { VoiceRoomType } from './voice-room.model'
 import { VoiceRoomMapper } from './voice-room.mapper'
 import {
@@ -19,7 +19,7 @@ import {
   UpdateVoiceRoomBody,
   VoiceRoomMemberDto,
   VoiceRoomResponseDto
-} from './types/voice-room.type'
+} from './voice-room.type'
 import { WebhookEvent } from 'livekit-server-sdk'
 import {
   getVoiceRoomSocketRoom,
@@ -30,8 +30,8 @@ import {
   VOICE_ROOM_SOCKET_ROOMS,
   VOICE_ROOM_STATUS
 } from './voice-room.constants'
-import { Question } from '~/modules/question/question.model'
-import { logger } from '~/infrastructure/logging/logger'
+import { Question } from '~/modules/content/question/question.model'
+import { logger } from '~/core/logging/logger'
 
 @singleton()
 export class VoiceRoomService {
@@ -39,7 +39,7 @@ export class VoiceRoomService {
     @inject(TOKENS.IVoiceRoomRepository)
     private readonly voiceRoomRepository: IVoiceRoomRepository,
     private readonly voiceRoomMapper: VoiceRoomMapper,
-    private readonly liveKitService: LiveKitService,
+    private readonly liveKitProvider: LiveKitProvider,
     private readonly accountService: AccountService,
     private readonly socketService: SocketService
   ) {}
@@ -70,7 +70,7 @@ export class VoiceRoomService {
 
     const roomId = room._id.toString()
 
-    await this.liveKitService.createRoom(roomId, room.maxParticipants, 600)
+    await this.liveKitProvider.createRoom(roomId, room.maxParticipants, 600)
 
     const hostUser = await this.accountService.getMe(hostId)
     const hostDto = {
@@ -117,7 +117,7 @@ export class VoiceRoomService {
     }
 
     const roomIds = rooms.map((r) => r._id.toString())
-    const lkRooms = await this.liveKitService.listRooms(roomIds)
+    const lkRooms = await this.liveKitProvider.listRooms(roomIds)
 
     if (!lkRooms) {
       return {
@@ -183,7 +183,7 @@ export class VoiceRoomService {
       throw new AppError('Voice room not found or has ended', StatusCodes.NOT_FOUND)
     }
 
-    const participants = await this.liveKitService.listParticipants(id)
+    const participants = await this.liveKitProvider.listParticipants(id)
     const members: VoiceRoomMemberDto[] = participants.map((p) => {
       let avatar: string | null = null
       try {
@@ -218,7 +218,7 @@ export class VoiceRoomService {
 
     const isHost = this.checkIsHost(room, userId)
 
-    const participants = await this.liveKitService.listParticipants(roomId)
+    const participants = await this.liveKitProvider.listParticipants(roomId)
     const isAlreadyInRoom = participants.some((p) => p.identity === userId)
 
     if (!isAlreadyInRoom && participants.length >= room.maxParticipants) {
@@ -235,7 +235,7 @@ export class VoiceRoomService {
     const name = user.fullName || user.username
     const avatar = user.avatarUrl || null
 
-    const token = await this.liveKitService.generateToken({
+    const token = await this.liveKitProvider.generateToken({
       roomId,
       identity: userId,
       name,
@@ -248,7 +248,7 @@ export class VoiceRoomService {
     return {
       room: this.voiceRoomMapper.toResponse(room, currentCount, [], isHost),
       token,
-      serverUrl: this.liveKitService.getServerUrl()
+      serverUrl: this.liveKitProvider.getServerUrl()
     }
   }
 
@@ -262,9 +262,9 @@ export class VoiceRoomService {
       throw new AppError('Voice room has already ended', StatusCodes.BAD_REQUEST)
     }
 
-    await this.liveKitService.removeParticipant(roomId, userId)
+    await this.liveKitProvider.removeParticipant(roomId, userId)
 
-    const remainingCount = await this.liveKitService.getParticipantCount(roomId)
+    const remainingCount = await this.liveKitProvider.getParticipantCount(roomId)
 
     this.socketService.toRoom(VOICE_ROOM_SOCKET_ROOMS.LOBBY, VOICE_ROOM_SOCKET_EVENTS.ROOM_UPDATED, {
       id: roomId,
@@ -295,7 +295,7 @@ export class VoiceRoomService {
       endedAt: new Date()
     })
 
-    await this.liveKitService.deleteRoom(roomId)
+    await this.liveKitProvider.deleteRoom(roomId)
 
     this.socketService.toRoom(VOICE_ROOM_SOCKET_ROOMS.LOBBY, VOICE_ROOM_SOCKET_EVENTS.ROOM_CLOSED, { id: roomId })
   }
@@ -320,7 +320,7 @@ export class VoiceRoomService {
       throw new AppError('Only the host can update this room', StatusCodes.FORBIDDEN)
     }
 
-    const currentCount = await this.liveKitService.getParticipantCount(roomId)
+    const currentCount = await this.liveKitProvider.getParticipantCount(roomId)
 
     if (body.maxParticipants !== undefined && body.maxParticipants < currentCount) {
       throw new AppError(
@@ -573,7 +573,7 @@ export class VoiceRoomService {
       throw new AppError('You are already the host of this room', StatusCodes.BAD_REQUEST)
     }
 
-    const participants = await this.liveKitService.listParticipants(roomId)
+    const participants = await this.liveKitProvider.listParticipants(roomId)
     const isTargetInRoom = participants.some((p) => p.identity === targetUserId)
     if (!isTargetInRoom) {
       throw new AppError('Target user is not currently in this voice room', StatusCodes.BAD_REQUEST)
@@ -652,7 +652,7 @@ export class VoiceRoomService {
       )
     }
 
-    await this.liveKitService.setParticipantSpeakingPermission(roomId, targetUserId, canPublish)
+    await this.liveKitProvider.setParticipantSpeakingPermission(roomId, targetUserId, canPublish)
 
     this.socketService.toRoom(getVoiceRoomSocketRoom(roomId), VOICE_ROOM_SOCKET_EVENTS.MEMBER_MUTED, {
       targetUserId,
@@ -678,7 +678,7 @@ export class VoiceRoomService {
       throw new AppError('Host cannot kick themselves', StatusCodes.BAD_REQUEST)
     }
 
-    await this.liveKitService.removeParticipant(roomId, targetUserId)
+    await this.liveKitProvider.removeParticipant(roomId, targetUserId)
 
     this.socketService.toRoom(getVoiceRoomSocketRoom(roomId), VOICE_ROOM_SOCKET_EVENTS.MEMBER_KICKED, {
       targetUserId

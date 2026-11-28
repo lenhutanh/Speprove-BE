@@ -1,8 +1,8 @@
 import { container } from 'tsyringe'
-import { setupContainer } from '~/bootstrap/container'
-import { TOKENS } from '~/common/constants/di.tokens'
-import { RateLimiterService } from '~/infrastructure/rate-limiter/rate-limiter.service'
-import { QueueFactory } from '~/infrastructure/queues/queue.factory'
+import { setupContainer } from '~/main/container'
+import { TOKENS } from '~/core/di/di.constants'
+import { RateLimiterService } from '~/core/rate-limiter/rate-limiter.service'
+import { QueueRegistry } from '~/core/queue/queue.registry'
 
 class MemoryCache {
   private readonly store = new Map<string, string>()
@@ -34,7 +34,7 @@ export function setupTestContainer() {
   setupContainer()
   container.registerInstance(TOKENS.ICacheService, new MemoryCache())
   container.registerInstance(RateLimiterService, { isAllowedStrict: allowAll, isAllowedFast: allowAll } as never)
-  container.registerInstance(QueueFactory, {
+  container.registerInstance(QueueRegistry, {
     initQueues: () => undefined,
     shutdown: async () => undefined,
     getQueue: () => ({ add: async () => ({}), addBulk: async () => [] })

@@ -1,20 +1,20 @@
 import { StatusCodes } from 'http-status-codes'
 import { Account, AccountType } from '~/modules/account/account.model'
-import { STATUS } from '~/common/constants/status.constants'
+import { STATUS } from '~/core/persistence/status.constants'
 import { FREE_SIGNUP_BALANCE } from './account.constants'
-import { GROUP_NAME } from '../group/group.constants'
+import { GROUP_NAME } from './group/group.constants'
 import { inject, singleton } from 'tsyringe'
-import { GroupService } from '../group/group.service'
-import { TOKENS } from '~/common/constants/di.tokens'
-import { IAccountRepository } from './repositories/account.repository.interface'
-import { AppError } from '~/common/errors'
-import { VoiceService } from '../voice/voice.service'
-import { ErrorCodes } from '~/common/constants/error-codes'
+import { GroupService } from './group/group.service'
+import { TOKENS } from '~/core/di/di.constants'
+import { IAccountRepository } from './account.repository.interface'
+import { AppError } from '~/core/errors/app.error'
+import { VoiceService } from '../content/voice/voice.service'
+import { ERROR_CODES } from '~/core/errors/error.constants'
 import { AccountMapper } from './account.mapper'
-import { UpdateProfileBodyType } from '../auth/types/auth.type'
+import { UpdateProfileBodyType } from '../auth/auth.type'
 import { UpdateSelectedVoiceBodyType } from './account.type'
-import { CreditLogService } from '~/modules/credit-log/credit-log.service'
-import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from '~/modules/credit-log/credit-log.constants'
+import { CreditLogService } from '~/modules/billing/wallet/credit-log.service'
+import { CREDIT_LOG_REF_TYPE, CREDIT_LOG_TYPE } from '~/modules/billing/wallet/credit-log.constants'
 
 @singleton()
 export class AccountService {
@@ -110,31 +110,31 @@ export class AccountService {
 
   public async addBalance(userId: string, amount: number, session: any) {
     const updated = await this.accountRepository.addBalance(userId, amount, session)
-    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ERROR_CODES.NOT_FOUND)
     return updated
   }
 
   public async deductBalance(userId: string, amount: number, session: any) {
     const updated = await this.accountRepository.deductBalance(userId, amount, session)
-    if (!updated) throw new AppError('Insufficient balance', StatusCodes.BAD_REQUEST, ErrorCodes.INSUFFICIENT_BALANCE)
+    if (!updated) throw new AppError('Insufficient balance', StatusCodes.BAD_REQUEST, ERROR_CODES.INSUFFICIENT_BALANCE)
     return updated
   }
 
   public async updatePassword(email: string, password: string) {
     const updated = await this.accountRepository.updateOne({ email }, { password })
-    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ERROR_CODES.NOT_FOUND)
     return updated
   }
 
   public async updateProfile(userId: string, data: UpdateProfileBodyType) {
     const updated = await this.accountRepository.updateById(userId, data)
-    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ERROR_CODES.NOT_FOUND)
     return this.getMe(userId)
   }
 
   public async updateSelectedVoice(userId: string, data: UpdateSelectedVoiceBodyType) {
     const voice = await this.voiceService.findActiveById(data.selectedVoiceId)
     const updated = await this.accountRepository.updateById(userId, { selectedVoiceId: voice._id })
-    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ErrorCodes.NOT_FOUND)
+    if (!updated) throw new AppError('Account not found', StatusCodes.NOT_FOUND, ERROR_CODES.NOT_FOUND)
   }
 }

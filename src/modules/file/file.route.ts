@@ -1,9 +1,9 @@
 import express from 'express'
 import { FileController } from './file.controller'
-import { authMiddleware } from '~/common/middlewares/auth.middleware'
-import { validateMiddleware } from '~/common/middlewares'
+import { authMiddleware } from '~/core/middlewares/auth.middleware'
+import { validateMiddleware } from '~/core/middlewares/validate.middleware'
 import { fileUploadMiddleware, validateFileContent } from './file.middleware'
-import { bindHandler } from '~/common/http'
+import { bindHandler } from '~/core/http/bind-handler'
 import { uploadAudioSchema, uploadImageSchema } from './file.validation'
 
 const router = express.Router()

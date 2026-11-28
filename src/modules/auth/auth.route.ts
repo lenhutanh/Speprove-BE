@@ -1,6 +1,6 @@
 import express from 'express'
 import { AuthController } from '~/modules/auth/auth.controller'
-import { validateMiddleware } from '~/common/middlewares/validate.middleware'
+import { validateMiddleware } from '~/core/middlewares/validate.middleware'
 import {
   changePasswordSchema,
   forgotPasswordSchema,
@@ -11,9 +11,9 @@ import {
   setPasswordSchema,
   verifySchema
 } from './auth.validation'
-import { bindHandler } from '~/common/http'
-import { authMiddleware } from '~/common/middlewares/auth.middleware'
-import { rateLimitMiddleware } from '~/infrastructure/rate-limiter/rate-limiter.middleware'
+import { bindHandler } from '~/core/http/bind-handler'
+import { authMiddleware } from '~/core/middlewares/auth.middleware'
+import { rateLimitMiddleware } from '~/core/middlewares/rate-limiter.middleware'
 
 const router = express.Router()
 
