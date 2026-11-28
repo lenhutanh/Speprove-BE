@@ -24,14 +24,14 @@ flowchart LR
 | `mail-queue` | `mail:send-otp` | Sends the OTP email through Brevo |
 | `speaking-queue` | `speaking:transcribe`, `speaking:assess`, `speaking:evaluate`, `speaking:score-session`, `speaking:extract-vocabulary` | The scoring pipeline stages, session scoring, vocabulary extraction |
 
-2.1. Names are constants in `src/infrastructure/queues/queue.constant.ts`. Do not write a queue or job name as a string elsewhere. `voice:generate` is defined there but no code publishes it.
-2.2. A **producer** (`src/infrastructure/queues/publishers`) is the only code that adds jobs: `MailProducer`, `SpeakingProducer`.
-2.3. A **consumer** (`src/infrastructure/workers/consumers`) extends `BaseConsumer`, which creates the BullMQ `Worker`, logs start, completion and failure, and runs each job inside the request id carried in the job data, so logs of one request and its jobs share an id.
-2.4. Job payload types are in `src/infrastructure/queues/types`.
+2.1. Names are constants in `src/core/queue/queue.constants.ts`. Do not write a queue or job name as a string elsewhere.
+2.2. A **producer** is the only code that adds jobs: `BaseProducer` (`src/core/queue/base.producer.ts`) and its two subclasses `SpeakingProducer` (`src/modules/practice/jobs/`) and `MailProducer` (`src/modules/notification/jobs/`).
+2.3. A **consumer** (`BaseConsumer` in `src/core/queue/`; `SpeakingConsumer` in `src/modules/practice/jobs/`, `MailConsumer` in `src/modules/notification/jobs/`) extends `BaseConsumer`, which creates the BullMQ `Worker`, logs start, completion and failure, and runs each job inside the request id carried in the job data, so logs of one request and its jobs share an id.
+2.4. Job payload types of scoring are in `src/modules/practice/jobs/speaking-job.type.ts`.
 
 ## 3. Job Options
 
-3.1. Options come from three levels; the most specific wins: the job options a producer passes, then `BaseProducer.defaultOptions`, then the queue's `defaultJobOptions` in `QueueFactory`. Today every job gets the producer defaults, so the queue defaults are only a fallback.
+3.1. Options come from three levels; the most specific wins: the job options a producer passes, then `BaseProducer.defaultOptions`, then the queue's `defaultJobOptions` in `QueueRegistry`. Today every job gets the producer defaults, so the queue defaults are only a fallback.
 
 | Setting | Value | Where |
 | :--- | :--- | :--- |
@@ -42,7 +42,7 @@ flowchart LR
 | `speaking:score-session` | 3 attempts | `SpeakingProducer` |
 | `speaking:extract-vocabulary` | 2 attempts | `SpeakingProducer` |
 | `mail:send-otp` | 5 attempts, priority 1 | `MailProducer` |
-| Queue fallback | 5 attempts, backoff 2000 ms, keep the last 100 completed and 500 failed | `QueueFactory` |
+| Queue fallback | 5 attempts, backoff 2000 ms, keep the last 100 completed and 500 failed | `QueueRegistry` |
 | Worker concurrency | 1 (one job at a time per queue) | `BaseConsumer` |
 
 3.2. A job that throws is retried with backoff. The consumer passes `job.attemptsMade` and `job.opts.attempts` to the stage method (`jobAttempts`, `jobMaxAttempts`) so it can tell a retry from the last attempt. What happens on the last failed attempt is in the [AI scoring flow](../04-business-logic/01-ai-scoring.md).
@@ -51,7 +51,7 @@ flowchart LR
 ## 4. Realtime with Socket.io
 
 4.1. `SocketService` wraps the Socket.io server, created once from the HTTP server with the same CORS options.
-4.2. **Handshake:** the client first calls `POST /auth/socket-ticket` (signed in) and passes the ticket in `socket.handshake.auth.ticket`. `socketAuthMiddleware` looks the ticket up in Redis, deletes it (single use) and stores the user id on the socket. No ticket or an unknown ticket refuses the connection.
+4.2. **Handshake:** the client first calls `POST /auth/socket-ticket` (signed in) and passes the ticket in `socket.handshake.auth.ticket`. `socketAuthMiddleware` (`src/modules/auth/socket-auth.middleware.ts`, plugged in by `src/main/socket.ts`) looks the ticket up in Redis, deletes it (single use) and stores the user id on the socket. No ticket or an unknown ticket refuses the connection.
 4.3. **Rooms:** on connect the socket joins `user:<userId>`. `SocketService.emit(userId, event, data)` sends to that room, so every tab of the user receives it.
 4.4. Scoring events:
 
@@ -70,7 +70,7 @@ flowchart LR
 
 ## 6. Startup and Shutdown
 
-6.1. Startup order (`src/index.ts`): MongoDB, queues, workers, the Express app (with Bull Board outside production), the HTTP server, Socket.io. Shutdown (`src/infrastructure/shutdown.ts`): Socket.io closes first (open connections would keep the HTTP server open), the HTTP server stops accepting and drains, then workers stop, then the queues, then MongoDB. The whole sequence is bounded by `SHUTDOWN_TIMEOUT_MS`; after that the process exits with code 1.
+6.1. Startup order (`src/index.ts`): MongoDB, queues, workers, the Express app (with Bull Board outside production), the HTTP server, Socket.io. Shutdown (`src/core/lifecycle/shutdown.ts`): Socket.io closes first (open connections would keep the HTTP server open), the HTTP server stops accepting and drains, then workers stop, then the queues, then MongoDB. The whole sequence is bounded by `SHUTDOWN_TIMEOUT_MS`; after that the process exits with code 1.
 6.2. A repeated signal during shutdown is ignored; a fatal error exits with code 1.
 
 ## 7. Known Limits

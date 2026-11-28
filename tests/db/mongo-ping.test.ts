@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest'
-import { pingDB } from '~/common/config/mongodb.config'
+import { pingDB } from '~/config/mongodb.config'
 import { startMongo, stopMongo } from '../helpers/mongo'
 
 describe('pingDB', () => {

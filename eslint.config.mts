@@ -14,6 +14,12 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   eslintPluginPrettierRecommended,
 
+  // CommonJS config files (for example .dependency-cruiser.cjs) use module.exports
+  {
+    files: ['**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node } }
+  },
+
   // Cấu hình chi tiết cho các file TS
   {
     files: ['**/*.ts', '**/*.mts'],

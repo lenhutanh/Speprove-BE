@@ -40,7 +40,7 @@ Rule: **`core/` and `config/` never contain a business concept** (speaking, mail
 
 | Module | Owns | Current folders that move in |
 | :--- | :--- | :--- |
-| `account` | user profile and preferences; roles and permissions (`access/`: group, permission, permission-group) | `account`, `group`, `permission`, `permission-group` |
+| `account` | user profile and preferences; roles and permissions (the sub-folders `group/`, `permission/` and `permission-group/`) | `account`, `group`, `permission`, `permission-group` |
 | `auth` | registration, login, OTP, Google login, sessions, refresh tokens, password reset; `social-identity/` keeps the link between an account and its Google id (Google is the only provider, no other is planned) | `auth`, `session`, `account-provider` |
 | `content` | exam content and catalogs written by admins: `topic/`, `question/`, `forecast/` (forecast + its topic and question links), `vocabulary/` (hints per question), `voice/` (the catalog of voices a learner can choose: code, gender, locale, speed, pitch, default, sample file) | `topic`, `question`, `forecast`, `forecast-topic`, `forecast-question`, `vocabulary-suggestion`, `voice` |
 | `practice` | what the learner does: attempts, mock tests, history, leaderboard, sharing | `attempt` (without the scoring parts), `speaking-session` (as `mock-test`) |
@@ -63,19 +63,19 @@ Why these boundaries (checked against the code, not only the names):
 
 ### 2.3 Inside a module
 
-One layout everywhere (today repositories are at the module root in 9 modules and in `repositories/` in 11; types are in `.type.ts` or `types/`):
+One layout everywhere: all the files of a module sit in the module folder (or in the folder of an entity, see below). The role of a file is its suffix, so there is no `repositories/`, `services/` or `types/` folder; a folder exists only for a different concept (`adapters/`, `jobs/`, `templates/`). Decided by the owner on 2026-11-28; before, repositories were at the module root in 9 modules and in `repositories/` in 11:
 
 ```
 <module>/
   <name>.controller.ts  <name>.service.ts  <name>.route.ts  <name>.validation.ts
   <name>.dto.ts  <name>.mapper.ts  <name>.model.ts  <name>.constants.ts  <name>.di.ts
-  repositories/   <name>.repository.ts  <name>.repository.interface.ts
+  <name>.repository.ts  <name>.repository.interface.ts  <name>.type.ts
   adapters/       external providers used only by this module
   jobs/           producer, consumer, job types of this module
   public.ts       the few functions other modules may call
 ```
 
-**Sub-areas.** The default is flat: one set of files per module. A module that holds two or more entities with their own model, route and service gets one folder per entity (`content/topic/`, `content/question/`, `content/forecast/`, `content/vocabulary/`, `content/voice/`; `billing/wallet/`, `billing/package/`, `billing/payment/`; `account/access/` beside the profile files; `auth/session/`). Each sub-area repeats the same files by role. One level only; there are no `controllers/` or `services/` folders grouped by layer. Files are `kebab-case`, `<name>.<role>.ts`. A `dto` or `mapper` file exists only if it maps something; a plain `_id` to `id` rename is not a reason for a mapper.
+**Sub-areas.** The default is flat: one set of files per module. A module that holds two or more entities with their own model, route and service gets one folder per entity (`content/topic/`, `content/question/`, `content/forecast/`, `content/vocabulary/`, `content/voice/`; `billing/wallet/`, `billing/package/`, `billing/payment/`; `account/group/`, `account/permission/` and `account/permission-group/` beside the profile files; `auth/session/`). Each sub-area repeats the same files by role. One level only; there are no `controllers/` or `services/` folders grouped by layer. Files are `kebab-case`, `<name>.<role>.ts`. A `dto` or `mapper` file exists only if it maps something; a plain `_id` to `id` rename is not a reason for a mapper.
 
 ### 2.4 Where today's shared code goes
 
@@ -99,9 +99,9 @@ One layout everywhere (today repositories are at the module root in 9 modules an
 | `providers/stt, speech-assessment, evaluator, llm` | `assessment/adapters/` | |
 | `providers/tts` | `tts/adapters/` | §4.5 |
 | `providers/storage`, `providers/media/ffmpeg` | `file/adapters/` | |
-| `providers/vocabulary-extractor` | `practice/jobs/` (only if kept, §4.2) | |
+| `providers/vocabulary-extractor` | `practice/adapters/` (only if kept, §4.2) | |
 | `infrastructure/event-bus/*` | deleted | nothing publishes to it (§11) |
-| `infrastructure/bull-board.config.ts` | `core/queue/` | development only |
+| `infrastructure/bull-board.config.ts` | `main/bull-board.ts` | development only |
 | `scripts/seed.ts` | `scripts/seed-reference.ts`, `scripts/seed-demo.ts` | §6.4 |
 
 ### 2.5 Dependency check between the ten modules

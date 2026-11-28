@@ -1,4 +1,4 @@
-import { GroupResponseDto } from '../group/group.dto'
+import { GroupResponseDto } from './group/group.dto'
 
 export type AccountResponseDto = {
   id: string

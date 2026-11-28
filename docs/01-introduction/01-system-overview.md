@@ -36,49 +36,46 @@ The project is a **Modular Monolith** that combines a **Layered Pattern** with *
 
 ## 4. Directory structure
 
-### `src/common/`
+`src/` holds the entry point `index.ts` and six folders. The layout was fixed by the module layout refactor ([spec](../specs/module-layout/requirements.md), [file mapping](../specs/module-layout/mapping.md)).
 
-Shared building blocks used across the whole application:
+### `src/config/`
 
-- `base/`: base classes such as `BaseRepository` and `BaseMapper`.
-- `config/`: app configuration (environment, database, Redis, CORS).
-- `constants/`: constants, enums, error codes, DI tokens.
-- `errors/`: custom error classes (e.g. `AppError`).
-- `http/`: response envelope and controller binding helpers (`ResponseTransformer`, `bindHandler`).
-- `contracts/`, `types/`: shared type definitions.
-- `middlewares/`: Express middlewares (auth, error handling, validation).
-- `utils/`: helper functions.
+Application configuration: the environment schema (`env.config.ts`), CORS, MongoDB and Redis settings. Nothing here knows a business concept.
 
-### `src/infrastructure/`
+### `src/core/`
 
-Connections to external systems and shared infrastructure:
+Technical code without business names, grouped by concern:
 
-- `cache/`, `redis/`: caching.
-- `logging/`: JSON logger (Winston), request context and redaction.
-- `health/`: `/health` and `/ready` probes.
-- `shutdown.ts`: the bounded shutdown sequence.
-- `providers/`: external service integrations (LLM, mail, speech, storage, etc.).
-- `queues/`, `workers/`: background job processing (BullMQ).
-- `socket/`: Socket.io server and event constants.
-- `livekit/`: LiveKit integration for voice rooms.
-- `rate-limiter/`: HTTP rate limiting.
-- `security/`: hashing and JWT helpers.
+- `persistence/`: base classes (`BaseRepository`, `BaseMapper`, base model, query builder, base validation helpers).
+- `http/`: response envelope and controller binding (`ResponseTransformer`, `bindHandler`).
+- `middlewares/`: authentication, error handling, request id, validation and the socket handshake.
+- `rate-limiter/`: the Redis-backed rate limiter and its middleware.
+- `errors/`: `AppError` and the error code registry.
+- `security/`: hashing, JWT and the contracts they implement.
+- `types/`, `utils/`, `constants/`, `di/`: shared types, helpers, the status enum and the DI tokens.
+- `cache/`, `redis/`, `logging/`: cache service, Redis clients, JSON logger, request context and redaction.
+- `lifecycle/`: the `/health` and `/ready` probes and the bounded shutdown.
+- `queue/`: the BullMQ queue factory, the base producer, the worker factory and the base consumer, and the queue dashboard.
+- `realtime/`: the Socket.io server wrapper and the event constants of scoring.
+
+### `src/main/`
+
+The composition root, the only place allowed to import every module: the Express app (`app.ts`), the DI container, the route table, the Socket.io wiring and the worker start.
 
 ### `src/modules/`
 
-The business domains. Each module is self-contained, with its own controller, service, repository, model, DTO, mapper, routes and DI file:
+Ten business modules. A module with two or more entities has one folder per entity; the others are flat.
 
-- **Accounts & permissions**: `account`, `account-provider`, `auth`, `permission`, `permission-group`.
-- **Payments & credits**: `payment`, `credit-package`, `credit-log`.
-- **IELTS speaking content**: `forecast`, `forecast-topic`, `forecast-question`, `topic`, `question`, `vocabulary-suggestion`.
-- **Practice sessions**: `session`, `speaking-session`, `attempt`.
-- **User groups**: `group`.
-- **Audio & voice**: `speech`, `voice`, `generated-audio`, `voice-room`.
-- **Other utilities**: `file`, `mail`.
+- `account` (profile; sub-folders `group/`, `permission/`, `permission-group/`) and `auth` (credentials, OTP, Google; sub-folders `session/`, `social-identity/`).
+- `content` (sub-folders `topic/`, `question/`, `forecast/`, `forecast-topic/`, `forecast-question/`, `vocabulary/`, `voice/`).
+- `practice` (sub-folders `attempt/`, `mock-test/`, `jobs/`) and `assessment` (scoring stages with `adapters/` for Groq, Azure and the evaluator).
+- `billing` (sub-folders `payment/`, `package/`, `wallet/`).
+- `file` (upload, storage and ffmpeg adapters), `tts` (generated audio cache and the TTS providers).
+- `voice-room` (rooms and the LiveKit adapter) and `notification` (email, its jobs and templates).
 
-### `src/routes/`
+### `src/scripts/` and `src/types/`
 
-Aggregates all the main API routes.
+The seed script and the global type declarations. Unchanged.
 
 ## 5. Coding conventions
 
@@ -97,4 +94,5 @@ The conventions have their own documents, so each fact lives in one place:
 - `pnpm lint`, `pnpm lint:fix`: check and fix lint errors with ESLint.
 - `pnpm format`, `pnpm check`: format the code with Prettier.
 - `pnpm test`, `pnpm test:watch`, `pnpm test:coverage`: run the Vitest suite once, in watch mode, or with a coverage report
+- `pnpm deps`: module boundary check (`dependency-cruiser`, warnings only for now) ([testing strategy](../06-testing/01-testing-strategy.md)).
 - `pnpm db:seed`: run the data seeding script.

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { runWithRequestId } from '~/infrastructure/logging/request-context'
+import { runWithRequestId } from '~/core/logging/request-context'
 
 const { seen } = vi.hoisted(() => ({ seen: [] as Array<string | undefined> }))
 
 vi.mock('ioredis', async () => {
-  const { getRequestId } = await import('~/infrastructure/logging/request-context')
+  const { getRequestId } = await import('~/core/logging/request-context')
   return {
     default: class {
       constructor() {
@@ -19,7 +19,7 @@ vi.mock('ioredis', async () => {
 
 describe('createRedisClient', () => {
   it('constructs the client outside the request that first needs it', async () => {
-    const { createRedisClient } = await import('~/infrastructure/redis/redis.factory')
+    const { createRedisClient } = await import('~/core/redis/redis-client.util')
 
     runWithRequestId('abc', () => createRedisClient('test'))
 

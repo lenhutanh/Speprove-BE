@@ -47,10 +47,10 @@ These are true on the branch this document ships with. A change that fixes one r
 
 | Control | Where |
 | :--- | :--- |
-| Security headers | `helmet()` in `src/app.ts`, applied before every route including the probes |
-| CORS | `src/common/config/cors.config.ts`: only origins in `CORS_ORIGINS`, credentials allowed; requests with no origin (same-origin navigation, server-to-server, OAuth redirects) pass |
+| Security headers | `helmet()` in `src/main/app.ts`, applied before every route including the probes |
+| CORS | `src/config/cors.config.ts`: only origins in `CORS_ORIGINS`, credentials allowed; requests with no origin (same-origin navigation, server-to-server, OAuth redirects) pass |
 | Cookies | `httpOnly`; `secure` and `sameSite=none` in production, `sameSite=lax` otherwise; the refresh cookie is limited to `/api/v1/auth` |
-| Passwords | Hashed with bcrypt behind `IHasher`; the password field is `select: false` |
+| Passwords | Hashed with bcrypt behind `IPasswordHasher`; the password field is `select: false` |
 | Input validation | Zod on every route that takes input ([validation](./04-validation.md)) |
 | Rate limiting | Redis-backed; applied today to login and refresh |
 | Upload checks | Size limit, MIME type and extension allow-list, and a content-type check on the file bytes (`src/modules/file/file.middleware.ts`) |

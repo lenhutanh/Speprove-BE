@@ -9,7 +9,7 @@ The board is the source of truth for the **order** and the **status** of the tic
 
 Kinds: **spec** means a spec of three files in [`../specs/`](../specs/) approved before coding; **tasks** means a task list with acceptance criteria, approved in chat before coding, no spec file; **docs** means a documentation ticket. Each spec is written just in time and needs the owner's approval before code. Status: `done`, `owner check` (waiting for a manual check of the owner), `todo`.
 
-**Rules of the order.** Refactor is a must. If time runs out, cut friend, chat, call and the scope of scoring v2 first. Tests are written inside each ticket (tests of the current behavior first, then the change, then tests of any intended change of behavior). Every refactor step leaves the system working, so the work can stop after any step.
+**Rules of the order.** Each module ticket also creates the `public.ts` of its module (decided 2026-11-27: a separate pass would export repositories and models that the rule forbids), and the modules are done from the bottom of the dependency graph up: billing, file, notification, tts, account, auth, content, assessment, practice, voice-room. Refactor is a must. If time runs out, cut friend, chat, call and the scope of scoring v2 first. Tests are written inside each ticket (tests of the current behavior first, then the change, then tests of any intended change of behavior). Every refactor step leaves the system working, so the work can stop after any step.
 
 | # | Ticket (branch) | Repo | Kind | Status |
 | :--- | :--- | :--- | :--- | :--- |
@@ -23,13 +23,13 @@ Kinds: **spec** means a spec of three files in [`../specs/`](../specs/) approved
 | 8 | `chore/measure-baseline` (duplication, lint, tests; coverage came with row 9) | BE | tasks | done locally, see [tasks](../specs/measure-baseline/tasks.md) |
 | 9 | `ci/quality-gates` (coverage, frontend CI, Dependabot, static analysis, image scan, branch protection) | BE, FE | tasks | BE part done locally, see [tasks](../specs/ci-quality-gates/tasks.md); open: frontend workflow, static analysis service, branch protection |
 | 10 | `ci-cd-staging` (pipeline, deploy, rollback, health check, deploy history) | BE, FE | spec | todo. Needs the owner's decisions: staging host, registry, secrets, trigger |
-| 11 | `refactor/module-layout` (`core/`, ten modules, `public.ts`, dependency check; one pull request per group) | BE | spec | todo |
-| 12 | `refactor/account-auth` (split `AuthService`, `assertOwner`, admin routes and permissions, rate limits, OTP lockout) with `fix/route-permissions` | BE, FE | spec | todo |
-| 13 | `refactor/billing` (`WalletService`, one credit path, payment states, expiry job) with `fix/webhook-and-http-errors` | BE | spec | todo |
+| 11 | `refactor/module-layout` (`core/`, `config/`, `main/`, ten modules, dependency check in warning mode; one branch per group) | BE | spec: [module-layout](../specs/module-layout/) | done on one branch, `refactor/module-layout`, in three commits (the 12 per-group checkpoints were squashed), nothing changed but file locations and imports; open: owner manual checks, push and merge. Baseline of the boundary check: 62 warnings |
+| 12 | `refactor/account-auth` (split `AuthService`, `requiredString` accepts a whitespace-only value because it trims after `min` (`'   '` becomes `''`), and `passwordSchema` allows 256 characters while bcrypt reads only the first 72 bytes, both checked with a test on 2026-11-28; `assertOwner`, admin routes and permissions (`GET /group` is not served: its route was commented out and the comment was removed in the layout branch), rate limits, OTP lockout, `public.ts` of the two modules) with `fix/route-permissions` | BE, FE | spec | todo |
+| 13 | `refactor/billing` (`WalletService`, one credit path, payment states, expiry job, `public.ts`) with `fix/webhook-and-http-errors` (this includes the payment providers: `PaymentProviderRegistry` takes each provider in its constructor and switches on the name, so a second method means a new line in both; register the providers under one token and let each one say its name, and throw an `AppError` with a code for an unknown name; and `errorMiddleware`: a malformed JSON body or a body over the size limit answers 500 `SYS_001` instead of 400 and 413, checked with a test on 2026-11-28; and the error codes: an `AppError` without `errorCode` answers `SYS_001` even for a 4xx, which is the case of 121 of the 173 `new AppError(` calls (also `hasPermission` when it denies), and 16 of the 36 codes of `ERROR_CODES` are never used; decide a default code per status, then a lint rule); **first module to do**: it moves money and has the fewest outgoing dependencies | BE | spec | todo |
 | 14 | `refactor/practice-assessment` (`assessment` as its own module, listener, reconciler, safe enqueue, scoring retry policy) | BE, FE | spec | todo |
-| 15 | `refactor/content-tts-file` (voice catalog in `content`, `tts` capability, safe upload, TTS cache lock) with `fix/resilience` | BE | spec | todo |
+| 15 | `refactor/content-tts-file` (voice catalog in `content`, `tts` capability, safe upload, TTS cache lock; `POST /forecast/:id/import-topics` only checks that the caller is logged in, its `FORECAST_TOPIC:CREATE` check had been commented out and the comment was removed in the layout branch, so decide the permission) with `fix/resilience` (this includes Redis: the workers open their own connections and `BaseConsumer` has no `error` listener, so nothing is logged when Redis is lost (checked on 2026-11-28: no crash, no log); no key has an application or environment prefix (`register:`, `verify:`, `socket-ticket:`, `rl:str`, and BullMQ's default `bull`), so two environments on one Redis share OTPs and jobs; and the queue connection: BullMQ advises that a `Queue` fails fast when Redis is down, but `getRedisOptions` sets `maxRetriesPerRequest: null` for every client, so a request that adds a job can hang) | BE | spec | todo |
 | 16 | `refactor/voice-room` | BE | spec | todo |
-| 17 | `refactor/conventions-cache-metrics` (lint rules, dependency check as an error, cache, `/metrics`) and `chore/seed-split` | BE | tasks | todo |
+| 17 | `refactor/conventions-cache-metrics` (lint rules, dependency check as an error, cache, `/metrics`; `QueryBuilder.castValue` guesses types from the value and the field name (`'007'` becomes `7`, a field named `format` is read as a date), harmless with today's whitelists but wrong for a new field; left from the layout work: `di.constants`, `queue.constants` and `error-codes` still list names of modules (moving them changes how the app is wired, so each module ticket takes its own part), and the entity folders that carry another name than their files, which the module tickets decide) and `chore/seed-split` | BE | tasks | todo |
 | 18 | `fix/demo-path` (edge cases of mock test, frontend `error.tsx` and `loading.tsx`) | BE, FE | tasks | todo |
 | 19 | `test/load-k6` (staging with fake providers) and the measured values for the NFRs | BE | tasks | todo |
 | 20 | `docs/design-docs` (diagrams that match the code after the refactor, NFR numbers) | BE | docs | todo |
@@ -91,7 +91,7 @@ Owner-managed and not assigned to the assistant: the product commitment (gate G1
 
 ## E1 Foundation (spec R0)
 
-- [x] `createApp()` in `src/app.ts`; route files and `rateLimitMiddleware` no longer resolve the container at import time (`authMiddleware` in `auth.middleware.ts` resolves per request).
+- [x] `createApp()` in `src/main/app.ts`; route files and `rateLimitMiddleware` no longer resolve the container at import time (`authMiddleware` in `auth.middleware.ts` resolves per request).
 - [ ] `ROLE=api|worker` and `main/worker.ts`: blocked until the worker can reach Socket.io from another process. Today `SocketService.emit` silently does nothing without the in-process `io`, so a separate worker would lose all scoring progress events. Needs `@socket.io/redis-adapter` or `redis-emitter` first.
 - [x] One JSON logger; `requestId` in every line, in error responses and in BullMQ job data; redaction; 5xx always logged. (76 `console.*` calls replaced, two unused logger implementations removed; `src/scripts/` keeps `console` for CLI output.)
 - [x] `/health` and `/ready` (Mongo and Redis), `trust proxy` from env, graceful shutdown with a timeout, `unhandledRejection`; Mongo options (`serverSelectionTimeoutMS`, `maxPoolSize`).
@@ -148,9 +148,9 @@ Owner-managed and not assigned to the assistant: the product commitment (gate G1
 
 ## E5 Folder moves (spec R2) — if time
 
-- [ ] Create `core/`, `config/`, `main/`; move `common/` and `infrastructure/` per design §2.4 (one PR per group).
-- [ ] Move module folders into `account`, `auth`, `content`, `practice`, `assessment`, `billing`, `file`, `tts`, `voice-room`, `notification` (one PR per module).
-- [ ] Business code leaves `core/`: speaking jobs to `practice`, mail to `notification`, LiveKit to `voice-room`, providers to their modules.
+- [x] Create `core/`, `config/`, `main/`; move `common/` and `infrastructure/` per design §2.4 (one PR per group).
+- [x] Move module folders into `account`, `auth`, `content`, `practice`, `assessment`, `billing`, `file`, `tts`, `voice-room`, `notification` (one PR per module).
+- [x] Business code leaves `core/`: speaking jobs to `practice`, mail to `notification`, LiveKit to `voice-room`, providers to their modules. (The three items above are done on one branch, `refactor/module-layout`, in three commits; see board row 11. Left on purpose: `di.constants`, `queue.constants` and `error.constants` still hold names of modules.)
 - [ ] Every PR: `tsc`, build and the E1 tests green, no logic change.
 
 ## E6 Account, auth and admin API (spec R3) — if time

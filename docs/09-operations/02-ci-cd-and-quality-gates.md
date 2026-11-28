@@ -14,9 +14,10 @@ The workflow `CI` runs on every pull request and on every push to `main`. One jo
 | 4 | `pnpm build` | TypeScript compile |
 | 5 | cache of the MongoDB binary, `pnpm test:coverage` | Unit and API tests with a coverage report |
 | 6 | Coverage summary and `actions/upload-artifact` | Writes the percentages to the job summary and keeps `lcov.info` and `coverage-summary.json` |
-| 7 | `pnpm audit --audit-level=high` | Fails on a high or critical advisory |
-| 8 | `gitleaks/gitleaks-action` | Secret scan over the history |
-| 9 | `SonarSource/sonarqube-scan-action` (only when the `SONAR_TOKEN` secret exists) | Sends the code and the coverage report to SonarQube Cloud; reports only, the quality gate does not fail the build yet |
+| 7 | `pnpm deps` (`dependency-cruiser`, rules in `.dependency-cruiser.cjs`) | Reports cycles, cross-module imports and imports from `core/` or `config/` into a module; warnings only for now |
+| 8 | `pnpm audit --audit-level=high` | Fails on a high or critical advisory |
+| 9 | `gitleaks/gitleaks-action` | Secret scan over the history |
+| 10 | `SonarSource/sonarqube-scan-action` (only when the `SONAR_TOKEN` secret exists) | Sends the code and the coverage report to SonarQube Cloud; reports only, the quality gate does not fail the build yet |
 
 A second job, `image`, runs after `check`: it builds the Docker image, which proves that the `Dockerfile` still builds. It does not scan the image: the Trivy step was removed on 2026-11-28 because the action's version tags were rewritten in the March 2026 supply chain incident and the tag used here no longer resolves. An image scan is left for the registry of the cloud host (to be decided in the `ci-cd-staging` ticket).
 

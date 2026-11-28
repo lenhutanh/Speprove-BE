@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { idParamSchema, querySchema } from '~/common/base/base.validation'
-import { objectIdSchema, requiredString } from '~/common/utils/validators.util'
+import { idParamSchema, querySchema } from '~/core/persistence/base.validation'
+import { objectIdSchema, requiredString } from '~/core/utils/validators.util'
 import { VOICE_ROOM_CONFIG, VOICE_ROOM_LEVEL, VOICE_ROOM_POLICY, VOICE_ROOM_TOPIC_TYPE } from './voice-room.constants'
 
 export const createVoiceRoomSchema = z.object({

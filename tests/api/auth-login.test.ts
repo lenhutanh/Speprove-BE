@@ -1,13 +1,13 @@
 import request from 'supertest'
 import { container } from 'tsyringe'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createApp } from '~/app'
-import { TOKENS } from '~/common/constants/di.tokens'
-import { STATUS } from '~/common/constants/status.constants'
-import { IHasher } from '~/common/contracts/hasher.contract'
+import { createApp } from '~/main/app'
+import { TOKENS } from '~/core/di/di.constants'
+import { STATUS } from '~/core/persistence/status.constants'
+import { IPasswordHasher } from '~/core/security/password-hasher.service.interface'
 import { Account } from '~/modules/account/account.model'
-import { GROUP_KIND } from '~/modules/group/group.constants'
-import { Group } from '~/modules/group/group.model'
+import { GROUP_KIND } from '~/modules/account/group/group.constants'
+import { Group } from '~/modules/account/group/group.model'
 import { resetMongo, startMongo, stopMongo } from '../helpers/mongo'
 import { setupTestContainer } from '../helpers/test-container'
 
@@ -25,7 +25,7 @@ describe('POST /api/v1/auth/login', () => {
   beforeEach(async () => {
     await resetMongo()
     const group = await Group.create({ name: 'user', kind: GROUP_KIND.USER, permissionIds: [] })
-    const password = await container.resolve<IHasher>(TOKENS.IHasher).hash(PASSWORD)
+    const password = await container.resolve<IPasswordHasher>(TOKENS.IPasswordHasher).hash(PASSWORD)
     await Account.create({
       username: 'learner',
       email: 'learner@example.com',

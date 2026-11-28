@@ -1,0 +1,154 @@
+import { StatusCodes } from 'http-status-codes'
+import { PART_KIND } from './question.constants'
+import { inject, singleton } from 'tsyringe'
+import { TOKENS } from '~/core/di/di.constants'
+import { IQuestionRepository } from './question.repository.interface'
+import { QueryBuilder } from '~/core/persistence/query.builder'
+import { QuestionType } from './question.model'
+import { CreateQuestionBodyType, UpdateQuestionBodyType } from './question.type'
+import { AppError } from '~/core/errors/app.error'
+import { toObjectId } from '~/core/utils/mongoose.util'
+import { QuestionMapper } from './question.mapper'
+import { checkSpelling, getSuggestions } from './question-spelling.service'
+import { GeneratedAudioService } from '../../tts/generated-audio.service'
+
+@singleton()
+export class QuestionService {
+  constructor(
+    @inject(TOKENS.IQuestionRepository) private readonly questionRepository: IQuestionRepository,
+    private readonly questionMapper: QuestionMapper,
+    private readonly generatedAudioService: GeneratedAudioService
+  ) {}
+
+  public async createNew(data: CreateQuestionBodyType) {
+    const { errors } = checkSpelling(data.content)
+
+    if (errors.length) {
+      const suggestions = errors.map((w) => ({
+        word: w,
+        suggestion: getSuggestions(w)
+      }))
+
+      throw new AppError(`Spelling errors: ${JSON.stringify(suggestions)}`)
+    }
+
+    let question: QuestionType | null = null
+
+    switch (data.part) {
+      case PART_KIND.ONE:
+        question = await this.questionRepository.createPart1Question({
+          ...data,
+          topicId: toObjectId(data.topicId)
+        })
+        break
+
+      case PART_KIND.TWO:
+        question = await this.questionRepository.createPart2Question(data)
+        break
+
+      case PART_KIND.THREE:
+        question = await this.questionRepository.createPart3Question({
+          ...data,
+          parentId: toObjectId(data.parentId)
+        })
+        break
+    }
+
+    return this.questionMapper.toResponse(question)
+  }
+
+  public async findOrCreate(data: CreateQuestionBodyType): Promise<QuestionType> {
+    let question: QuestionType | null = null
+
+    switch (data.part) {
+      case PART_KIND.ONE:
+        question = await this.questionRepository.findOne({
+          content: data.content.trim(),
+          part: PART_KIND.ONE,
+          topicId: toObjectId(data.topicId)
+        })
+        break
+
+      case PART_KIND.TWO:
+        question = await this.questionRepository.findOne({
+          content: data.content.trim(),
+          part: PART_KIND.TWO
+        })
+        break
+
+      case PART_KIND.THREE:
+        question = await this.questionRepository.findOne({
+          content: data.content.trim(),
+          part: PART_KIND.THREE,
+          parentId: toObjectId(data.parentId)
+        })
+        break
+    }
+
+    if (question) {
+      return question
+    }
+
+    let createdQuestion: QuestionType | null = null
+    switch (data.part) {
+      case PART_KIND.ONE:
+        createdQuestion = await this.questionRepository.createPart1Question({
+          ...data,
+          topicId: toObjectId(data.topicId)
+        })
+        break
+
+      case PART_KIND.TWO:
+        createdQuestion = await this.questionRepository.createPart2Question(data)
+        break
+
+      case PART_KIND.THREE:
+        createdQuestion = await this.questionRepository.createPart3Question({
+          ...data,
+          parentId: toObjectId(data.parentId)
+        })
+        break
+    }
+
+    if (!createdQuestion) {
+      throw new AppError('Failed to create question')
+    }
+
+    return createdQuestion
+  }
+
+  public async update(id: string, data: UpdateQuestionBodyType) {
+    const question = await this.questionRepository.updateById(id, data)
+    if (!question) {
+      throw new AppError('Question not found', StatusCodes.NOT_FOUND)
+    }
+    return question
+  }
+
+  public async getList(query: any) {
+    const { page, limit, sortBy, sortOrder, search, ...filters } = query || {}
+    const qb = new QueryBuilder<QuestionType>()
+
+    const { filter, options } = qb
+      .applyFilters(filters, ['topicId', 'part', 'status', 'createdAt'])
+      .search(['content'], search)
+      .sort(sortBy, sortOrder)
+      .build()
+
+    const { data, pagination } = await this.questionRepository.paginate(filter, page, limit, options)
+    return {
+      data: this.questionMapper.toResponseList(data),
+      pagination
+    }
+  }
+
+  public async getQuestionAudio(questionId: string, voiceId: string) {
+    const question = await this.questionRepository.findById(questionId)
+
+    if (!question) throw new AppError('Question not found', StatusCodes.NOT_FOUND)
+
+    const audio = await this.generatedAudioService.getOrCreate({ text: question.content, voiceId })
+
+    return { audioUrl: audio.audioUrl }
+  }
+}

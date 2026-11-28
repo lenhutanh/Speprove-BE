@@ -18,8 +18,8 @@ flowchart LR
 ```
 
 1.1. The route file lists the middlewares in order: rate limit, `authMiddleware.isAuthorized`, `authMiddleware.hasPermission(...)`, `validateMiddleware(schema)`, then `bindHandler(Controller, 'method')`.
-1.2. Routes are mounted under `/api/v1` in `src/routes/index.ts`.
-1.3. Long work (speech to text, pronunciation assessment, LLM scoring, mail) goes through a BullMQ queue. Workers run in `src/infrastructure/workers/consumers` and report progress through Socket.io. The stages are in [the AI scoring flow](../04-business-logic/01-ai-scoring.md).
+1.2. Routes are mounted under `/api/v1` in `src/main/routes.ts`.
+1.3. Long work (speech to text, pronunciation assessment, LLM scoring, mail) goes through a BullMQ queue. Workers (the consumers of `practice` and `notification`, built on `src/core/queue/base.consumer.ts`) run and report progress through Socket.io. The stages are in [the AI scoring flow](../04-business-logic/01-ai-scoring.md).
 
 ## 2. What Each Layer May Do
 
@@ -34,7 +34,7 @@ flowchart LR
 | Model | `*.model.ts` | Mongoose schema, indexes | Be imported by another module |
 | DI | `*.di.ts` | Registers interface tokens in `register<Module>Module` | Contain logic |
 
-2.1. Dependency injection uses `tsyringe`. Classes use `@singleton()` or `@injectable()`. A repository is registered against a token in `src/common/constants/di.tokens.ts` and injected by that token. `src/bootstrap/container.ts` calls every module's register function.
+2.1. Dependency injection uses `tsyringe`. Classes use `@singleton()` or `@injectable()`. A repository is registered against a token in `src/core/di/di.constants.ts` and injected by that token. `src/main/container.ts` calls every module's register function.
 2.2. A service gets other modules and providers through the constructor, as an interface when one exists.
 2.3. Controllers are bound with `bindHandler`, which wraps the method so a thrown error reaches `errorMiddleware`.
 
@@ -54,8 +54,8 @@ Known violations that the refactor removes are listed in section 11.1 of [the ar
 ## 4. Adding a Module
 
 4.1. Create `src/modules/<name>/` with the files of section 2 that the module needs. A module without HTTP has no route, controller or validation. Keep the module flat; add one folder per entity only when the module has two or more entities with their own model, route and service (one level, no folders grouped by layer).
-4.2. Register the repository token in `di.tokens.ts` and a `register<Name>Module` function in `<name>.di.ts`; call it from `src/bootstrap/container.ts`.
-4.3. Mount the router in `src/routes/index.ts` with a singular resource name.
+4.2. Register the repository token in `di.constants.ts` and a `register<Name>Module` function in `<name>.di.ts`; call it from `src/main/container.ts`.
+4.3. Mount the router in `src/main/routes.ts` with a singular resource name.
 4.4. Add the model's indexes in the model file. Add the permissions it needs (section 5) to the seed.
 4.5. Add an API test for the endpoints ([testing strategy](../06-testing/01-testing-strategy.md)), then update [layout-and-index.md](../layout-and-index.md).
 
@@ -68,5 +68,5 @@ Known violations that the refactor removes are listed in section 11.1 of [the ar
 
 ## 6. Configuration of the Process
 
-6.1. `src/app.ts` builds the Express app (`createApp`), so tests can start it without a port. `src/index.ts` starts queues, workers and the HTTP server, and stops them in order on shutdown.
+6.1. `src/main/app.ts` builds the Express app (`createApp`), so tests can start it without a port. `src/index.ts` starts queues, workers and the HTTP server, and stops them in order on shutdown.
 6.2. The probes `/health` and `/ready` are served outside `/api/v1`.

@@ -17,7 +17,7 @@ The contract between the backend and any client (the web frontend, tests, tools)
 
 ## 2. Response
 
-All responses are JSON built by `ResponseTransformer` (`src/common/http/response.transformer.ts`).
+All responses are JSON built by `ResponseTransformer` (`src/core/http/response-transformer.util.ts`).
 
 ### 2.1. Success
 

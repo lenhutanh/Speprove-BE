@@ -1,11 +1,11 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
-import { BaseSchemaContent, BaseSchemaOptions } from '../../common/base/base.model'
-import { STATUS } from '~/common/constants/status.constants'
+import { BASE_SCHEMA_CONTENT, BASE_SCHEMA_OPTIONS } from '../../core/persistence/base.model'
+import { STATUS } from '~/core/persistence/status.constants'
 import { ACCOUNT_KIND } from './account.constants'
 
 const accountSchema = new Schema(
   {
-    ...BaseSchemaContent,
+    ...BASE_SCHEMA_CONTENT,
     username: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: {
@@ -22,7 +22,7 @@ const accountSchema = new Schema(
     selectedVoiceId: { type: Schema.Types.ObjectId, ref: 'Voice' },
     balance: { type: Schema.Types.Number, default: 0, required: true }
   },
-  BaseSchemaOptions
+  BASE_SCHEMA_OPTIONS
 )
 
 export type AccountType = InferSchemaType<typeof accountSchema> & {

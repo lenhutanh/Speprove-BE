@@ -17,7 +17,7 @@
 | [x] | Bounded shutdown, repeated signals ignored, fatal errors exit 1 | AC4 | code; exit codes not checked on this machine |
 | [x] | `APP_PORT` default, `REDIS_URL`, Mongo pool and selection timeout, `returnDocument` | AC5 | code |
 | [x] | Timeouts on Groq, PayOS and the audio download | AC5 | code |
-| [x] | Timeout on LiveKit, in the unit the SDK reads (seconds), see section 3b | AC5 | test (`livekit-service.test.ts`); the timeout existed in the runtime commit but was 30000 seconds |
+| [x] | Timeout on LiveKit, in the unit the SDK reads (seconds), see section 3b | AC5 | test (`livekit-provider.test.ts`); the timeout existed in the runtime commit but was 30000 seconds |
 | [x] | Third-party keys optional when `NODE_ENV=test` | AC5 | test (the suite runs without them) |
 | [x] | Dockerfile `HEALTHCHECK` and workspace file | AC6 | code; the image was not built |
 
@@ -32,7 +32,7 @@
 ## 3. Health probes behind helmet (commit `fix(app): serve the health probes behind helmet`)
 
 - [x] 1. Add the header test and see it fail (`x-powered-by: Express` was present) (AC9).
-- [x] 2. Reorder the middleware in `src/app.ts` (AC9).
+- [x] 2. Reorder the middleware in `src/main/app.ts` (AC9).
 
 ## 4. Redis log context (commit `fix(redis): create clients outside the request context`)
 
@@ -42,7 +42,7 @@
 ## 3b. LiveKit timeout unit (commit `fix(livekit): pass the request timeout`)
 
 - [x] 3b.1. Add the test and see it fail (`requestTimeout` was 30000, expected 30) (AC5).
-- [x] 3b.2. Convert milliseconds to seconds in `LiveKitService` (AC5).
+- [x] 3b.2. Convert milliseconds to seconds in `LiveKitProvider` (AC5).
 - [x] 3b.3. Check the other timeouts: Groq (milliseconds), PayOS (milliseconds), axios audio download (milliseconds) are correct (AC5).
 
 ## 3c. Shutdown with open Socket.io clients and the Dockerfile port (review of 2026-11-25)

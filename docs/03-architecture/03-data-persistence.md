@@ -7,8 +7,8 @@ How the backend stores data: MongoDB through Mongoose, Redis for short-lived sta
 | Store | Holds | Access |
 | :--- | :--- | :--- |
 | MongoDB (replica set) | All business data: accounts, content, attempts, payments, credit ledger, sessions, voice rooms | Mongoose models, only through repositories |
-| Redis | Job queues (BullMQ), cache, OTP and pending registration, OAuth state, socket tickets, rate-limit counters | `CacheService`, `QueueFactory`, `RateLimiterService` |
-| Cloudinary | Uploaded audio and images (the `File` collection keeps the metadata and URL) | `infrastructure/providers/storage` |
+| Redis | Job queues (BullMQ), cache, OTP and pending registration, OAuth state, socket tickets, rate-limit counters | `CacheService`, `QueueRegistry`, `RateLimiterService` |
+| Cloudinary | Uploaded audio and images (the `File` collection keeps the metadata and URL) | `src/modules/file/adapters/storage` |
 
 1.1. MongoDB must be a **replica set**: payment and credit use multi-document transactions, which a standalone server does not support.
 1.2. One database per environment (`DATABASE_NAME`). A seed script that deletes collections must never point to a shared database.
@@ -16,14 +16,14 @@ How the backend stores data: MongoDB through Mongoose, Redis for short-lived sta
 ## 2. Models
 
 2.1. A model is a Mongoose schema in `<module>/<module>.model.ts`, exported as `models.X || model(...)`.
-2.2. Every schema spreads `BaseSchemaContent` (`deletedAt`, default `null`) and uses `BaseSchemaOptions`: `timestamps: true` (`createdAt`, `updatedAt`) and `toJSON` with virtuals and no `__v`.
+2.2. Every schema spreads `BASE_SCHEMA_CONTENT` (`deletedAt`, default `null`) and uses `BASE_SCHEMA_OPTIONS`: `timestamps: true` (`createdAt`, `updatedAt`) and `toJSON` with virtuals and no `__v`.
 2.3. Statuses and kinds are numbers from `*.constants.ts` (for example `STATUS` in `status.constants.ts`: `ACTIVE 1`, `PENDING 0`, `PROCESSING 2`, `LOCKED -1`, `DELETED -2`, `REJECTED -3`, `FAILED -4`; `ATTEMPT_STATUS`: `PENDING 0`, `PROCESSING 1`, `DONE 2`, `FAILED 3`).
 2.4. A secret field is `select: false` (`Account.password`).
 2.5. References between modules are stored as ids (`ObjectId` with `ref`). Reading the other module's data goes through its service, not `.populate()` ([layers and modules](../07-development-guides/02-layers-and-modules.md), section 3).
 
 ## 3. Repositories
 
-3.1. A repository extends `BaseRepository<T>` (`src/common/base/base.repository.ts`) and implements the module's `I<Name>Repository` interface, registered under a token in `di.tokens.ts`.
+3.1. A repository extends `BaseRepository<T>` (`src/core/persistence/base.repository.ts`) and implements the module's `I<Name>Repository` interface, registered under a token in `di.constants.ts`.
 3.2. `BaseRepository` offers: `findById`, `findOne`, `findMany`, `paginate`, `count`, `exists`, `create`, `createMany`, `updateById`, `updateOne`, `updateMany`, `softDeleteById`, `restoreById`, `hardDeleteById`, `hardDeleteMany`, `bulkWrite`, `withTransaction`.
 3.3. Reads return plain objects (`lean`) by default; pass `lean: false` when a Mongoose document is needed.
 3.4. A model with a `deletedAt` path is filtered by soft delete: queries add `deletedAt: null` unless `includeSoftDeleted` is set. Delete with `softDeleteById`; use `hardDelete*` only for data that must disappear.

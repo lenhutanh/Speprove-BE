@@ -1,5 +1,5 @@
 import z from 'zod'
-import { createSchema } from '~/common/base'
+import { createSchema } from '~/core/persistence/base.validation'
 import { AUDIO_PURPOSE, IMAGE_PURPOSE } from './file.constants'
 
 export const uploadImageSchema = createSchema({

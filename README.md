@@ -150,18 +150,21 @@ docker compose -f docker-compose.dev.yaml up --build
 ## Project Structure
 ```bash
 src/
-├── bootstrap/             # Dependency container registration
-├── common/                # Shared utilities, base classes, middlewares & config
-├── infrastructure/        # Caching, health probes, socket.io, background queues & workers
-├── modules/               # Domain-specific modules (Modular Monolith)
-│   ├── account/           # Profile management, settings & configuration
-│   ├── auth/              # JWT, Google OAuth2, & OTP authentication
-│   ├── attempt/           # Question practice attempts & evaluation
-│   ├── speaking-session/  # Mock exam sessions (Part 1/2/3 and Full Test)
-│   ├── forecast/          # Forecast question banks, topics, and questions
-│   ├── payment/           # Checkout processing & credit log tracking
-│   ├── vocabulary-suggestion/ # Curated & AI vocabulary suggestions
-│   └── ...                # Other domain-specific business packages
-├── routes/                # Main router aggregation (APIs_V1)
+├── config/                # Environment schema, CORS, MongoDB and Redis settings
+├── core/                  # Technical code: persistence base, http, middlewares, security, cache, logging, queue, realtime
+├── main/                  # Composition root: Express app, DI container, route table, socket and worker wiring
+├── modules/               # Ten business modules (Modular Monolith)
+│   ├── account/           # Profile, groups, permissions
+│   ├── auth/              # JWT, Google OAuth2, OTP, sessions
+│   ├── content/           # Topics, questions, forecasts, vocabulary hints, voice catalog
+│   ├── practice/          # Practice attempts, mock tests, speaking jobs
+│   ├── assessment/        # Scoring stages: speech to text, pronunciation, LLM evaluation
+│   ├── billing/           # Payments (PayOS), credit packages, credit ledger
+│   ├── file/              # Upload, storage, audio processing
+│   ├── tts/               # Text to speech and generated audio cache
+│   ├── voice-room/        # Live practice rooms (LiveKit)
+│   └── notification/      # Email and its templates
+├── scripts/               # Seed script
+├── types/                 # Global type declarations
 └── index.ts               # Application entry point
 ```

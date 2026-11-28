@@ -1,8 +1,8 @@
 import express from 'express'
-import { bindHandler } from '~/common/http'
+import { bindHandler } from '~/core/http/bind-handler'
 import { AccountController } from './account.controller'
-import { authMiddleware } from '~/common/middlewares/auth.middleware'
-import { validateMiddleware } from '~/common/middlewares'
+import { authMiddleware } from '~/core/middlewares/auth.middleware'
+import { validateMiddleware } from '~/core/middlewares/validate.middleware'
 import { updateProfileSchema, updateSelectedVoiceSchema } from './account.validation'
 
 const router = express.Router()
@@ -15,11 +15,7 @@ router
     bindHandler(AccountController, 'getList')
   )
 
-router.route('/me').get(
-  authMiddleware.isAuthorized,
-  // authMiddleware.hasPermission('ACCOUNT:VIEW'),
-  bindHandler(AccountController, 'getMe')
-)
+router.route('/me').get(authMiddleware.isAuthorized, bindHandler(AccountController, 'getMe'))
 
 router.put(
   '/update-profile',

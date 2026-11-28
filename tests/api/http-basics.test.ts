@@ -1,6 +1,6 @@
 import request from 'supertest'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { createApp } from '~/app'
+import { createApp } from '~/main/app'
 import { setupTestContainer } from '../helpers/test-container'
 import { accessTokenFor } from '../helpers/tokens'
 

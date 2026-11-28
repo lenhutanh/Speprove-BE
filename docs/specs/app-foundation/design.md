@@ -24,11 +24,11 @@
 
 | Area | Files | AC |
 | :--- | :--- | :--- |
-| App factory | `src/app.ts`, `src/index.ts`, `src/bootstrap/container.ts` | AC1 |
-| Logger and request id | `src/infrastructure/logging/` (`logger.ts`, `request-context.ts`, `sanitize.ts`), `src/common/middlewares/request-id.middleware.ts`, `error.middleware.ts`, queue producers | AC2 |
-| Probes | `src/infrastructure/health/health.router.ts` | AC3 |
+| App factory | `src/main/app.ts`, `src/index.ts`, `src/main/container.ts` | AC1 |
+| Logger and request id | `src/core/logging/` (`logger.ts`, `request-context.ts`, `sanitize.ts`), `src/core/middlewares/request-id.middleware.ts`, `error.middleware.ts`, queue producers | AC2 |
+| Probes | `src/core/lifecycle/health.route.ts` | AC3 |
 | Shutdown | `src/index.ts` | AC4 |
-| Configuration and timeouts | `src/common/config/` (`env.config.ts`, `redis.config.ts`, `mongodb.config.ts`), providers (Groq, Azure audio download, PayOS) | AC5 |
+| Configuration and timeouts | `src/config/` (`env.config.ts`, `redis.config.ts`, `mongodb.config.ts`), providers (Groq, Azure audio download, PayOS) | AC5 |
 | Container | `Dockerfile`, `pnpm-workspace.yaml`, `.env.example` | AC6 |
 
 ### 2.2. Tests and CI (commit `test: add vitest`, AC7, AC8)
@@ -38,7 +38,7 @@
 
 ### 2.3. Health probes behind helmet (commit `fix(app): serve the health probes behind helmet`, AC9)
 
-`src/app.ts` order: `requestIdMiddleware`, `helmet()`, health router, `cookieParser()`, `cors()`, `express.json()`. The probes stay before `cors()` and the body parser. Test in `tests/api/http-basics.test.ts`.
+`src/main/app.ts` order: `requestIdMiddleware`, `helmet()`, health router, `cookieParser()`, `cors()`, `express.json()`. The probes stay before `cors()` and the body parser. Test in `tests/api/http-basics.test.ts`.
 
 ### 2.4. Redis log context (commit `fix(redis): create clients outside the request context`, AC10)
 
@@ -46,11 +46,11 @@
 
 ### 2.5. LiveKit request timeout unit (commit `fix(livekit): pass the request timeout`, AC5)
 
-`LiveKitService` passed `env.HTTP_TIMEOUT_MS` (milliseconds) as `requestTimeout` to `RoomServiceClient`, which reads seconds (`AbortSignal.timeout(timeout * 1e3)` in the SDK). It now passes `Math.ceil(env.HTTP_TIMEOUT_MS / 1000)`. The other timeouts were checked and are correct: Groq, PayOS and axios all read milliseconds. Test in `tests/unit/livekit-service.test.ts` mocks `livekit-server-sdk` and checks the options given to the client.
+`LiveKitProvider` passed `env.HTTP_TIMEOUT_MS` (milliseconds) as `requestTimeout` to `RoomServiceClient`, which reads seconds (`AbortSignal.timeout(timeout * 1e3)` in the SDK). It now passes `Math.ceil(env.HTTP_TIMEOUT_MS / 1000)`. The other timeouts were checked and are correct: Groq, PayOS and axios all read milliseconds. Test in `tests/unit/livekit-provider.test.ts` mocks `livekit-server-sdk` and checks the options given to the client.
 
 ### 2.6. Shutdown with open Socket.io clients (AC12)
 
-2.6.1. The sequence moves out of `src/index.ts` into `createShutdown` in `src/infrastructure/shutdown.ts`, so that it can be tested. It takes the HTTP server, the timeout, `closeSocket`, a `stopBackground` function (workers, then queues, then the database) and an `exit` function (default `process.exit`). `index.ts` only wires it.
+2.6.1. The sequence moves out of `src/index.ts` into `createShutdown` in `src/core/lifecycle/shutdown.ts`, so that it can be tested. It takes the HTTP server, the timeout, `closeSocket`, a `stopBackground` function (workers, then queues, then the database) and an `exit` function (default `process.exit`). `index.ts` only wires it.
 2.6.2. Order: ignore repeated calls; arm the forced-exit timer; call `closeSocket()` (Socket.io disconnects its clients and closes the HTTP server); call `server.close(...)` and `server.closeIdleConnections()`; when the server has closed, run `stopBackground`; then log `Shutdown complete` and exit with the requested code. A rejection of `stopBackground` is caught, logged, and exits with code 1 at once.
 2.6.3. **Alternatives considered:** (a) *only move `closeSocket()` before `server.close()` inside `index.ts`*: fixes the order but leaves the sequence untestable. (b) *`server.closeAllConnections()`*: also unblocks the server but cuts in-flight HTTP requests, which defeats graceful shutdown.
 2.6.4. Tests in `tests/unit/shutdown.test.ts`: with a real HTTP server, a Socket.io server and one WebSocket client the exit code is the requested one and arrives before the timeout; a failing cleanup step exits with 1 before the timeout; repeated calls run cleanup once.
@@ -65,15 +65,15 @@
 
 | File | Change | AC |
 | :--- | :--- | :--- |
-| `src/infrastructure/shutdown.ts` | New: `createShutdown`, Socket.io closed first, cleanup failures caught | AC12 |
+| `src/core/lifecycle/shutdown.ts` | New: `createShutdown`, Socket.io closed first, cleanup failures caught | AC12 |
 | `src/index.ts` | Use `createShutdown` | AC12 |
 | `tests/unit/shutdown.test.ts` | New file, three tests | AC12 |
 | `Dockerfile` | `ENV APP_PORT=8017` in the runner stage | AC13 |
-| `src/infrastructure/livekit/livekit.service.ts` | Convert the timeout to seconds | AC5 |
-| `tests/unit/livekit-service.test.ts` | New file, one test | AC5 |
-| `src/app.ts` | Reorder as in 2.3 | AC9 |
-| `src/infrastructure/logging/request-context.ts` | Add `runOutsideRequest` | AC10 |
-| `src/infrastructure/redis/redis.factory.ts` | Construct the client inside `runOutsideRequest` | AC10 |
+| `src/modules/voice-room/adapters/livekit.provider.ts` | Convert the timeout to seconds | AC5 |
+| `tests/unit/livekit-provider.test.ts` | New file, one test | AC5 |
+| `src/main/app.ts` | Reorder as in 2.3 | AC9 |
+| `src/core/logging/request-context.ts` | Add `runOutsideRequest` | AC10 |
+| `src/core/redis/redis-client.util.ts` | Construct the client inside `runOutsideRequest` | AC10 |
 | `tests/api/http-basics.test.ts` | One new test | AC9 |
 | `tests/unit/redis-factory.test.ts` | New file, one test | AC10 |
 

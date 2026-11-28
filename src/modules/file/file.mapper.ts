@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe'
-import { BaseMapper } from '~/common/base'
+import { BaseMapper } from '~/core/persistence/base.mapper'
 import { FileType, AudioFileType, ImageFileType } from './file.model'
 import { FileResponseDto } from './file.dto'
 import { FILE_KIND } from './file.constants'

@@ -2,7 +2,7 @@ import { createServer, type Server as HttpServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { Server as SocketServer } from 'socket.io'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createShutdown } from '~/infrastructure/shutdown'
+import { createShutdown } from '~/core/lifecycle/shutdown'
 
 const TIMEOUT_MS = 3000
 

@@ -1,4 +1,4 @@
-import { TokenPayload } from '../common/types/token-payload.type'
+import { TokenPayload } from '../core/security/token-payload.type'
 
 declare global {
   namespace Express {

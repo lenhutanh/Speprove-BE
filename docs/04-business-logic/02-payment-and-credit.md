@@ -64,8 +64,8 @@ Refunds happen automatically when scoring fails **after the manual retry has bee
 
 ## Related code
 
-- `src/modules/payment/`: `payment.service.ts`, `providers/payos.provider.ts`, `payment.constants.ts` (statuses, `BUFFER_TIME`, `EXPIRED_DURATION`).
-- `src/modules/credit-package/`, `src/modules/credit-log/` (`credit.util.ts`, `CREDIT_COST`).
+- `src/modules/billing/payment/`: `payment.service.ts`, `adapters/payos.provider.ts`, `payment.constants.ts` (statuses, `BUFFER_TIME`, `EXPIRED_DURATION`).
+- `src/modules/billing/package/`, `src/modules/billing/wallet/` (`credit.util.ts`, `CREDIT_COST`).
 - `src/modules/account/account.service.ts`: `addBalance`, `deductBalance`.
 - Env: `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`, `APP_URL`.
 

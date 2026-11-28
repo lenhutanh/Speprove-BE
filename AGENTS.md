@@ -12,18 +12,18 @@ Speprove backend: a Node.js + Express 5 + TypeScript modular monolith for an IEL
 - `pnpm db:seed`: seeds master and mock data (`src/scripts/seed.ts`)
 - Docker: `docker compose -f docker-compose.dev.yaml up --build`
 - `pnpm test`: Vitest with supertest and an in-memory MongoDB (`tests/`). End-to-end tests against a deployed system live in the separate `speprove-testing` repo.
-- `src/common/config/env.config.ts` validates env with Zod at startup, so a missing variable crashes boot. Copy `.env.example` to `.env` to get started.
-- All REST routes are mounted under `/api/v1` (`src/routes/index.ts`), with singular resource names (`/attempt`, `/payment`, `/speaking-session`). There is no Swagger: the API contract is in `docs/08-integration-contracts/`.
+- `src/config/env.config.ts` validates env with Zod at startup, so a missing variable crashes boot. Copy `.env.example` to `.env` to get started.
+- All REST routes are mounted under `/api/v1` (`src/main/routes.ts`), with singular resource names (`/attempt`, `/payment`, `/speaking-session`). There is no Swagger: the API contract is in `docs/08-integration-contracts/`.
 
 ## Architecture
 
-Request flow: Express router → middlewares (rate limiter, auth, Zod `validateMiddleware`) → controller → service → repository → Mongoose. Services push long-running work onto BullMQ queues (`src/infrastructure/queues`). Workers (`src/infrastructure/workers/consumers`, e.g. `speaking.consumer.ts`, `mail.consumer.ts`) process those jobs and send progress to clients through Socket.io (`src/infrastructure/socket`). `src/index.ts` boots in this order: queues first, then Bull Board, workers, HTTP. Shutdown stops the workers first.
+Request flow: Express router → middlewares (rate limiter, auth, Zod `validateMiddleware`) → controller → service → repository → Mongoose. Services push long-running work onto BullMQ queues (`src/core/queue`). Workers (the consumers in `src/modules/practice/jobs/` and `src/modules/notification/jobs/`, built on `src/core/queue/base.consumer.ts`) process those jobs and send progress to clients through Socket.io (`src/core/realtime`). `src/index.ts` boots in this order: queues first, then Bull Board, workers, HTTP. Shutdown stops the workers first.
 
 Each `src/modules/<name>/` packages its own model, repository, service, controller, route, validation, DTO, mapper and DI file. The duties of each layer, dependency injection and how to add a module are in `docs/07-development-guides/02-layers-and-modules.md`. Import alias: `~/*` → `src/*`.
 
-External integrations sit behind interfaces in `src/infrastructure/providers/` (llm/Groq, stt/Groq, tts/Edge TTS, speech-assessment/Azure, evaluator, storage/Cloudinary, mail/Brevo, media/ffmpeg). Payments go through PayOS.
+External integrations sit behind interfaces in the `adapters/` folder of the module that uses them (`assessment`: Groq STT and LLM, Azure pronunciation, evaluator; `tts`: Edge TTS; `file`: Cloudinary, ffmpeg; `notification`: Brevo; `voice-room`: LiveKit). Payments go through PayOS.
 
-The AI scoring pipeline (the `attempt` and `speaking-session` modules) runs in stages: STT → pronunciation assessment → LLM evaluation → band score. Failed stages are retried, progress is reported over Socket.io, and credits are refunded automatically if processing fails.
+The AI scoring pipeline (the `practice` and `assessment` modules) runs in stages: STT → pronunciation assessment → LLM evaluation → band score. Failed stages are retried, progress is reported over Socket.io, and credits are refunded automatically if processing fails.
 
 ## Docs
 

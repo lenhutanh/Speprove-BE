@@ -55,6 +55,9 @@ jobs:
             coverage/lcov.info
             coverage/coverage-summary.json
 
+      # Module boundaries: only reports (warnings), the exit code stays 0 until the module tickets are done
+      - run: pnpm deps
+
       # Fails on advisories rated high or critical; moderate ones are reported by Dependabot alerts
       - run: pnpm audit --audit-level=high
 

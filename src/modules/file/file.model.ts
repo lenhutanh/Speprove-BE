@@ -1,11 +1,11 @@
 import { InferSchemaType, model, models, Schema, Types } from 'mongoose'
-import { BaseSchemaContent, BaseSchemaOptions } from '../../common/base/base.model'
-import { STORAGE_PROVIDER } from '~/infrastructure/providers/storage/storage.constants'
+import { BASE_SCHEMA_CONTENT, BASE_SCHEMA_OPTIONS } from '../../core/persistence/base.model'
+import { STORAGE_PROVIDER } from '~/modules/file/adapters/storage/storage.constants'
 import { FILE_KIND } from './file.constants'
 
 const fileSchema = new Schema(
   {
-    ...BaseSchemaContent,
+    ...BASE_SCHEMA_CONTENT,
     kind: {
       type: String,
       enum: Object.values(FILE_KIND),
@@ -28,7 +28,7 @@ const fileSchema = new Schema(
     ownerId: { type: Schema.Types.ObjectId, ref: 'Account', index: true }
   },
   {
-    ...BaseSchemaOptions,
+    ...BASE_SCHEMA_OPTIONS,
     discriminatorKey: 'kind'
   }
 )

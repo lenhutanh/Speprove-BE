@@ -1,4 +1,4 @@
-import { CLOUD_FOLDERS } from '~/infrastructure/providers/storage/storage.constants'
+import { CLOUD_FOLDERS } from '~/modules/file/adapters/storage/storage.constants'
 
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 export const ALLOWED_AUDIO_TYPES = [

@@ -15,7 +15,7 @@ Where input is checked and what each check is for. Validation answers "is this r
 
 ## 2. Writing a Schema
 
-2.1. Build a schema with the helpers in `src/common/base/base.validation.ts`:
+2.1. Build a schema with the helpers in `src/core/persistence/base.validation.ts`:
 
 | Helper | Wraps |
 | :--- | :--- |
@@ -26,7 +26,7 @@ Where input is checked and what each check is for. Validation answers "is this r
 | `idParamSchema` | `{ params: { id } }` where `id` is a valid ObjectId |
 
 2.2. Paging fields in `querySchema`: `page` (at least 1, default 1), `limit` (1 to 100, default 12), `sortBy` (default `createdAt`), `sortOrder` (`asc` or `desc`, default `asc`), `search` (optional).
-2.3. Reusable field schemas (`emailSchema`, `passwordSchema`, `otpSchema`, `objectIdSchema`) are in `src/common/utils/validators.util.ts`. Reuse them; do not repeat a regular expression.
+2.3. Reusable field schemas (`emailSchema`, `passwordSchema`, `otpSchema`, `objectIdSchema`) are in `src/core/utils/validators.util.ts`. Reuse them; do not repeat a regular expression.
 2.4. A cross-field rule uses `.refine(...)` with a `path` that points to the field the user must fix (`['body', 'confirmPassword']`).
 2.5. Unknown keys are stripped (`.strip()`), so a client cannot write a field the schema does not name.
 

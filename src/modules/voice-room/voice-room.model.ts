@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose'
-import { BaseSchemaContent, BaseSchemaOptions } from '~/common/base/base.model'
+import { BASE_SCHEMA_CONTENT, BASE_SCHEMA_OPTIONS } from '~/core/persistence/base.model'
 import {
   VOICE_ROOM_CONFIG,
   VOICE_ROOM_LEVEL,
@@ -14,7 +14,7 @@ import {
 
 const voiceRoomSchema = new Schema(
   {
-    ...BaseSchemaContent,
+    ...BASE_SCHEMA_CONTENT,
     title: {
       type: String,
       required: true,
@@ -87,7 +87,7 @@ const voiceRoomSchema = new Schema(
       default: null
     }
   },
-  BaseSchemaOptions
+  BASE_SCHEMA_OPTIONS
 )
 
 voiceRoomSchema.index({ status: 1, createdAt: -1 })
